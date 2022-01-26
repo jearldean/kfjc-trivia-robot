@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Welcome to the KFJC Trivia Robot™!{% endblock %}
+
+{% block body %}
+
+<h1>Welcome to the KFJC Trivia Robot™!</h1>
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <!-- COLUMN ONE -->
+      <div class="row justify-content-center">
+        <!--You can have as many rows as you need.-->
+        <img src={{random_robot_img}} style="max-height: 500px; max-width: 500px;" />
+      </div>
+    </div>
+    <div class="col">
+      <div class="row justify-content-center">
+        <form action="/play" id="game-on-form">
+
+          <label>Would you like to answer a trivia question?</label>
+            <input type="radio" name="game-on" value="yes" class="game-on" checked/>Yes
+            <input type="radio" name="game-on" value="no" class="game-on"/>No
+            
+            <button class="radio-btn" type="submit" id="submit-profile">Submit</button>
+          </form>
+     </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
