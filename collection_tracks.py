@@ -1,7 +1,7 @@
 """Collection Track operations for KFJC Trivia Robot."""
 
 from model import db, connect_to_db, CollectionTrack
-
+from sqlalchemy import func
 
 def create_collection_track(album_id, title, artist, indx, clean):
     """Create and return a new collection_track."""
@@ -30,10 +30,8 @@ def get_collection_tracks_on_album_id(album_id):
 
 def get_collection_tracks_with_word_in_title(word):
     """Get collection tracks with a word in the title."""
-
-    return CollectionTrack.query.filter(CollectionTrack.title.contains(word)).order_by(
+    return CollectionTrack.query.filter(CollectionTrack.title.ilike("%"+word+"%")).order_by(
         CollectionTrack.album_id).all()
-
 
 def who_is_on_this_album(album_id):
 

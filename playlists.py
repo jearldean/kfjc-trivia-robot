@@ -1,7 +1,8 @@
 """Playlist operations for KFJC Trivia Robot."""
 
 from model import db, connect_to_db, Playlist
-
+from random import choice
+import common
 
 def create_playlist(playlist_id, user_id, air_name, start_time, end_time):
     """Create and return a new playlist."""
@@ -29,23 +30,37 @@ def get_playlist_by_playlist_id(playlist_id):
 
     return Playlist.query.filter(Playlist.playlist_id == playlist_id).first()
 
+def get_playlists_by_user_id(user_id):
+    return Playlist.query.filter(Playlist.user_id == user_id).all()
+
 def max_date_is_the_freshest_data_stamp():
+    dto=db.session.query(Playlist.end_time.desc()).first()[0]
+    return common.convert_datetime(datetime_object=dto)
 
-    from sqlalchemy import func, and_
+def get_random_air_name():
+    # tuple: (user_id, air_name)
+    rando_user_id = choice(get_unique_user_ids())
+    air_name = user_id_to_airname(user_id=rando_user_id)
+    return (rando_user_id, air_name)
 
-    subq = db.query(Playlist.identifier,
-        func.max(Table.date).label('maxdate')
-    ).group_by(Table.identifier).subquery('t2')
+def all_air_names():
+    dj_ids = get_unique_user_ids()
+    air_names = []
+    for di in dj_ids:
+        air_names.append(user_id_to_airname(user_id=di))
+    air_names.sort()
+    return air_names
 
-    query = session.query(Table).join(
-        subq,
-        and_(
-            Table.identifier == subq.c.identifier,
-            Table.date == subq.c.maxdate
-        )
-    )
+def get_unique_user_ids():
+    dj_ids = []
+    for val in db.session.query(Playlist.user_id.desc()).distinct():
+        dj_ids.append(val[0])
+    dj_ids.sort()
+    return dj_ids
 
-    return Playlist.query.filter(Playlist.playlist_id == playlist_id).first()
+def user_id_to_airname(user_id):
+    return Playlist.query.filter(Playlist.user_id == user_id).first().air_name
+
 
 
 if __name__ == '__main__':

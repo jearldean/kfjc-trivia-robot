@@ -66,6 +66,12 @@ def get_artist_for_track_instance(track_instance):
     return album_instance.artist
 
 
+def get_tracks_with_word_in_title(word):
+    """Get tracks with a word in the title."""
+    return Track.query.filter(Track.title.ilike("%"+word+"%")).order_by(
+        Track.album_id).all()
+
+
 if __name__ == '__main__':
     """Will connect you to the database when you run tracks.py interactively"""
     from server import app

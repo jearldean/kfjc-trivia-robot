@@ -25,11 +25,14 @@ def get_playlist_tracks(limit_to=10):
 
 def get_playlist_track_by_playlist_id_and_indx(playlist_id, indx):
     """Get a playlist_track by playlist_id and indx. The primary key is not the station's playlist_id."""
-
     return PlaylistTrack.query.filter(
         PlaylistTrack.playlist_id == playlist_id,
         PlaylistTrack.indx == indx).first()
     
+def get_playlist_tracks_by_user_id(playlist_id):
+    return PlaylistTrack.query.filter(
+        PlaylistTrack.playlist_id == playlist_id).all()
+
 
 if __name__ == '__main__':
     """Will connect you to the database when you run playlist_tracks.py interactively"""

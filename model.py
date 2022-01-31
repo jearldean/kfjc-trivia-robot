@@ -68,12 +68,12 @@ class Playlist(db.Model):
     air_name = db.Column(db.String(60), nullable=True)
     start_time = db.Column(db.DateTime, nullable=True)  # '2022-01-19 22:04:31'
     end_time = db.Column(db.DateTime, nullable=True)  # '2022-01-19 22:08:42'
-    # playlist = a list of Playlists objects
 
     
     def __repr__(self):
         #return f"\n{self.playlist_id}. {self.air_name} on {self.start_time}"
         return f"{self.id_}, {self.playlist_id}, {self.user_id}, {self.air_name}, {self.start_time}, {self.end_time}"
+
 
 class PlaylistTrack(db.Model):
     """A playlist track from the station."""
@@ -95,6 +95,7 @@ class PlaylistTrack(db.Model):
         #return f"\nPlaylist {self.playlist_id}. {self.track_title} from {self.album_title} by {self.artist} played on {self.time_played}"
         return f"{self.playlist_id}, {self.is_current}, {self.artist}, {self.track_title}, {self.album_title}, {self.album_id}, {self.album_label}, {self.time_played}"
 
+
 class Album(db.Model):
     """An album from the station."""
 
@@ -107,7 +108,7 @@ class Album(db.Model):
     is_collection = db.Column(db.SmallInteger)
 
     def __repr__(self):
-        return f"\nAlbum {self.album_id}: {self.title} by {self.artist}"
+        return f"\nAlbum {self.album_id}: {self.artist}\t\t{self.title}"
 
 
 class Track(db.Model):

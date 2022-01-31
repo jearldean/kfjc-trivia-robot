@@ -45,7 +45,7 @@ def shall_we_play():
 
     if response == "yes":  # TO DO: Maybe a boolean here?
         # next_question = question_maker.formulate_question()
-        next_question = crud.ran 
+        next_question = questions.get
         return render_template(
             'question.html', random_robot_img=random_robot_image(),
             question=next_question)
