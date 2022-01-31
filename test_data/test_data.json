@@ -1,0 +1,861 @@
+{
+   "users": [
+       [
+           "arthur@ministry_of_magic.gov",
+           "Arthur",
+           "test",
+           "test"
+       ],
+       [
+           "molly@theburrough.com",
+           "Molly",
+           "test",
+           "test"
+       ],
+       [
+           "bill@ministry_of_magic.gov",
+           "Bill",
+           "test",
+           "test"
+       ],
+       [
+           "charlie@dragon_preserve.ro",
+           "Charlie",
+           "test",
+           "test"
+       ],
+       [
+           "percy@hogwarts.edu",
+           "Percy",
+           "test",
+           "test"
+       ],
+       [
+           "fred@weasleyswizardingwheezes.com",
+           "Fred",
+           "test",
+           "test"
+       ],
+       [
+           "george@weasleyswizardingwheezes.com",
+           "George",
+           "test",
+           "test"
+       ],
+       [
+           "ron@hogwarts.edu",
+           "Ron",
+           "test",
+           "test"
+       ],
+       [
+           "ginny@hogwarts.edu",
+           "Ginny",
+           "test",
+           "test"
+       ]
+   ],
+   "questions": [
+       [
+           "Name a spell.",
+           [
+               "expelliarmus",
+               "alohamora"
+           ]
+       ],
+       [
+           "Name a teacher.",
+           [
+               "snape",
+               "mcgonigal"
+           ]
+       ],
+       [
+           "Name a headmaster.",
+           [
+               "dumbledore"
+           ]
+       ],
+       [
+           "Name a gryffindor.",
+           [
+               "harry",
+               "ron",
+               "hermione"
+           ]
+       ],
+       [
+           "Name a slytherin.",
+           [
+               "draco",
+               "severus",
+               "salizar"
+           ]
+       ],
+       [
+           "Name a hufflepuff.",
+           [
+               "cedric"
+           ]
+       ],
+       [
+           "Name a ravenclaw.",
+           [
+               "luna",
+               "cho"
+           ]
+       ],
+       [
+           "Name a broom.",
+           [
+               "nimbus 2000",
+               "cleansweep 7",
+               "silver arrow"
+           ]
+       ],
+       [
+           "Name a quidditch ball.",
+           [
+               "snitch",
+               "bludger",
+               "quaffle"
+           ]
+       ]
+   ],
+   "playlists": [
+      [
+         66019,
+         66375,
+         431,
+         "DJ Click rebroadcast",
+         "2022-01-16 03:00:25",
+         "2022-01-16 05:59:47"
+      ],
+      [
+         66020,
+         66376,
+         431,
+         "Lucky Jae rebroadcast",
+         "2022-01-16 06:00:01",
+         "2022-01-16 08:56:21"
+      ],
+      [
+         66021,
+         66377,
+         44,
+         "Dangerous Dan",
+         "2022-01-16 08:56:42",
+         "2022-01-16 11:59:10"
+      ],
+      [
+         66022,
+         66378,
+         255,
+         "Sir Cumference",
+         "2022-01-16 12:00:06",
+         "2022-01-16 15:05:10"
+      ],
+      [
+         66023,
+         66379,
+         177,
+         "Spliff Skankin",
+         "2022-01-16 15:05:35",
+         "2022-01-16 19:03:40"
+      ],
+      [
+         66024,
+         66380,
+         17,
+         "Belladonna",
+         "2022-01-16 19:03:50",
+         "2022-01-16 21:49:22"
+      ],
+      [
+         66025,
+         66381,
+         431,
+         "Avakhov rebroadcast",
+         "2022-01-16 21:59:54",
+         "2022-01-17 01:56:47"
+      ]
+   ],
+   "playlist_tracks": [
+      [
+         2576975,
+         66375,
+         1,
+         0,
+         "DJ Click",
+         "2014 Originally aired February 16",
+         "Playlist: https://kfjc.org/listen/playlist?i=45484",
+         0,
+         null,
+         null
+      ],
+      [
+         2576976,
+         66376,
+         1,
+         0,
+         "Lucky Jae",
+         "2018 rebroadcast from 2 September",
+         "https://kfjc.org/listen/playlist?i=57420",
+         0,
+         "KFJC",
+         "2022-01-16 06:00:51"
+      ],
+      [
+         2576990,
+         66377,
+         14,
+         1,
+         "Eddy Current Suppression Ring",
+         "Future Self",
+         "All In Good Time",
+         866268,
+         "Castle Face Records",
+         "2022-01-16 10:30:39"
+      ],
+      [
+         2576977,
+         66377,
+         1,
+         0,
+         "Johnny Cash",
+         "Sunday Morning Coming Down",
+         "Essential Johnny Cash - Disc 2",
+         80086,
+         "Columbia",
+         "2022-01-16 09:01:03"
+      ],
+      [
+         2577009,
+         66378,
+         1,
+         0,
+         "Peter Jones Geoffrey McGivern &c... Simon Jones",
+         "Fit the Ninth",
+         "The Hitchhiker's Guide to the Galaxy",
+         0,
+         "BBC",
+         "2022-01-16 12:00:45"
+      ],
+      [
+         2577010,
+         66378,
+         2,
+         0,
+         null,
+         null,
+         null,
+         0,
+         null,
+         null
+      ],
+      [
+         2577011,
+         66378,
+         3,
+         0,
+         "Weird Al\" Yankovic",
+         "The Hamilton Polka",
+         "The Hamilton Polka - Single",
+         0,
+         "Atlantic",
+         "2022-01-16 12:33:30"
+      ],
+      [
+         2577012,
+         66378,
+         4,
+         0,
+         "Lin-Manuel Miranda",
+         "You're Welcome (Demo)",
+         "Moana (Original Motion Picture Soundtrack)",
+         0,
+         "Walt Disney Records",
+         "2022-01-16 12:38:25"
+      ],
+      [
+         2577013,
+         66378,
+         5,
+         0,
+         null,
+         null,
+         null,
+         0,
+         null,
+         null
+      ],
+      [
+         2577014,
+         66378,
+         6,
+         0,
+         "Liam Tamne & Cast",
+         "Delivery",
+         "Working: A Musical (Original London Cast Recording)",
+         0,
+         "Ghostlight Records",
+         "2022-01-16 12:42:30"
+      ],
+      [
+         2577015,
+         66378,
+         7,
+         0,
+         "Josefina Scaglione & Cast",
+         "Me Siento Hermosa (I Feel Pretty)",
+         "West Side Story (2009 Broadway Cast Recording)",
+         0,
+         "Masterworks Broadway",
+         "2022-01-16 12:46:29"
+      ],
+      [
+         2577016,
+         66378,
+         8,
+         0,
+         null,
+         null,
+         null,
+         0,
+         null,
+         null
+      ],
+      [
+         2577017,
+         66378,
+         9,
+         0,
+         "Shag Kava",
+         "Jabba Flow",
+         "Star Wars: The Force Awakens",
+         0,
+         "Walt Disney Records",
+         "2022-01-16 12:51:30"
+      ],
+      [
+         2577018,
+         66378,
+         10,
+         0,
+         "Lin-Manuel Miranda",
+         "(Underneath the) Lovely London Sky",
+         "Mary Poppins Returns",
+         0,
+         "Walt Disney Records",
+         "2022-01-16 12:53:08"
+      ],
+      [
+         2577019,
+         66378,
+         11,
+         0,
+         "Lin-Manuel Miranda & Company",
+         "In the Heights (Radio Edit)",
+         "In the Heights (Original Broadway Cast Recording)",
+         0,
+         "Ghostlight Records",
+         "2022-01-16 12:56:50"
+      ],
+      [
+         2577020,
+         66378,
+         12,
+         0,
+         null,
+         null,
+         null,
+         0,
+         null,
+         null
+      ],
+      [
+         2577034,
+         66378,
+         26,
+         1,
+         "Wang Inc",
+         "Approdo",
+         "Cold Wave",
+         867135,
+         "Soul Jazz Records",
+         "2022-01-16 13:47:20"
+      ],
+      [
+         2577113,
+         66380,
+         13,
+         0,
+         "Marc Houle",
+         "Bay of Figs (1)",
+         "Nothing Much",
+         636128,
+         "M_Nus",
+         "2022-01-16 20:24:04"
+      ],
+      [
+         2577052,
+         66379,
+         1,
+         0,
+         "bob marley & the wailers",
+         "could you be loved - work",
+         "germany '80",
+         0,
+         "meldac (japan)",
+         null
+      ],
+      [
+         2577053,
+         66379,
+         2,
+         0,
+         "John Holt",
+         "Sweetie Come Brush Me",
+         "Live At Reggae Sunsplash",
+         841339,
+         "Reggae Sunsplash",
+         null
+      ],
+      [
+         2577089,
+         66379,
+         38,
+         0,
+         "Niccodeemos",
+         "Days of Olden",
+         "Dance Hall Style",
+         835950,
+         "Starlight Records",
+         "2022-01-16 18:28:50"
+      ],
+      [
+         2577090,
+         66379,
+         39,
+         0,
+         "Nicodemus & Rankin Toyan",
+         "Tubby's Daddy",
+         "Bad Djs Meet",
+         476333,
+         "Tubbys",
+         null
+      ],
+      [
+         2577091,
+         66379,
+         40,
+         0,
+         "Niccodeemos",
+         "Mad Over Me",
+         "Dance Hall Style",
+         835950,
+         "Starlight Records",
+         null
+      ],
+      [
+         2577105,
+         66380,
+         5,
+         1,
+         "Roy Davis Jr.",
+         "House Inferno",
+         "Soul Electrica",
+         866549,
+         "Peacefrog Records",
+         "2022-01-16 19:32:30"
+      ],
+      [
+         2577112,
+         66380,
+         12,
+         0,
+         "Maksim Dark",
+         "Never Look Down (Gabriel Moraes Remix)",
+         "Pollinate - Best of 2020",
+         0,
+         "Stone Seed",
+         "2022-01-16 20:10:54"
+      ],
+      [
+         2577121,
+         66380,
+         22,
+         1,
+         "Filippo Diana",
+         "Danza Postmoderna",
+         "Formula Abstracta",
+         865975,
+         "Medical Records",
+         "2022-01-16 21:16:47"
+      ],
+      [
+         2577122,
+         66380,
+         23,
+         1,
+         "Wang Inc",
+         "Approdo",
+         "Cold Wave",
+         867135,
+         "Soul Jazz Records",
+         "2022-01-16 21:24:56"
+      ],
+      [
+         2577126,
+         66380,
+         27,
+         1,
+         "Century Plants",
+         "The Twin Paradox",
+         "Intrinsic Geometry Vol. 1",
+         866404,
+         "Tape Drift Records",
+         "2022-01-16 21:47:36"
+      ],
+      [
+         2577128,
+         66381,
+         1,
+         0,
+         "Avakhov",
+         "2019 rebroadcast of \"Radio for the Masses\" from 13 January",
+         "https://kfjc.org/listen/playlist?i=58393",
+         0,
+         "KFJC",
+         "2022-01-16 21:59:57"
+      ]
+   ],
+   "albums": [
+      [
+         8006,
+         80086,
+         "Johnny Cash",
+         "Essential Johnny Cash - Disc 2",
+         0
+      ],
+      [
+         82932,
+         841339,
+         "Various Artists Compilation",
+         "Live At Reggae Sunsplash",
+         1
+      ],
+      [
+         85511,
+         867135,
+         "Cold Wave",
+         "Cold Wave",
+         1
+      ],
+      [
+         68947,
+         636128,
+         "48 Hour Crack In Your Bass (1)",
+         "Magda",
+         1
+      ]
+   ],
+   "tracks": [
+      [
+         303385,
+         80086,
+         "One Piece at a Time",
+         13,
+         0
+      ],
+      [
+         303386,
+         80086,
+         "Ragged Old Flag",
+         12,
+         0
+      ],
+      [
+         303387,
+         80086,
+         "Man in Black",
+         11,
+         0
+      ],
+      [
+         303388,
+         80086,
+         "Flesh and Blood",
+         10,
+         0
+      ],
+      [
+         303389,
+         80086,
+         "Sunday Morning Coming Down",
+         9,
+         0
+      ],
+      [
+         303390,
+         80086,
+         "If I Were a Carpenter",
+         8,
+         0
+      ],
+      [
+         303391,
+         80086,
+         "A Boy Named Sue (Live)",
+         7,
+         0
+      ],
+      [
+         303392,
+         80086,
+         "Girl From the North Country",
+         6,
+         0
+      ],
+      [
+         303393,
+         80086,
+         "Daddy Sang Bass",
+         5,
+         0
+      ],
+      [
+         303394,
+         80086,
+         "Folsom Prison Blues (Live)",
+         4,
+         0
+      ],
+      [
+         303395,
+         80086,
+         "Jackson",
+         3,
+         0
+      ],
+      [
+         303396,
+         80086,
+         "The One On The Right Is On The Left",
+         2,
+         0
+      ],
+      [
+         303397,
+         80086,
+         "Babe It Ain't Me",
+         1,
+         0
+      ],
+      [
+         506515,
+         80086,
+         "(Ghost) Riders in the Sky",
+         14,
+         0
+      ],
+      [
+         506516,
+         80086,
+         "Song of the Patriot",
+         15,
+         0
+      ],
+      [
+         506517,
+         80086,
+         "Highwayman",
+         16,
+         0
+      ],
+      [
+         506518,
+         80086,
+         "The Night Hank Williams Came to Town",
+         17,
+         0
+      ],
+      [
+         506519,
+         80086,
+         "The Wanderer U2",
+         18,
+         0
+      ]
+   ],
+   "collection_tracks": [
+      [
+         127312,
+         867135,
+         "Capture",
+         "Dissemblance",
+         1,
+         0
+      ],
+      [
+         127313,
+         867135,
+         "Reflexion Ocean",
+         "Carcass Identity",
+         2,
+         0
+      ],
+      [
+         127314,
+         867135,
+         "Wayne County Stomp",
+         "Fit Siegel",
+         3,
+         0
+      ],
+      [
+         127315,
+         867135,
+         "Standhouden",
+         "De Ambassade",
+         4,
+         0
+      ],
+      [
+         127316,
+         867135,
+         "Approdo",
+         "Wang Inc",
+         5,
+         0
+      ],
+      [
+         127317,
+         867135,
+         "Ninos Matadores",
+         "Krikor Kouchian",
+         6,
+         0
+      ],
+      [
+         127318,
+         867135,
+         "Fight Or Flight",
+         "Celine Gillain",
+         7,
+         0
+      ],
+      [
+         127319,
+         867135,
+         "Kannibal",
+         "Kreidler",
+         8,
+         0
+      ],
+      [
+         127320,
+         867135,
+         "Gammut",
+         "Moisture",
+         9,
+         0
+      ],
+      [
+         127321,
+         867135,
+         "Of Course I'm a Liar",
+         "Violent Quand On Aime",
+         10,
+         0
+      ],
+      [
+         68948,
+         636128,
+         "Fed On Youth (1)",
+         "False",
+         2,
+         0
+      ],
+      [
+         68949,
+         636128,
+         "Seeing Through Shadows (1)",
+         "Loco Dice",
+         3,
+         0
+      ],
+      [
+         68950,
+         636128,
+         "Egress (1)",
+         "Gaiser",
+         4,
+         0
+      ],
+      [
+         68951,
+         636128,
+         "Green 01 (Skoozbot Remix) (1)",
+         "JPLS",
+         5,
+         0
+      ],
+      [
+         68952,
+         636128,
+         "Baby Kate (1)",
+         "Heartthrob",
+         6,
+         0
+      ],
+      [
+         68953,
+         636128,
+         "Bay of Figs (1)",
+         "Marc Houle",
+         7,
+         0
+      ],
+      [
+         68954,
+         636128,
+         "R U OK (1)",
+         "Ambivalent",
+         8,
+         0
+      ],
+      [
+         68955,
+         636128,
+         "25 Bitches (Gaiser's Too Many Bitches Makeover) (1)",
+         "Troy Pierce",
+         9,
+         0
+      ],
+      [
+         68956,
+         636128,
+         "The Tunnel (1)",
+         "Richie Hawtin",
+         10,
+         0
+      ],
+      [
+         68957,
+         636128,
+         "Decompression (1)",
+         "Mathew Jonson",
+         11,
+         0
+      ],
+      [
+         68958,
+         636128,
+         "Baby Kate (Troy Pierce Remix) (2)",
+         "Heartthrob",
+         12,
+         0
+      ]
+   ]
+}
