@@ -1,6 +1,7 @@
 """User operations for KFJC Trivia Robot."""
 
 from model import db, connect_to_db, User
+import common
 
 
 def create_user(email, fname, password, salt):
@@ -48,6 +49,14 @@ def does_the_password_match(email, password):
         return True
     else:
         return False
+
+
+def count_users():
+    """How many unique users?"""
+
+    return common.get_count(User.user_id, unique=True)
+    
+
 
 
 if __name__ == '__main__':

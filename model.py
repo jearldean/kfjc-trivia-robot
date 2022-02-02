@@ -72,7 +72,7 @@ class Playlist(db.Model):
     
     def __repr__(self):
         #return f"\n{self.playlist_id}. {self.air_name} on {self.start_time}"
-        return f"{self.id_}, {self.playlist_id}, {self.user_id}, {self.air_name}, {self.start_time}, {self.end_time}"
+        return f"{self.id_}, {self.playlist_id}, {self.user_id}, {self.air_name}, {self.start_time}"
 
 
 class PlaylistTrack(db.Model):

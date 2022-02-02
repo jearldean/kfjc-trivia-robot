@@ -40,7 +40,7 @@ def seed_db():
 
 def setup_seed_db():
     # Change this before going to production; 
-    # we won't want to dump our user data everytime we import fresh station data.
+    # We won't want to dump our user data everytime we import fresh station data.
 
     # Purge old databases:
     os.system(f"dropdb {DB_NAME}")
@@ -119,6 +119,11 @@ def create_playlist_tracks(row):
     artist = title_fixer(row[3])
     track_title = title_fixer(row[4])
     album_title = title_fixer(row[5])
+    # If artist, track_title and album_title are all NULL,
+    # don't import the row to improve performance:
+    if artist == 'NULL' and track_title == 'NULL' and album_title == 'NULL':
+        return
+    # This reduced the table size by 282,167 rows (11%) and reduced import time by 50s.
     album_id = cell_value_may_be_null(row[6])
     album_label = title_fixer(row[7])
     time_played = cell_value_may_be_null(row[8])  # '2022-01-19 22:04:31'

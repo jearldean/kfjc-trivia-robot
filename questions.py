@@ -1,8 +1,8 @@
 """Question operations for KFJC Trivia Robot."""
 
-from model import db, connect_to_db, UserAnswer, Question
-from random import choice, choices
+from random import choice, choices, randint
 
+from model import db, connect_to_db, UserAnswer, Question
 import common
 import playlists
 import playlist_tracks
@@ -83,6 +83,14 @@ def get_all_tracks_with_word_in_title(word):
     b = tracks.get_tracks_with_word_in_title(word)
     return a + b
 
+def seed_q_random_album_by_a_djs_top_artist():
+    # call add_q_random_album_by_a_djs_top_artist() in an efficient manner:
+    # for a few DJs and for a few of their fave artists.
+
+
+    db.session.commit()
+
+
 def add_q_random_album_by_a_djs_top_artist():
     # TODO: getting the top_n list is what takes a lot of time.
     # For each time we do that, seed about 3-5 questions from top_n.
@@ -94,7 +102,6 @@ def add_q_random_album_by_a_djs_top_artist():
     create_question(
         question=f"KFJC DJ {air_name} {rando_verb} the artist {rando_artist}. Can you name a track from their album {album_title}?",
         acceptable_answers=acceptable_answers)
-    db.session.commit()
 
 def random_album_by_a_djs_top_artist():
     air_name, top_artists = random_djs_top_artists()
@@ -150,7 +157,13 @@ def wrong_answer_generator(data_type, acceptable_answers, k=3):
     elif data_type == 'air_names':
         pass
     
-    
+
+def get_random_question():
+    """Get a question."""
+
+    question_id = randint(1, common.get_count(Question.question_id))
+    return Question.query.get(question_id)
+
 
 if __name__ == '__main__':
     """Will connect you to the database when you run questions.py interactively"""

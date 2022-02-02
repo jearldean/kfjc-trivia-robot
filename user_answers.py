@@ -8,6 +8,7 @@ import common
 
 def create_user_answer(user_instance, question_instance, answer_given):
     """Create and return a new user answer."""
+
     user_answer = UserAnswer(
         user_id=user_instance.user_id,
         question_id=question_instance.question_id,
@@ -106,6 +107,7 @@ def grade_all_answers():
         'questions': all_num_questions, 'percent': all_percent}
 
     return all_users_score
+
 
 if __name__ == '__main__':
     """Will connect you to the database when you run user_answers.py interactively"""

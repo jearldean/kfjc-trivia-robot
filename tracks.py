@@ -1,7 +1,10 @@
 """Track operations for KFJC Trivia Robot."""
 
+from random import randint
+
 from model import db, connect_to_db, Track, Album
-#from  sqlalchemy.sql.expression import func, select
+import common
+
 
 def create_track(album_id, title, indx, clean):
     """Create and return a new track."""
@@ -68,8 +71,28 @@ def get_artist_for_track_instance(track_instance):
 
 def get_tracks_with_word_in_title(word):
     """Get tracks with a word in the title."""
+
     return Track.query.filter(Track.title.ilike("%"+word+"%")).order_by(
         Track.album_id).all()
+
+
+def get_random_track():
+    """Returns one track from the non-collection library."""
+
+    id_ = randint(1, count_tracks())
+    return Track.query.get(id_)
+
+
+def count_tracks():
+    """How many non-collection tracks are in our record library?"""
+
+    return common.get_count(Track.id_, unique=False)
+
+
+def count_track_titles():
+    """How many unique song titles are in our record library?"""
+
+    return common.get_count(Track.title, unique=True)
 
 
 if __name__ == '__main__':
