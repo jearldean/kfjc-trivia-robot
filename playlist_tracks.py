@@ -6,13 +6,19 @@ from model import db, connect_to_db, PlaylistTrack
 import common
 
 
-def create_playlist_track(playlist_id, indx, is_current, artist, track_title,
-    album_title, album_id, album_label, time_played):
+def create_playlist_track(
+    kfjc_playlist_id, indx, kfjc_album_id, album_title, artist, 
+    track_title, time_played):
     """Create and return a new playlist_track."""
 
-    playlist_track = PlaylistTrack(playlist_id=playlist_id, indx=indx, is_current=is_current, 
-        artist=artist, track_title=track_title, album_title=album_title, album_id=album_id,
-        album_label=album_label, time_played=time_played)
+    playlist_track = PlaylistTrack(
+        kfjc_playlist_id=kfjc_playlist_id,
+        indx=indx,
+        kfjc_album_id=kfjc_album_id,
+        album_title=album_title,
+        artist=artist,
+        track_title=track_title,
+        time_played=time_played)
 
     db.session.add(playlist_track)
     # Don't forget to call model.db.session.commit() when done adding items.
@@ -25,11 +31,16 @@ def get_playlist_tracks(limit_to=10):
 
     return PlaylistTrack.query.limit(limit_to).all()
 
+"""
+def get_playlist_tracks_by_user_id(playlist_id):
+    return PlaylistTrack.query.filter(
+        PlaylistTrack.playlist_id == playlist_id).all()
+        
 
 def get_playlist_track_by_playlist_id_and_indx(playlist_id, indx):
-    """Get a playlist_track by playlist_id and indx.
+    ""Get a playlist_track by playlist_id and indx.
     
-    !!!The primary key is not the station's playlist_id.!!!"""
+    !!!The primary key is not the station's playlist_id.!!!""
 
     return PlaylistTrack.query.filter(
         PlaylistTrack.playlist_id == playlist_id,
@@ -37,7 +48,7 @@ def get_playlist_track_by_playlist_id_and_indx(playlist_id, indx):
 
 
 def get_random_playlist_track():
-    """Returns one track from all songs played since 1995-09-19 22:00:00."""
+    ""Returns one track from all songs played since 1995-09-19 22:00:00.""
 
     id_ = randint(1, common.get_count(PlaylistTrack.id_))
     random_playlist_track = PlaylistTrack.query.get(id_)
@@ -48,7 +59,7 @@ def get_random_playlist_track():
         # What you got there is a blank line. Pick again.
         return get_random_playlist_track()
     else:
-        return random_playlist_track
+        return random_playlist_track"""
 
 
 def count_playlist_tracks():

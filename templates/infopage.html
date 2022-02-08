@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Question{% endblock %}
+
+{% block body %}
+<h1>Infopage</h1>
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <!-- COLUMN ONE -->
+      <div class="row justify-content-center">
+        <!--You can have as many rows as you need.-->
+        <img src={{random_robot_img}} />
+      </div>
+    </div>
+    <div class="col">
+      <div class="row justify-content-center">
+        <p>I am a handcrafted robot. Here is information about my maker:</p>
+        <h2>Jerry Majors Patterson</h2>
+        <p><a href="mailto:jem@me.com?subject=I've seen the KFJC Trivia Robot">Email</a></p>
+        <p><a href="https://www.linkedin.com/in/jerry-majors-patterson/">Linkedin</a></p>
+        <p><a href="https://github.com/jearldean?tab=repositories">Github</a></p>
+     </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

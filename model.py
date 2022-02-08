@@ -3,7 +3,7 @@
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
-DATABASE = "trivia"  # Make sure this agrees with your seed.py program...
+DATABASE = "trivia"  # Make sure this agrees with your seed_database.py program...
 
 
 class User(db.Model):
@@ -12,15 +12,14 @@ class User(db.Model):
     __tablename__ = 'users'
 
     user_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    email = db.Column(db.String(256), unique=True, nullable=False)
+    username = db.Column(db.String(256), unique=True, nullable=False)
     fname = db.Column(db.String(30), unique=False, nullable=True)
-    password = db.Column(db.String, nullable=False)
-    salt = db.Column(db.String, nullable=False)
-    # user_answers = a list of UserAnswer objects
+    hashed_password = db.Column(db.String, nullable=False)
+    # answers = a list of Answer objects
 
     def __repr__(self):
         spaces = (13 - len(self.fname)) * " "
-        return (f"\nU:{self.user_id}\t{self.fname}{spaces}{self.email}")
+        return (f"\nU:{self.user_id}\t{self.fname}{spaces}{self.username}")
 
 
 class Question(db.Model):
@@ -29,32 +28,32 @@ class Question(db.Model):
     __tablename__ = 'questions'
 
     question_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    question_type = db.Column(db.String, nullable=False)
     question = db.Column(db.String, nullable=False)
     acceptable_answers = db.Column(db.PickleType, nullable=False)
-    # user_answers = a list of UserAnswers objects
 
     def __repr__(self):
         spaces = (25 - len(self.question)) * " "
         return (f"\nQ:{self.question_id}\t{self.question}{spaces}{self.acceptable_answers}")
 
 
-class UserAnswer(db.Model):
+class Answer(db.Model):
     """A response from a user."""
 
-    __tablename__ = 'user_answers'
+    __tablename__ = 'answers'
 
-    user_answer_id = db.Column(db.Integer, autoincrement=True, primary_key=True, nullable=False)
+    answer_id = db.Column(db.Integer, autoincrement=True, primary_key=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"))
     question_id = db.Column(db.Integer, db.ForeignKey("questions.question_id"))
     answer_given = db.Column(db.String, nullable=True)
     answer_correct = db.Column(db.Boolean, nullable=True)
     timestamp = db.Column(db.DateTime)
 
-    question = db.relationship("Question", backref="user_answers")
-    user = db.relationship("User", backref="user_answers")
+    question = db.relationship("Question", backref="answers", cascade="all, delete-orphan", single_parent=True)
+    user = db.relationship("User", backref="answers", cascade="all, delete-orphan", single_parent=True)
 
     def __repr__(self):
-        return f"\nA:{self.user_answer_id}\tU:{self.user_id}\tQ:{self.question_id}\t{self.answer_given}\t{self.answer_correct}\t{self.timestamp}"
+        return f"\nA:{self.answer_id}\tU:{self.user_id}\tQ:{self.question_id}\t{self.answer_given}\t{self.answer_correct}\t{self.timestamp}"
 
 
 class Playlist(db.Model):
@@ -63,8 +62,8 @@ class Playlist(db.Model):
     __tablename__ = 'playlists'
 
     id_ = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    playlist_id = db.Column(db.Integer)
-    user_id = db.Column(db.Integer)
+    kfjc_playlist_id = db.Column(db.Integer)
+    dj_id = db.Column(db.Integer)
     air_name = db.Column(db.String(60), nullable=True)
     start_time = db.Column(db.DateTime, nullable=True)  # '2022-01-19 22:04:31'
     end_time = db.Column(db.DateTime, nullable=True)  # '2022-01-19 22:08:42'
@@ -72,7 +71,7 @@ class Playlist(db.Model):
     
     def __repr__(self):
         #return f"\n{self.playlist_id}. {self.air_name} on {self.start_time}"
-        return f"{self.id_}, {self.playlist_id}, {self.user_id}, {self.air_name}, {self.start_time}"
+        return f"{self.id_}, {self.kfjc_playlist_id}, {self.dj_id}, {self.air_name}, {self.start_time}"
 
 
 class PlaylistTrack(db.Model):
@@ -81,19 +80,17 @@ class PlaylistTrack(db.Model):
     __tablename__ = 'playlist_tracks'
 
     id_ = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    playlist_id = db.Column(db.Integer)
+    kfjc_playlist_id = db.Column(db.Integer)
     indx = db.Column(db.Integer, nullable=True)
-    is_current = db.Column(db.SmallInteger, nullable=True)
+    kfjc_album_id = db.Column(db.Integer, nullable=True)
+    album_title = db.Column(db.String(100))
     artist = db.Column(db.String(100))
     track_title = db.Column(db.String(100))
-    album_title = db.Column(db.String(100))
-    album_id = db.Column(db.Integer, nullable=True)
-    album_label = db.Column(db.String(100), nullable=True)
     time_played = db.Column(db.DateTime, nullable=True)
 
     def __repr__(self):
         #return f"\nPlaylist {self.playlist_id}. {self.track_title} from {self.album_title} by {self.artist} played on {self.time_played}"
-        return f"{self.playlist_id}, {self.is_current}, {self.artist}, {self.track_title}, {self.album_title}, {self.album_id}, {self.album_label}, {self.time_played}"
+        return f"{self.kfjc_playlist_id}, {self.artist}, {self.track_title}, {self.album_title}, {self.kfjc_album_id}, {self.time_played}"
 
 
 class Album(db.Model):
@@ -102,13 +99,12 @@ class Album(db.Model):
     __tablename__ = 'albums'
 
     id_ = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    album_id = db.Column(db.Integer)
+    kfjc_album_id = db.Column(db.Integer)
     artist = db.Column(db.String(100))
     title = db.Column(db.String(100))
-    is_collection = db.Column(db.SmallInteger)
 
     def __repr__(self):
-        return f"\nAlbum {self.album_id}: {self.artist}\t\t{self.title}"
+        return f"\nAlbum {self.kfjc_album_id}: {self.artist}\t\t{self.title}"
 
 
 class Track(db.Model):
@@ -117,29 +113,13 @@ class Track(db.Model):
     __tablename__ = 'tracks'
 
     id_ = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    album_id = db.Column(db.Integer)
+    kfjc_album_id = db.Column(db.Integer)
+    artist = db.Column(db.String(100), nullable=True)
     title = db.Column(db.String(100))
     indx = db.Column(db.Integer)
-    clean = db.Column(db.SmallInteger)
 
     def __repr__(self):
-        return f"\nid_{self.id_}\tAlbum {self.album_id}, Track {self.indx}: {self.title}"
-
-
-class CollectionTrack(db.Model):
-    """A collection_track from the station."""
-
-    __tablename__ = 'collection_tracks'
-
-    id_ = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    album_id = db.Column(db.Integer)
-    title = db.Column(db.String(100), nullable=True)
-    artist = db.Column(db.String(100), nullable=True)
-    indx = db.Column(db.Integer)
-    clean = db.Column(db.SmallInteger)
-
-    def __repr__(self):
-        return f"\nAlbum {self.album_id}, Track {self.indx}: {self.title} by {self.artist}"
+        return f"\nid_{self.id_}\tAlbum {self.kfjc_album_id}, Track {self.indx}: {self.title}"
 
 
 def connect_to_db(flask_app, db_uri=f"postgresql:///{DATABASE}", echo=True):

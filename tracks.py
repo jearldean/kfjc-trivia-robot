@@ -6,10 +6,14 @@ from model import db, connect_to_db, Track, Album
 import common
 
 
-def create_track(album_id, title, indx, clean):
+def create_track(kfjc_album_id, artist, title, indx):
     """Create and return a new track."""
 
-    track = Track(album_id=album_id, title=title, indx=indx, clean=clean)
+    track = Track(
+        kfjc_album_id=kfjc_album_id, 
+        artist=artist,
+        title=title,
+        indx=indx)
 
     db.session.add(track)
     # Don't forget to call model.db.session.commit() when done adding items.

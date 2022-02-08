@@ -3,7 +3,7 @@
 {% block title %}Question{% endblock %}
 
 {% block body %}
-<h1>Question</h1>
+<h1>Score for {{ username }}</h1>
 
 <div class="container">
   <div class="row">
@@ -16,14 +16,10 @@
     </div>
     <div class="col">
       <div class="row justify-content-center">
-        <form action="/answer" id="answer">
-
-          <label>{{ question }}</label>
-            <input type="radio" name="game-on" value="yes" class="game-on" checked/>Yes
-            <input type="radio" name="game-on" value="no" class="game-on"/>No
-            
-            <button class="radio-btn" type="submit" id="submit-profile">Submit</button>
-          </form>
+        
+        {% for info in user_score %}
+          <p>{{ info }}: {{ user_score[info] }}</p>
+        {% endfor %}
      </div>
     </div>
   </div>

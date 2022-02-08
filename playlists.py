@@ -1,17 +1,21 @@
 """Playlist operations for KFJC Trivia Robot."""
 
-from random import randint  # , choice
-import datetime
+from random import choice, sample
+from collections import OrderedDict
 
 from model import db, connect_to_db, Playlist
 import common
 
 
-def create_playlist(playlist_id, user_id, air_name, start_time, end_time):
+def create_playlist(kfjc_playlist_id, dj_id, air_name, start_time, end_time):
     """Create and return a new playlist."""
 
-    playlist = Playlist(playlist_id=playlist_id, user_id=user_id, air_name=air_name,
-        start_time=start_time, end_time=end_time)
+    playlist = Playlist(
+        kfjc_playlist_id = kfjc_playlist_id,
+        dj_id = dj_id,
+        air_name = air_name,
+        start_time = start_time,
+        end_time = end_time)
 
     db.session.add(playlist)
     # Don't forget to call model.db.session.commit() when done adding items.
@@ -31,120 +35,94 @@ def get_playlists_with_limit(limit_to=10):
     return Playlist.query.limit(limit_to).all()
 
 
-def get_playlist_by_playlist_id(playlist_id):
-    """Get a playlist by id. 
+def get_playlist_by_kfjc_playlist_id(kfjc_playlist_id):
+    """Get a playlist by kfjc_playlist_id."""
+
+    return Playlist.query.filter(Playlist.kfjc_playlist_id == kfjc_playlist_id).first()
+
+
+def get_all_dj_ids():
+    """Info about our brotherhood of KFJC DJs."""
+
+    raw_q = db.session.query(Playlist.dj_id).distinct()
+    unique_dj_ids = [row[0] for row in raw_q.all()]
+    unique_dj_ids.sort()
+    count_dj_ids = len(unique_dj_ids)
+    return unique_dj_ids, count_dj_ids
     
-    !!!The primary key is not the station's playlist_id.!!!"""
 
-    return Playlist.query.filter(Playlist.playlist_id == playlist_id).first()
+def get_4_random_dj_ids():
+    """For "Who has been on the air the longest?"
+    and "Who has the most shows?" questions."""
+    
+    return sample(get_all_dj_ids(), k=4)
 
 
-def get_playlists_by_user_id(user_id):
+def get_playlists_by_dj(dj_id):
     """Shows by a DJ."""
-    return Playlist.query.filter(Playlist.user_id == user_id).all()
+
+    return Playlist.query.filter(Playlist.dj_id == dj_id).all()
 
 
-def how_old_is_this_data():
-    """Used to get the age of the data import:
+def get_random_dj_id():
+    """Select a random dj_id from the pile."""
 
-    The datetime of the very last show on record."""
+    unique_dj_ids, _ = get_all_dj_ids()
+    return choice(unique_dj_ids)
 
-    return common.when_is_this_from(Playlist.end_time, newest=True)
+def get_all_playlists_by_dj_id(dj_id=None):
+    """Get the body of work for a dj_id. If not specified, returns a random one."""
 
+    if not dj_id:
+        dj_id = get_random_dj_id()
+    air_name = dj_id_to_airname(dj_id=dj_id)
+    their_playlists = get_playlists_by_dj(dj_id=dj_id)
+    count_playlists = len(their_playlists)
+    return air_name, count_playlists, their_playlists
 
-def how_far_back_does_this_go():
-    """What's the first show on record?
+def dj_id_to_airname(dj_id):
+    """Translate dj_id for computers into air_name for humans."""
+
+    return Playlist.query.filter(Playlist.dj_id == dj_id).first().air_name
+
+def a_dj_is_born(dj_id):
+    """When did dj_id log their first show?"""
+
+    first_playlist = db.session.query(Playlist).filter(
+        Playlist.dj_id == dj_id).order_by(Playlist.start_time).first()
+    air_name = dj_id_to_airname(dj_id)
+    return air_name, first_playlist.start_time, f"{air_name}'s first show was on {first_playlist.start_time}."
+
+def get_air_names_by_age():
+    air_names_by_age = OrderedDict()
+    for playlist in db.session.query(Playlist).order_by(Playlist.start_time).all():
+        if playlist.dj_id not in air_names_by_age and (
+            playlist.air_name) and "KFJC" not in playlist.air_name:
+                air_names_by_age[playlist.dj_id] = [playlist.air_name, playlist.start_time]
+    return air_names_by_age
+
+def get_air_names_by_show_count():
+    air_names_by_show_count = []
+    for dj_id in get_all_dj_ids():
+        air_name, count_playlists, _their_playlists = get_all_playlists_by_dj_id(dj_id=dj_id)
+        if air_name and "KFJC" not in air_name:
+            air_names_by_show_count.append([air_name, count_playlists])
+
+    air_names_by_show_count = common.sort_nested_lists(
+        a_list_of_lists=air_names_by_show_count, by_key=1, reverse=False)
+    return air_names_by_show_count
+
+def all_dj_birthdays():
+    """A sanity check for a_dj_is_born()."""
     
-    earliest datestamp: datetime.datetime(1969, 12, 31, 16, 0)
+    birthdays = []
+    for dj_id in get_all_dj_ids():
+        #if int(dj_id) > 0:
+        _, _, sentence  = a_dj_is_born(dj_id)
+        birthdays.append(sentence)
 
-    ??? Didn't give the right answer ???  '01/19/2022, 22:08:42' """
-
-    #Playlist.query.order_by('updated desc').limit(1)
-    many =  Playlist.query.order_by(Playlist.start_time).limit(100).all()
-    #return common.when_is_this_from(Playlist.start_time, newest=False)
-    for row in many:
-        if row != '1969-12-31 16:00:00':
-            print(row.start_time)
-    #return many
-
-
-def get_random_air_name():
-    """
-    
-    tuple: (user_id, air_name)"""
-
-    rando_user_id = randint(
-        1, common.get_count(Playlist.user_id, unique=True))
-
-    try:
-        air_name = Playlist.query.filter(
-            Playlist.user_id == rando_user_id).first().air_name
-        return (rando_user_id, air_name)
-    except AttributeError:
-        # Bad row. Pick again:
-        return get_random_air_name()
-
-
-def user_id_to_airname(user_id):
-    """Find the air_name for a DJ's user_id."""
-
-    return Playlist.query.filter(Playlist.user_id == user_id).first().air_name
-
-
-def count_playlists():
-    """Counts rows in the table."""
-    
-    return common.get_count(Playlist.playlist_id, unique=False)
-
-
-def get_random_playlist():
-    """Returns one dj's show since 1995-09-19 22:00:00."""
-
-    id_ = randint(1, common.get_count(Playlist.id_))
-    return Playlist.query.get(id_)
-
-def all_djs_birthdays():
-    print_nice = ""
-    for djid in range(1, common.get_count(Playlist.user_id, unique=True)):
-        try:
-            a, _, c= user_ids_first_playlist(user_id=djid)
-            print_nice += a + "\t" + c + "\n"
-            # print(user_ids_first_playlist(user_id=djid))
-        except AttributeError:
-            continue
-        except TypeError:
-            continue
-    print(print_nice)
-    #return print_nice
-
-def user_ids_first_playlist(user_id=None):
-    """When was {DJ}'s First Show?"""
-    random_pick = False
-
-    if user_id:
-        air_name = user_id_to_airname(user_id=user_id)
-    else:  # Give a random.
-        random_pick = True
-        user_id, air_name = get_random_air_name()
-        while user_id == 222 or air_name.isspace():
-            # Pick again; there are a couple of malformed rows.
-            user_id, air_name = get_random_air_name()
-
-    first_show = Playlist.query.order_by(Playlist.start_time).filter(
-        Playlist.user_id == user_id).limit(1).first()
-    first_show_date_object = first_show.start_time
-    if first_show_date_object == datetime.datetime(1969, 12, 31, 16, 0):
-        if random_pick:  # Pick again. Else, return nothing.
-            return user_ids_first_playlist()
-        else:
-            return
-
-    first_show_date = common.convert_datetime(
-        first_show_date_object, human_readable=True)
-
-    # return f"{air_name}'s first show was on {first_show_date}."
-    return [air_name, first_show_date_object, first_show_date]
-
+    for j in birthdays:
+        print(j)
 
 if __name__ == '__main__':
     """Will connect you to the database when you run playlists.py interactively"""

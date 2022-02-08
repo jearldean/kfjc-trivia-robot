@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}Question{% endblock %}
+{% block title %}Answer{% endblock %}
 
 {% block body %}
-<h1>Question</h1>
+<h1>Answer</h1>
 
 <div class="container">
   <div class="row">
@@ -11,25 +11,26 @@
       <!-- COLUMN ONE -->
       <div class="row justify-content-center">
         <!--You can have as many rows as you need.-->
-        <img src={{random_robot_img}} style="max-height: 500px; max-width: 500px;" />
+        <img src={{random_robot_img}} />
       </div>
     </div>
     <div class="col">
       <div class="row justify-content-center">
-        <form action="/answer" id="answer">
-
-          <label>{{ question }}</label>
-            <input type="radio" name="game-on" value="yes" class="game-on" checked/>Yes
-            <input type="radio" name="game-on" value="no" class="game-on"/>No
-            
-            <button class="radio-btn" type="submit" id="submit-profile">Submit</button>
-          </form>
+        <h2> {{ user_msg }} </h2>
+        <p> {{ answer }} </p>
+        <p> {{ answer_data }} </p>
      </div>
+     
+     <form action="/play" id="game-on-form">
+ 
+       <label>Play again?</label>
+         <input type="radio" name="game-on" value=true class="game-on" checked/>Yes
+         <input type="radio" name="game-on" value=false class="game-on"/>No
+         <button class="radio-btn" type="submit" id="submit-profile">Submit</button>
+       </form>
+ 
     </div>
   </div>
 </div>
-
-
-
 
 {% endblock %}

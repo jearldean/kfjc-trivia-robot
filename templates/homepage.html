@@ -11,19 +11,34 @@
       <!-- COLUMN ONE -->
       <div class="row justify-content-center">
         <!--You can have as many rows as you need.-->
-        <img src={{random_robot_img}} style="max-height: 500px; max-width: 500px;" />
+        <img src={{random_robot_img}} />
       </div>
     </div>
     <div class="col">
-      <div class="row justify-content-center">
-        <form action="/play" id="game-on-form">
 
-          <label>Would you like to answer a trivia question?</label>
-            <input type="radio" name="game-on" value="yes" class="game-on" checked/>Yes
-            <input type="radio" name="game-on" value="no" class="game-on"/>No
-            
-            <button class="radio-btn" type="submit" id="submit-profile">Submit</button>
-          </form>
+      <div class="row justify-content-center">
+        
+
+        <form action="/login" method="POST">
+
+          <div>
+            <label>UserID:
+              <input type="text" name="username" required>
+            </label>
+          </div>
+        
+          <div>
+            <label>Password:
+              <input type="password" name="password" required>
+            </label>
+          </div>
+        
+          <div>
+            <input type="submit" value="Log In">
+          </div>
+        
+        </form>
+
      </div>
     </div>
   </div>

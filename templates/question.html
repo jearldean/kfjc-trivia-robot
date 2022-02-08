@@ -11,25 +11,34 @@
       <!-- COLUMN ONE -->
       <div class="row justify-content-center">
         <!--You can have as many rows as you need.-->
-        <img src={{random_robot_img}} style="max-height: 500px; max-width: 500px;" />
+        <img src={{random_robot_img}} />
       </div>
     </div>
     <div class="col">
       <div class="row justify-content-center">
-        <form action="/answer" id="answer">
-
-          <label>{{ question }}</label>
-            <input type="radio" name="game-on" value="yes" class="game-on" checked/>Yes
-            <input type="radio" name="game-on" value="no" class="game-on"/>No
-            
-            <button class="radio-btn" type="submit" id="submit-profile">Submit</button>
-          </form>
+        {{ question }}
+        <form action="/answer" id="{{ answer_a }}" method="POST">
+          <button id="a" name="q" value="{{ answer_a }}" class="answer_question">{{ answer_a }}</button>
+        </form>
+        <form action="/answer" id="{{ answer_b }}" method="POST">
+          <button id="b" name="q" value="{{ answer_b }}" class="answer_question">{{ answer_b }}</button>
+        </form>
+        <form action="/answer" id="{{ answer_c }}" method="POST">
+          <button id="c" name="q" value="{{ answer_c }}" class="answer_question">{{ answer_c }}</button>
+        </form>
+        <form action="/answer" id="{{ answer_d }}" method="POST">
+          <button id="d" name="q" value="{{ answer_d }}" class="answer_question">{{ answer_d }}</button>
+        </form>
+        <br>
+      <div>
+        <form action="/answer" id="skip" method="POST">
+          <label>I don't like this question.</label>
+          <button id="s" name="q" value="SKIP" class="answer_question">Skip Question Without Penalty</button>
+        </form>
+     </div>
      </div>
     </div>
   </div>
 </div>
-
-
-
 
 {% endblock %}

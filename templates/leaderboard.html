@@ -11,29 +11,19 @@
       <!-- COLUMN ONE -->
       <div class="row justify-content-center">
         <!--You can have as many rows as you need.-->
-        <img src={{random_robot_img}} style="max-height: 500px; max-width: 500px;" />
+        <img src={{random_robot_img}} />
       </div>
     </div>
     <div class="col">
       <div class="row justify-content-center">
+        <h2>{{ robot_msg }}</h2>
+        <br>
         {% for n in range(table_range) %}
-          <p> {{ leaders[n] }} </p>
+          <p> {{ n+1 }}. {{ leaders[n] }} </p>
         {% endfor %}
-
-        <form action="/answer" id="answer">
-
-          <label>{{ question }}</label>
-            <input type="radio" name="game-on" value="yes" class="game-on" checked/>Yes
-            <input type="radio" name="game-on" value="no" class="game-on"/>No
-            
-            <button class="radio-btn" type="submit" id="submit-profile">Submit</button>
-          </form>
      </div>
     </div>
   </div>
 </div>
-
-
-
 
 {% endblock %}
