@@ -39,19 +39,8 @@ def is_answer_correct(question_instance, answer_given):
     """Return a boolean"""
 
     if answer_given:
-        for acceptable_answer in question_instance.acceptable_answers:
-            if question_instance.question_type == "date":
-                if answer_given == common.make_date_pretty(date_time_string=acceptable_answer):
-                    return True
-                    # Only need one to be right.
-            # Was causing a problem on the numbers questions, form replies are always strings.
-            elif question_instance.question_type == "number":
-                if answer_given == str(acceptable_answer):
-                    return True
-            elif question_instance.question_type == "how_long":
-                # Durations are strings.
-                if answer_given == acceptable_answer:
-                    return True
+        if answer_given in question_instance.acceptable_answers["answer_choice"]:
+            return True
         return False  # If we didn't hit by now, it's wrong.
     else:
         return  # For the skipped question case.

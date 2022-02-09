@@ -1,12 +1,10 @@
 """Question operations for KFJC Trivia Robot."""
 
-from datetime import datetime, timedelta
 from random import choice, randrange, shuffle  # choices, randint, 
 
 from model import db, connect_to_db, Question, Answer, Playlist, PlaylistTrack, Album, Track
 import common
 import playlists
-import answers
 
 
 def create_question(question, question_type, acceptable_answers):
@@ -34,85 +32,135 @@ def get_question_by_id(question_id):
 
     return Question.query.get(question_id)
 
-def how_many():
-    return {
-        "count_djs": common.get_count(Playlist.dj_id, unique=True),
-        "count_playlists": common.get_count(Playlist.id_, unique=True),
-        "count_playlist_tracks": common.get_count(PlaylistTrack.id_, unique=True),
-        "count_albums": common.get_count(Album.id_, unique=True),
-        "count_artists": common.get_count(Album.artist, unique=True),
-        "count_tracks": common.get_count(Track.id_, unique=True),
-        "oldest_playlist": common.get_age(Playlist.start_time)[0],
-        "newest_playlist": common.get_age(Playlist.start_time)[1],
-        }
+def make_a_count_question(question_str, table_dot_column, display_answer):
+    column_quantity = common.get_count(table_dot_column, unique=True)
+    acceptable_answers = {
+        "calculate_answer": column_quantity,
+        "answer_choice": f'{column_quantity:,}',
+        "display_answer": display_answer}
+    create_question(
+        question=question_str,
+        question_type="number",
+        acceptable_answers=acceptable_answers)
 
-def make_counts_questions():
-    # {'count_djs': 409, 'count_playlists': 66045,
-    # 'count_playlist_tracks': 2216327, 'count_albums': 85584,
-    # 'count_artists': 50583, 'count_tracks': 818591,
-    # 'oldest_playlist': '1995-09-19 22:00:00',
-    # 'newest_playlist': '2022-01-19 22:04:31'}
-    count_items = how_many()
-    track_length = 4  # minutes
-    kfjc_lifetime = common.minutes_to_years(
-        minutes=(count_items['count_tracks'] * track_length))
+def make_count_questions():
+    parameterized_questions = [
+        ["How many KFJC DJs are there?",
+        Playlist.dj_id,
+        "There are this many KFJC DJs!"],
+        ["Since we started counting, how many shows have there been?",
+        Playlist.id_,
+        "There are this many shows in our records:"],
+        ["Since we started counting, how many songs have been played on KFJC?",
+        PlaylistTrack.id_,
+        "We've played this many songs since we began keeping track!"],
+        ["How many albums are in the KFJC Library?",
+        Album.id_,
+        "There are this many albums in our library:"],
+        ["How many artists are in the KFJC Library?",
+        Album.artist,
+        "There are this many artists in our library:"],
+        ["How many tracks are there in the KFJC Library?",
+        Track.id_,
+        "There are this many tracks in our library:"]
+    ]
+    for jj in parameterized_questions:
+        make_a_count_question(
+            question_str=jj[0],
+            table_dot_column=jj[1],
+            display_answer=jj[2])
+
+def make_a_duration_question(question_str, duration_minutes, display_answer):
+    acceptable_answers = {
+        "calculate_answer": duration_minutes,
+        "answer_choice": common.minutes_to_years(duration_minutes),
+        "display_answer": display_answer}
     create_question(
-        question="How many KFJC DJs are there?",
-        question_type="number",
-        acceptable_answers=[count_items['count_djs']])
+        question=question_str,
+        question_type="duration",
+        acceptable_answers=acceptable_answers)
+
+def make_duration_questions():
+    parameterized_questions = [
+        ["If a track is about 4 minutes long, how long would it take to listen to all tracks are in the KFJC Library?",
+        4 * common.get_count(Track.id_, unique=True),
+        "It would take this long to listen to all the tracks in the KFJC Library!"
+        ]]
+    for jj in parameterized_questions:
+        make_a_duration_question(
+            question_str=jj[0],
+            duration_minutes=jj[1],
+            display_answer = jj[2])
+
+def make_a_date_question(question_str, isoformat_date_time_str, display_answer):
+    print(isoformat_date_time_str, type(isoformat_date_time_str))
+    
+    acceptable_answers = {
+        "calculate_answer": isoformat_date_time_str,
+        "answer_choice": common.make_date_pretty(isoformat_date_time_str),
+        "display_answer": display_answer}
     create_question(
-        question="Since we started counting, how many shows have there been?",
-        question_type="number",
-        acceptable_answers=[count_items['count_playlists']])
-    create_question(
-        question="Since we started counting, how many songs have we played?",
-        question_type="number",
-        acceptable_answers=[count_items['count_playlist_tracks']])
-    create_question(
-        question="How many albums are in the KFJC Library?",
-        question_type="number",
-        acceptable_answers=[count_items['count_albums']])
-    create_question(
-        question="How many artists are in the KFJC Library?",
-        question_type="number",
-        acceptable_answers=[count_items['count_artists']])
-    create_question(
-        question="How many tracks are in the KFJC Library?",
-        question_type="number",
-        acceptable_answers=[count_items['count_tracks']])
-    create_question(
-        question=(
-            "If a track is about 4 minutes long, how long would it take to listen to all tracks are in the KFJC Library?"),
-        question_type="how_long",
-        acceptable_answers=[kfjc_lifetime])
-    create_question(
-        question="When did KFJC begin collecting this data?",
+        question=question_str,
         question_type="date",
-        acceptable_answers=[count_items['oldest_playlist']])
-    create_question(
-        question="Just how fresh is this data?",
-        question_type="date",
-        acceptable_answers=[count_items['newest_playlist']])
+        acceptable_answers=acceptable_answers)
+
+def make_date_questions():
+    oldest_playlist, newest_playlist = common.get_age(Playlist.start_time)
+    parameterized_questions = [
+        ["When did KFJC begin collecting this data?",
+        oldest_playlist,
+        "We began collecting this data on:"],
+        ["Just how fresh is this data?",
+        newest_playlist, 
+        "The last data scrape for this page was on:"]
+    ]
+    for jj in parameterized_questions:
+        make_a_date_question(
+            question_str=jj[0],
+            isoformat_date_time_str=jj[1],
+            display_answer=jj[2])
+
+def seed_all_question_types():
+    make_count_questions()
+    make_duration_questions()
+    make_date_questions()
     db.session.commit()
+
+
+def make_dj_date_questions(n=10):
+    for _ in range(n):
+        rando_dj_id = playlists.get_random_dj_id()
+        _, date_time_first_show, _ = playlists.a_dj_is_born(dj_id=rando_dj_id)
+        air_name, date_time_last_show, _ = playlists.last_show_by_dj_id(dj_id=rando_dj_id)
+        create_question(
+            question=f"When was {air_name}'s first show?",
+            question_type="date",
+            acceptable_answers=[date_time_first_show])
+        create_question(
+            question=f"When was {air_name}'s last show?",
+            question_type="date",
+            acceptable_answers=[date_time_last_show])
+    db.session.commit() 
 
 def get_random_question():
     """Get a random question."""
-
-    num_questions = Question.query.count()
-    random_pk = choice(range(1, num_questions+1))
-    return Question.query.get(random_pk)
+    # We're going to be deleting question rows dring development...
+    # Keeping a pristine index for such a small table seems less efficient.
+    random_question_id = choice(db.session.query(Question.question_id).distinct())
+    return Question.query.get(random_question_id)
 
 def get_unique_question(user_id):
     """Make sure the user has never been asked this question before."""
     users_answers = Answer.query.filter(Answer.user_id == user_id).all()
     user_already_answered = [users_answer.question_id for users_answer in users_answers]
-    num_questions = Question.query.count()
-    allowed_pool = list(set(range(1, num_questions+1)) - set(user_already_answered))
-    try:
+    question_ids = [one_question.question_id for one_question in get_questions()]
+    allowed_pool = list(set(question_ids) - set(user_already_answered))
+    if allowed_pool:
         random_question_id = choice(allowed_pool)
-    except IndexError:
+        return Question.query.get(random_question_id)
+    else:
         return "You've answered EVERY question! How about listening to some music?"
-    return Question.query.get(random_question_id)
+
 
 def get_answer_pile(question_instance):
     answer_pile = get_three_wrong_answers(question_instance)
@@ -122,13 +170,9 @@ def get_answer_pile(question_instance):
 
 def get_one_right_answer(question_instance):
     """Get an acceptable_answer for multiple choice question."""
-    if question_instance.question_type == "number":
-        return choice(question_instance.acceptable_answers)
-    elif question_instance.question_type == "date":
-        one_date = question_instance.acceptable_answers[0]
-        return common.make_date_pretty(date_time_string=one_date)
-    elif question_instance.question_type == "how_long":
-        return question_instance.acceptable_answers[0]
+    if question_instance.question_type in ["number", "date", "duration"]:
+        # There is only one choice for these types:
+        return question_instance.acceptable_answers["answer_choice"]
     else:
         return ""
 
@@ -136,13 +180,16 @@ def get_three_wrong_answers(question_instance, k=3, percent=40):
     """Get three unacceptable yet mildly convincing answers for
     multiple choice questions."""
     if question_instance.question_type == "number":
-        some_randos = common.random_number_within_percent(
-            target_number=question_instance.acceptable_answers[0],
+        raw_numbers = common.random_number_within_percent(
+            target_number=question_instance.acceptable_answers["calculate_answer"],
             percent=40, k=4)
+        some_randos = []
+        for ii in raw_numbers:
+            some_randos.append(f'{ii:,}')
     elif question_instance.question_type == "date":
         some_randos = common.random_date_surrounding_another_date(
-            target_date_time=question_instance.acceptable_answers[0], k=4)
-    elif question_instance.question_type == "how_long":
+            target_date_time=question_instance.acceptable_answers["calculate_answer"], k=4)
+    elif question_instance.question_type == "duration":
         # Cheap way of doing it for now:
         some_randos = []
         for _ in range(4):
@@ -180,7 +227,6 @@ def four_djs_walk_into_a_bar():
         question_type="number",
         acceptable_answers=[max(count_playlists)])
     
-
 def popular_artist_by_dj_id(dj_id):
     playlist_track_artists = {}
     djs_playlists = playlists.get_all_playlists_by_dj_id(dj_id=dj_id)
@@ -192,49 +238,6 @@ def popular_artist_by_dj_id(dj_id):
                 playlist_track_artists[playlist_track_artist] = (
                     playlist_track_artists.get(playlist_track_artist, 0) + 1)
     return playlist_track_artists
-
-def get_random_question():
-    ""Get a random question.""
-
-    # TODO: Eliminate User's Already-Answered Questions from the reply
-
-    num_questions = Question.query.count()
-    random_pk = choice(range(1, num_questions+1))
-    return Question.query.get(random_pk)
-
-def get_unique_question(user_id):
-    ""Make sure the user has never been asked this question before.""
-
-    return Question.query.filter(Question.question_id.not_in(
-        Answer.query.filter(Answer.user_id == user_id).all()))
-
-def get_one_right_answer(question_instance):
-    ""Get an acceptable_answer for multiple choice question.""
-
-    return choice(question_instance.acceptable_answers)
-
-def get_three_wrong_answers(question_instance, possible_answers):
-    ""Get three unacceptable_answers for multiple choice question.""
-
-    for correct_answer in question_instance.acceptable_answers:
-        possible_answers.remove(correct_answer)
-    return choices(possible_answers, k=3)
-
-def compile_possible_answers(allow_skipped_questions=True):
-    ""TODO: This is not the final way I want to do this. 
-    Should use SQLAlchemy. Just getting it working using loops for now.""
-    possible_answers = []
-
-    for question_instance in get_questions():
-        possible_answers += question_instance.acceptable_answers
-
-    if allow_skipped_questions:
-        # Add some chances for user to SKIP a question:
-        possible_answers.append("")
-        possible_answers.append(None)
-
-    return possible_answers
-
 
 def add_qs_tracks_with_rando_word_in_title():
     pass
@@ -251,7 +254,6 @@ def seed_tracks_with_word_in_title():
             question=question,
             acceptable_answers=acceptable_answers,
             acceptable_answer_objects=acceptable_answer_objects)
-
 
 def get_all_tracks_with_word_in_title(word):
     a = collection_tracks.get_collection_tracks_with_word_in_title(word)
@@ -280,7 +282,6 @@ def seed_q_random_album_by_a_djs_top_artist(num_djs=5, num_artists=3):
                 question=question,
                 acceptable_answers=acceptable_answers,
                 acceptable_answer_objects=acceptable_answer_objects)
-
 
 def add_q_random_album_by_a_djs_top_artist():
     # TODO: getting the top_n list is what takes a lot of time.
@@ -335,41 +336,6 @@ def get_random_dj():
     user_id, air_name = playlists.get_random_air_name()
     return user_id, air_name
 
-def wrong_answer_generator(data_type, acceptable_answers, k=3):
-    ""For multiple choice questions: Select items of the same
-    data_type (tracks, artists, albums, air_names) 
-    not in acceptable_answers.""
-    three_wrongs = []
-
-    while len(three_wrongs) < k:
-        if data_type == 'tracks':
-            if randint(0, 1):  # Coin flip to pick between 2 libraries.
-                candidate = tracks.get_random_track()
-            else:
-                candidate = collection_tracks.get_random_collection_track()
-            if candidate.title not in acceptable_answers:
-                three_wrongs.append(candidate.title)
-        elif data_type == 'artists':
-            candidate = albums.get_random_album()
-            if candidate.artist not in acceptable_answers:
-                three_wrongs.append(candidate.artist)
-        elif data_type == 'albums':
-            candidate = albums.get_random_album()
-            if candidate.title not in acceptable_answers:
-                three_wrongs.append(candidate.title)
-        elif data_type == 'air_names':
-            _, air_name = playlists.get_random_air_name()
-            if air_name not in acceptable_answers:
-                three_wrongs.append(air_name)
-
-    return three_wrongs
-    
-
-def get_random_question():
-    ""Get a question.""
-
-    question_id = randint(1, common.get_count(Question.question_id))
-    return Question.query.get(question_id)
 """
 
 if __name__ == '__main__':

@@ -17,16 +17,20 @@
     <div class="col">
       <div class="row justify-content-center">
         <h2> {{ user_msg }} </h2>
-        <p> {{ answer }} </p>
-        <p> {{ answer_data }} </p>
+        <p> {{ restate_the_question }} </p>
+        <p> {{ right_answer }} </p>
      </div>
      
+     <br>
+     <br>
+     <br>
+     <br>
      <form action="/play" id="game-on-form">
- 
+      
        <label>Play again?</label>
-         <input type="radio" name="game-on" value=true class="game-on" checked/>Yes
-         <input type="radio" name="game-on" value=false class="game-on"/>No
-         <button class="radio-btn" type="submit" id="submit-profile">Submit</button>
+        <p><input type="radio" name="game-on" value=true class="game-on" checked/> Yes, another quesion.</p>
+        <p><input type="radio" name="game-on" value=false class="game-on"/> Nah, I'd rather listen to KFJC.</p>
+        <p><button class="radio-btn myButton"  type="submit" id="submit-profile">Submit</button></p>
        </form>
  
     </div>

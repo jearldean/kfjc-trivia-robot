@@ -93,6 +93,16 @@ def a_dj_is_born(dj_id):
     air_name = dj_id_to_airname(dj_id)
     return air_name, first_playlist.start_time, f"{air_name}'s first show was on {first_playlist.start_time}."
 
+
+def last_show_by_dj_id(dj_id):
+    """When did dj_id log their last show?"""
+
+    last_playlist = db.session.query(Playlist).filter(
+        Playlist.dj_id == dj_id).order_by(Playlist.start_time.desc()).first()
+    air_name = dj_id_to_airname(dj_id)
+    return air_name, last_playlist.start_time, f"{air_name}'s first show was on {last_playlist.start_time}."
+
+
 def get_air_names_by_age():
     air_names_by_age = OrderedDict()
     for playlist in db.session.query(Playlist).order_by(Playlist.start_time).all():

@@ -37,6 +37,18 @@ def get_user_by_username(username):
 
     return User.query.filter(User.username == username).first()
 
+def create_a_user(username, fname, password):
+
+    if not does_user_exist_already(username):
+        new_user = create_user(
+            username=username,
+            fname=fname,
+            password=password)
+        db.session.commit()
+        return new_user
+    else:
+        return False
+
 
 def does_user_exist_already(username):
     """Return a boolean we can use for the if-statement in server.py."""

@@ -21,6 +21,11 @@ def get_count(table_dot_column, unique=True):
         return db.session.query(func.count(table_dot_column)).scalar()
 
 def get_age(table_dot_column):
+    oldest = db.session.query(func.min(table_dot_column)).first()[0]
+    newest = db.session.query(func.max(table_dot_column)).first()[0]
+    return (oldest, newest)
+
+def get_age_by_dj_id(table_dot_column, dj_id):
     oldest = db.session.query(func.min(
         table_dot_column)).first()[0].strftime('%Y-%m-%d %H:%M:%S')
     newest = db.session.query(func.max(
@@ -92,7 +97,6 @@ def fix_titles(some_title):
 
     return some_title.strip()
 
-
 def profanity_filter(title_string):
     """
     Radio station data. Found out I needed a Profanity Filter.
@@ -144,7 +148,6 @@ def minutes_to_years(minutes):
 
     return f"{years} years, {weeks} weeks, and {days} days"
 
-
 def sort_nested_lists(a_list_of_lists, by_key=0, reverse=False):
 
     a_list_of_lists = sorted(a_list_of_lists, key=itemgetter(by_key), reverse=reverse)
@@ -174,14 +177,15 @@ def random_number_within_percent(target_number, percent=40, k=1):
 def random_date_surrounding_another_date(target_date_time, k=1):
     """Forget the time... just return a date.
     """
-    days_from_now = (datetime.now() - datetime.fromisoformat(target_date_time)).days
+    #days_from_now = (datetime.now() - datetime.fromisoformat(target_date_time)).days
+    days_from_now = (datetime.now() - target_date_time).days
     
     random_days = random_number_within_percent(target_number=days_from_now, percent=20, k=k)
     
     random_dates = []
     for dd in random_days:
-        random_dates.append((datetime.now() - timedelta(days=dd)).strftime('%B %d, %Y'))
-
+        random_dates.append(make_date_pretty(date_time_string=(
+            datetime.now() - timedelta(days=dd))))
     return random_dates
 
 def random_time_delta(target_date_time, k=1):
@@ -202,7 +206,11 @@ def make_date_pretty(date_time_string):
     >>> make_date_pretty('2000-07-28 06:00:00.000000')
     'July 28, 2000'
     """
-    return datetime.fromisoformat(date_time_string).strftime('%B %d, %Y')
+    if isinstance(date_time_string, str):
+        return datetime.fromisoformat(date_time_string).strftime('%B %d, %Y')
+    else:  # Maybe it's a datetime_object
+        return date_time_string.strftime('%B %d, %Y')
+
 
 def top_n(popularity_dict, n=10):
     """Used to get Top10, Top40 lists from any popularity_dict.

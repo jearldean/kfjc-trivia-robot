@@ -3,7 +3,7 @@
 
 {% block body %}
 
-<h1>Welcome to the KFJC Trivia Robot™!</h1>
+<h1>I'm the KFJC Trivia Robot™!</h1>
 
 <div class="container">
   <div class="row">
@@ -34,10 +34,39 @@
           </div>
         
           <div>
-            <input type="submit" value="Log In">
+            <input type="submit" class="myButton" value="Log In">
+          </div>
+        </form>
+        <br>
+        <br>
+        <br>
+        <br>
+        <form action="/create_account" method="POST">
+          <p><label>Or, create an account:</label>
+          <div>
+            <label>A username, unique like you:</p>
+              <p><input type="text" name="username" required>
+            </label></p>
+          </div>
+
+          <div>
+            <p><label>Your first name, for a personalized gameplay experience:
+              <input type="text" name="fname" required>
+            </label></p>
+          </div>
+
+          <div>
+            <p><label>And a secret password:
+              <input type="password" name="password" required>
+            </label></p>
+          </div>
+        
+          <div>
+            <p><input type="submit" class="myButton" value="Create Account"></p>
           </div>
         
         </form>
+
 
      </div>
     </div>

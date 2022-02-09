@@ -29,7 +29,7 @@ current_question = None
 def random_robot_image():
     """Give a path to a robot image."""
     
-    robot_picture_idx = choice(range(1, 6))
+    robot_picture_idx = choice(range(1, 13))
 
     return f"static/img/robot{robot_picture_idx}.png"
 
@@ -74,6 +74,22 @@ def login_process():
     else:
         flash("Oops, password didn't match.")
         return redirect("/")
+
+@app.route('/create_account', methods=['POST'])
+def create_account():
+    """Create A new user."""
+    username = request.form["username"]
+    fname = request.form["fname"]
+    password = request.form["password"]
+    
+    new_user = users.create_a_user(username, fname, password)
+
+    if not new_user:
+        flash("Oops, that username's taken.")
+        return redirect("/")
+    else:
+        session["user_id"] = new_user.user_id
+        return redirect("/question")
 
 @app.route("/important")
 def important():
@@ -142,15 +158,19 @@ def answer_question():
     question_instance = questions.get_question_by_id(
         question_id=session["question_id"])
 
-    answer = f"Here's the answer to '{question_instance.question}':"
-    answer_data = answers.display_answer(question_instance)
+    """
+    acceptable_answers = {
+        "calculate_answer": isoformat_date_time_str,
+        "answer_choice": common.make_date_pretty(isoformat_date_time_str),
+        "display_answer": display_answer}
+    """
 
     return render_template(
         'answer.html',
         random_robot_img=random_robot_image(),
         user_msg=user_msg,
-        answer=answer,
-        answer_data=answer_data)
+        restate_the_question=question_instance.acceptable_answers["display_answer"],
+        right_answer=question_instance.acceptable_answers["answer_choice"])
         
 
 @app.route("/infopage")
@@ -169,7 +189,7 @@ def myscore():
     return render_template(
         'score.html',
         random_robot_img=random_robot_image(),
-        username=user_instance.fname,
+        fname=user_instance.fname,
         user_score=user_score)
 
 
@@ -178,7 +198,8 @@ def leaderboard():
 
     score_board = []
 
-    for user_id in range(1, users.count_users()):
+    user_ids = [one_user.user_id for one_user in users.get_users()]
+    for user_id in user_ids:
         user_instance = users.get_user_by_id(user_id=user_id)
         user_score = answers.get_user_score(user_instance=user_instance)
         user_percent = user_score['percent']

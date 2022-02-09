@@ -47,6 +47,7 @@ def seed_fake_users():
 
 def seed_questions():
     questions.make_counts_questions()
+    questions.make_dj_date_questions()
 
 def nuclear_option():
     tic = time.perf_counter()
