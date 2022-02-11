@@ -1,6 +1,8 @@
 """Models for KFJC Trivia Robot."""
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy_json import mutable_json_type
 
 db = SQLAlchemy()
 DATABASE = "trivia"  # Make sure this agrees with your seed_database.py program...
@@ -30,7 +32,8 @@ class Question(db.Model):
     question_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     question_type = db.Column(db.String, nullable=False)
     question = db.Column(db.String, nullable=False)
-    acceptable_answers = db.Column(db.PickleType, nullable=False)
+    # Tips at https://amercader.net/blog/beware-of-json-fields-in-sqlalchemy/
+    acceptable_answers = db.Column(mutable_json_type(dbtype=JSON, nested=True))
 
     def __repr__(self):
         spaces = (25 - len(self.question)) * " "

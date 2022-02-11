@@ -18,16 +18,16 @@
       <div class="row justify-content-center">
         {{ question }}
         <form action="/answer" id="{{ answer_a }}" method="POST">
-          <button id="a" name="q" value="{{ answer_a }}" class="answer_question">{{ answer_a }}</button>
+          <button id="a" name="q" value="{{ answer_a }}" class="orange_button">{{ answer_a }}</button>
         </form>
         <form action="/answer" id="{{ answer_b }}" method="POST">
-          <button id="b" name="q" value="{{ answer_b }}" class="answer_question">{{ answer_b }}</button>
+          <button id="b" name="q" value="{{ answer_b }}" class="orange_button">{{ answer_b }}</button>
         </form>
         <form action="/answer" id="{{ answer_c }}" method="POST">
-          <button id="c" name="q" value="{{ answer_c }}" class="answer_question">{{ answer_c }}</button>
+          <button id="c" name="q" value="{{ answer_c }}" class="orange_button">{{ answer_c }}</button>
         </form>
         <form action="/answer" id="{{ answer_d }}" method="POST">
-          <button id="d" name="q" value="{{ answer_d }}" class="answer_question">{{ answer_d }}</button>
+          <button id="d" name="q" value="{{ answer_d }}" class="orange_button">{{ answer_d }}</button>
         </form>
         <br>
       <div>
@@ -36,7 +36,7 @@
         <br>
         <form action="/answer" id="skip" method="POST">
           <p><label>I don't like this question.</label></p>
-          <button id="s" name="q" value="SKIP" class="answer_question">Skip Question Without Penalty</button>
+          <button id="s" name="q" value="SKIP" class="orange_button">Skip Question Without Penalty</button>
         </form>
      </div>
      </div>

@@ -1,13 +1,13 @@
 """Common operations for KFJC Trivia Robot."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from random import choice, randrange
 
 from operator import itemgetter
-from model import connect_to_db, db
+from model import Playlist, connect_to_db, db
 from sqlalchemy.sql.expression import func, distinct
 
-unix_zero_hour = "1969-12-31 16:00:00"
+UNIX_ZERO_HOUR = "1969-12-31 16:00:00"
 
 def get_count(table_dot_column, unique=True):
     """A fast row counter.
@@ -25,20 +25,13 @@ def get_age(table_dot_column):
     newest = db.session.query(func.max(table_dot_column)).first()[0]
     return (oldest, newest)
 
-def get_age_by_dj_id(table_dot_column, dj_id):
-    oldest = db.session.query(func.min(
-        table_dot_column)).first()[0].strftime('%Y-%m-%d %H:%M:%S')
-    newest = db.session.query(func.max(
-        table_dot_column)).first()[0].strftime('%Y-%m-%d %H:%M:%S')
-    return (oldest, newest)
-
 def coerce_imported_data(one_cell):
     """Coerce incoming data to the correct type.
     >>> coerce_imported_data('NULL')
     >>> coerce_imported_data('Null')
     >>> coerce_imported_data("")
     >>> coerce_imported_data("0000-00-00 00:00:00")
-    >>> coerce_imported_data(unix_zero_hour)
+    >>> coerce_imported_data(UNIX_ZERO_HOUR)
     >>> coerce_imported_data(-3)
     -3
     >>> coerce_imported_data(27)
@@ -49,7 +42,7 @@ def coerce_imported_data(one_cell):
 
     if one_cell in [
         'NULL', "Null", '', " ", "?", ".", "..", "...", "*", "-", ",",
-        "\"", "0000-00-00 00:00:00", unix_zero_hour, "1970-01-01 01:00:00"]:
+        "\"", "0000-00-00 00:00:00", UNIX_ZERO_HOUR, "1970-01-01 01:00:00"]:
         return None
     elif isinstance(one_cell, int):
         return int(one_cell)
@@ -120,22 +113,21 @@ def profanity_filter(title_string):
 
     return title_string
 
-
 def fix_playlist_times(start_time, end_time):
     """A few dates are borked but if the other time cell is populated,
     we can make a decent guess. Fixes 166 rows.
     
-    >>> fix_playlist_times(unix_zero_hour, unix_zero_hour)
+    >>> fix_playlist_times(UNIX_ZERO_HOUR, UNIX_ZERO_HOUR)
     ('1969-12-31 16:00:00', '1969-12-31 16:00:00')
-    >>> fix_playlist_times('2000-07-27 10:30:00', unix_zero_hour)
+    >>> fix_playlist_times('2000-07-27 10:30:00', UNIX_ZERO_HOUR)
     ('2000-07-27 10:30:00', '2000-07-27 13:30:00')
-    >>> fix_playlist_times(unix_zero_hour, '2000-07-27 10:30:00')
+    >>> fix_playlist_times(UNIX_ZERO_HOUR, '2000-07-27 10:30:00')
     ('2000-07-27 07:30:00', '2000-07-27 10:30:00')
     """
 
-    if start_time == unix_zero_hour and end_time != unix_zero_hour:
+    if start_time == UNIX_ZERO_HOUR and end_time != UNIX_ZERO_HOUR:
         start_time = time_shift(end_time, shift=-3)
-    elif end_time == unix_zero_hour and start_time != unix_zero_hour:
+    elif end_time == UNIX_ZERO_HOUR and start_time != UNIX_ZERO_HOUR:
         end_time = time_shift(start_time, shift=3)
     
     return start_time, end_time
@@ -148,9 +140,9 @@ def minutes_to_years(minutes):
 
     return f"{years} years, {weeks} weeks, and {days} days"
 
-def sort_nested_lists(a_list_of_lists, by_key=0, reverse=False):
+def sort_nested_lists(a_list_of_lists, by_key=0, reverse_=False):
 
-    a_list_of_lists = sorted(a_list_of_lists, key=itemgetter(by_key), reverse=reverse)
+    a_list_of_lists = sorted(a_list_of_lists, key=itemgetter(by_key), reverse=reverse_)
     return a_list_of_lists
 
 def percent_correct(passed_count, failed_count):
@@ -178,7 +170,7 @@ def random_date_surrounding_another_date(target_date_time, k=1):
     """Forget the time... just return a date.
     """
     #days_from_now = (datetime.now() - datetime.fromisoformat(target_date_time)).days
-    days_from_now = (datetime.now() - target_date_time).days
+    days_from_now = (date.today() - date.fromisoformat(target_date_time[:10])).days
     
     random_days = random_number_within_percent(target_number=days_from_now, percent=20, k=k)
     
@@ -195,11 +187,10 @@ def random_time_delta(target_date_time, k=1):
 
     random_time_deltas = []
     for dd in random_days:
-        random_minutes = random_days * 24 * 60
+        random_minutes = dd * 24 * 60
         random_time_deltas.append(minutes_to_years(random_minutes))
 
-    return random_time_deltas
-    
+    return random_time_deltas   
 
 def make_date_pretty(date_time_string):
     """
@@ -210,7 +201,6 @@ def make_date_pretty(date_time_string):
         return datetime.fromisoformat(date_time_string).strftime('%B %d, %Y')
     else:  # Maybe it's a datetime_object
         return date_time_string.strftime('%B %d, %Y')
-
 
 def top_n(popularity_dict, n=10):
     """Used to get Top10, Top40 lists from any popularity_dict.
@@ -235,25 +225,33 @@ def top_n(popularity_dict, n=10):
 
     return top_n_items
 
-
-def print_a_popularity_dict_in_order(popularity_dict, min_items_required=0):
+def print_a_popularity_dict_in_order(popularity_dict, min_items_required=0, high_to_low=True):
     """See the results in order."""
 
     highest_value = max_value_in_popularity_dict(
         popularity_dict=popularity_dict)
     keys_and_frequencies = []  # An ordered list of most to least
 
-    for i in reversed(range(min_items_required, highest_value+1)):
-        # Counting Down:
-        if i in popularity_dict.values():
-            print(f"\n{i} occurrences:")
-        for k in popularity_dict:
-            if popularity_dict[k] == i:
-                print(k)
-                keys_and_frequencies.append((k, i))
+    if high_to_low:
+        for i in reversed(range(min_items_required, highest_value+1)):
+            # Counting Down:
+            if i in popularity_dict.values():
+                print(f"\n{i} occurrences:")
+            for k in popularity_dict:
+                if popularity_dict[k] == i:
+                    print(k)
+                    keys_and_frequencies.append((k, i))
+    else:
+        for i in range(min_items_required, highest_value+1):
+            # Counting Down:
+            if i in popularity_dict.values():
+                print(f"\n{i} occurrences:")
+            for k in popularity_dict:
+                if popularity_dict[k] == i:
+                    print(k)
+                    keys_and_frequencies.append((k, i))
     
     return keys_and_frequencies
-
 
 def max_value_in_popularity_dict(popularity_dict):
     """What has the most plays, the most shows, the most anything?"""

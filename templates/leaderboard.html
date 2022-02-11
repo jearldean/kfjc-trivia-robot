@@ -19,11 +19,15 @@
         <h2>{{ robot_msg }}</h2>
         <br>
         {% for n in range(table_range) %}
-          <p> {{ n+1 }}. {{ leaders[n] }} </p>
+          {% if current_user == leaders[n][0] %}
+          <!-- Special Printing if it's the current player: -->
+          <p id="ima_leader"> {{ n+1 }}. {{ leaders[n][2] }} </p>
+          {% else %}
+          <p> {{ n+1 }}. {{ leaders[n][2] }} </p>
+          {% endif %}
         {% endfor %}
      </div>
     </div>
   </div>
 </div>
-
 {% endblock %}

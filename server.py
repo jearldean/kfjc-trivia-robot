@@ -1,5 +1,6 @@
 """Server for KFJC Trivia Robot app."""
 
+import os
 from flask import (Flask, render_template, request, flash, session,
                    redirect)
 from model import connect_to_db, db
@@ -7,24 +8,23 @@ from random import choice
 import users
 import questions
 import answers
+from operator import itemgetter
 
 from jinja2 import StrictUndefined
 
 app = Flask(__name__)
-app.secret_key = "872tr87y23e9y120e[h1d"
+app.secret_key = os.environ['APP_SECRET_KEY']
 app.jinja_env.undefined = StrictUndefined
 
-praise = ["Aw, yeah!", "Oh, yeah!", "Sch-weet!", "Cool!", "Yay!", "Right!", "Correct!",
+PRAISE_MSG = ["Aw, yeah!", "Oh, yeah!", "Sch-weet!", "Cool!", "Yay!", "Right!", "Correct!",
     "You're right!", "You are Correct!", "Awesome!", "You're a wiz!"]
-consolation = ["Shucks", "Bad luck.", "Too bad.", "Better luck next time!", 
+CONSOLATION_MSG = ["Shucks", "Bad luck.", "Too bad.", "Better luck next time!", 
     "Awwww...", "Oh no!", "Sorry, wrong..."]
-skipped = ["Sorry you're not a fan of that one.", "I'll try to do better next time.",
+SKIP_MSG = ["Sorry you're not a fan of that one.", "I'll try to do better next time.",
     "No problem."]
-information = ["Here's what I found:", "I found these:", "Here's your answer:"]
-robot_messages = ["Robot loves you!", "Pretty good, meatbag!", "Well done, bag of mostly water!"]
-
-current_user = None
-current_question = None
+INFO_MSG = ["Here's what I found:", "I found these:", "Here's your answer:"]
+ROBOT_MSG = ["Robot loves you!", "Pretty good, meatbag!", "Well done, bag of mostly water!"]
+TOP_N_USERS = 10  # Displayed on Leaderboard
 
 def random_robot_image():
     """Give a path to a robot image."""
@@ -94,23 +94,30 @@ def create_account():
 @app.route("/important")
 def important():
     """Important info for logged in users."""
-    if "username" in session:
-        return render_template("important.html")
-
-    else:
-        flash("You must be logged in to view the important page")
-        return redirect("/login")
+    #if "user_id" in session:
+    #    return render_template("important.html")
+    #
+    #else:
+    flash("Make an account to take a fun quiz.")
+    return redirect("/")
 
 @app.route("/logout")
 def logout():
     """User must be logged in."""
+    if "user_id" not in session:
+        return redirect('/important')
     del session["user_id"]
-    del session["question_id"]
+    if "question_id" in session:
+        del session["question_id"]
     flash("Logged Out.")
-    return redirect("/login")
+    return redirect("/")
 
 @app.route("/question")
 def ask_question():
+    """Offer a question to user."""
+    if "user_id" not in session:
+        return redirect('/important')
+
     next_question = questions.get_unique_question(user_id=session["user_id"])
     if isinstance(next_question, str):
         error_message = next_question
@@ -131,7 +138,7 @@ def ask_question():
 
 @app.route("/answer", methods = ["POST"])
 def answer_question():
-    """Take ."""
+    """Deal with response from user."""
 
     answer_given=request.form.get("q")
 
@@ -151,26 +158,22 @@ def answer_question():
         return redirect('/question')
 
     if record_answer.answer_correct:
-        user_msg = choice(praise) + "\n\n" + choice(information)
+        user_msg = choice(PRAISE_MSG) + "\n\n" + choice(INFO_MSG)
+        answer_correct = True
     else:
-        user_msg = choice(consolation) + "\n\n" + choice(information)
+        user_msg = choice(CONSOLATION_MSG) + "\n\n" + choice(INFO_MSG)
+        answer_correct = False
 
     question_instance = questions.get_question_by_id(
         question_id=session["question_id"])
-
-    """
-    acceptable_answers = {
-        "calculate_answer": isoformat_date_time_str,
-        "answer_choice": common.make_date_pretty(isoformat_date_time_str),
-        "display_answer": display_answer}
-    """
 
     return render_template(
         'answer.html',
         random_robot_img=random_robot_image(),
         user_msg=user_msg,
-        restate_the_question=question_instance.acceptable_answers["display_answer"],
-        right_answer=question_instance.acceptable_answers["answer_choice"])
+        answer_correct=answer_correct,
+        restate_the_question=question_instance.acceptable_answers["rephrase_the_question"],
+        right_answer=question_instance.acceptable_answers["display_answer"])
         
 
 @app.route("/infopage")
@@ -181,6 +184,8 @@ def infopage():
 
 @app.route("/score")
 def myscore():
+    if "user_id" not in session:
+        return redirect('/important')
 
     user_instance=users.get_user_by_id(user_id=session["user_id"])
 
@@ -195,32 +200,32 @@ def myscore():
 
 @app.route("/leaderboard")
 def leaderboard():
+    if "user_id" not in session:
+        return redirect('/important')
 
     score_board = []
 
-    user_ids = [one_user.user_id for one_user in users.get_users()]
-    for user_id in user_ids:
-        user_instance = users.get_user_by_id(user_id=user_id)
+    for user_instance in users.get_users():
         user_score = answers.get_user_score(user_instance=user_instance)
         user_percent = user_score['percent']
-        score_board.append(f'{user_percent}%  {user_instance.fname}')
+        score_board.append([user_instance.user_id, user_percent, f"{user_percent}% {user_instance.fname}"])
     
-    score_board.sort(reverse=True)
-    # TODO: Handle this later with a div, css and columns.
+    score_board.sort(key=itemgetter(1), reverse=True)
 
-    #user_msg = "You're in the KFJC Top40!" if (
-    #    current_user == user_instance) else "Here's the KFJC Top40 Users!"
-    # user_id=session["user_id"]
-    user_msg = "Here are the Top Ten KFJC Trivia Robot Players!"
+    table_range=min(TOP_N_USERS, len(score_board))
+    if session["user_id"] in [f[0] for f in score_board[:table_range]]:
+        user_msg = "You're in the KFJC Top10!"
+    else:
+        user_msg = "Our Top10 Leaders:"
 
     return render_template(
         'leaderboard.html',
         random_robot_img=random_robot_image(),
-        robot_msg=choice(robot_messages),
-        table_range=min(10, len(score_board)),
+        robot_msg=choice(ROBOT_MSG),
+        table_range=table_range,
+        current_user = session["user_id"],
         user_msg=user_msg,
-        leaders=score_board,
-        question="Play again?")
+        leaders=score_board)
     
 
 if __name__ == "__main__":

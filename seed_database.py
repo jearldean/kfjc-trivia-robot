@@ -46,8 +46,8 @@ def seed_fake_users():
     db.session.commit() 
 
 def seed_questions():
-    questions.make_counts_questions()
-    questions.make_dj_date_questions()
+    #db.create_all()
+    questions.seed_all_question_types()
 
 def nuclear_option():
     tic = time.perf_counter()

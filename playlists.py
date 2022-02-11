@@ -1,9 +1,11 @@
 """Playlist operations for KFJC Trivia Robot."""
 
+from itertools import groupby
 from random import choice, sample
 from collections import OrderedDict
 
 from model import db, connect_to_db, Playlist
+from sqlalchemy.sql.expression import func, distinct
 import common
 
 
@@ -48,6 +50,7 @@ def get_all_dj_ids():
     unique_dj_ids = [row[0] for row in raw_q.all()]
     unique_dj_ids.sort()
     count_dj_ids = len(unique_dj_ids)
+
     return unique_dj_ids, count_dj_ids
     
 
@@ -78,7 +81,13 @@ def get_all_playlists_by_dj_id(dj_id=None):
     air_name = dj_id_to_airname(dj_id=dj_id)
     their_playlists = get_playlists_by_dj(dj_id=dj_id)
     count_playlists = len(their_playlists)
-    return air_name, count_playlists, their_playlists
+
+    first_show = Playlist.query.order_by(Playlist.start_time).filter(
+        Playlist.dj_id == dj_id).limit(1).first().start_time
+    last_show = Playlist.query.order_by(Playlist.start_time.desc()).filter(
+        Playlist.dj_id == dj_id).limit(1).first().start_time
+
+    return air_name, count_playlists, first_show, last_show, their_playlists
 
 def dj_id_to_airname(dj_id):
     """Translate dj_id for computers into air_name for humans."""

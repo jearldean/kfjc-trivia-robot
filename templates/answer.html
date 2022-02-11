@@ -16,7 +16,14 @@
     </div>
     <div class="col">
       <div class="row justify-content-center">
-        <h2> {{ user_msg }} </h2>
+
+        {% if answer_correct %}
+        <!-- Green for right and red for wrong. -->
+          <p id="correct"> {{ user_msg }} </p>
+        {% else %}
+          <p id="incorrect"> {{ user_msg }} </p>
+        {% endif %}
+
         <p> {{ restate_the_question }} </p>
         <p> {{ right_answer }} </p>
      </div>
@@ -30,7 +37,7 @@
        <label>Play again?</label>
         <p><input type="radio" name="game-on" value=true class="game-on" checked/> Yes, another quesion.</p>
         <p><input type="radio" name="game-on" value=false class="game-on"/> Nah, I'd rather listen to KFJC.</p>
-        <p><button class="radio-btn myButton"  type="submit" id="submit-profile">Submit</button></p>
+        <p><button class="orange_button"  type="submit" id="submit-profile">Submit</button></p>
        </form>
  
     </div>

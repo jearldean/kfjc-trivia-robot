@@ -38,12 +38,12 @@ def get_one_users_answers(user_instance):
 def is_answer_correct(question_instance, answer_given):
     """Return a boolean"""
 
-    if answer_given:
-        if answer_given in question_instance.acceptable_answers["answer_choice"]:
+    if answer_given == "SKIP":
+        return  # For the skipped question case.
+    else:
+        if answer_given in question_instance.acceptable_answers["display_answer"]:
             return True
         return False  # If we didn't hit by now, it's wrong.
-    else:
-        return  # For the skipped question case.
 
 
 def get_user_score(user_instance):

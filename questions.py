@@ -32,132 +32,17 @@ def get_question_by_id(question_id):
 
     return Question.query.get(question_id)
 
-def make_a_count_question(question_str, table_dot_column, display_answer):
-    column_quantity = common.get_count(table_dot_column, unique=True)
-    acceptable_answers = {
-        "calculate_answer": column_quantity,
-        "answer_choice": f'{column_quantity:,}',
-        "display_answer": display_answer}
-    create_question(
-        question=question_str,
-        question_type="number",
-        acceptable_answers=acceptable_answers)
-
-def make_count_questions():
-    parameterized_questions = [
-        ["How many KFJC DJs are there?",
-        Playlist.dj_id,
-        "There are this many KFJC DJs!"],
-        ["Since we started counting, how many shows have there been?",
-        Playlist.id_,
-        "There are this many shows in our records:"],
-        ["Since we started counting, how many songs have been played on KFJC?",
-        PlaylistTrack.id_,
-        "We've played this many songs since we began keeping track!"],
-        ["How many albums are in the KFJC Library?",
-        Album.id_,
-        "There are this many albums in our library:"],
-        ["How many artists are in the KFJC Library?",
-        Album.artist,
-        "There are this many artists in our library:"],
-        ["How many tracks are there in the KFJC Library?",
-        Track.id_,
-        "There are this many tracks in our library:"]
-    ]
-    for jj in parameterized_questions:
-        make_a_count_question(
-            question_str=jj[0],
-            table_dot_column=jj[1],
-            display_answer=jj[2])
-
-def make_a_duration_question(question_str, duration_minutes, display_answer):
-    acceptable_answers = {
-        "calculate_answer": duration_minutes,
-        "answer_choice": common.minutes_to_years(duration_minutes),
-        "display_answer": display_answer}
-    create_question(
-        question=question_str,
-        question_type="duration",
-        acceptable_answers=acceptable_answers)
-
-def make_duration_questions():
-    parameterized_questions = [
-        ["If a track is about 4 minutes long, how long would it take to listen to all tracks are in the KFJC Library?",
-        4 * common.get_count(Track.id_, unique=True),
-        "It would take this long to listen to all the tracks in the KFJC Library!"
-        ]]
-    for jj in parameterized_questions:
-        make_a_duration_question(
-            question_str=jj[0],
-            duration_minutes=jj[1],
-            display_answer = jj[2])
-
-def make_a_date_question(question_str, isoformat_date_time_str, display_answer):
-    print(isoformat_date_time_str, type(isoformat_date_time_str))
-    
-    acceptable_answers = {
-        "calculate_answer": isoformat_date_time_str,
-        "answer_choice": common.make_date_pretty(isoformat_date_time_str),
-        "display_answer": display_answer}
-    create_question(
-        question=question_str,
-        question_type="date",
-        acceptable_answers=acceptable_answers)
-
-def make_date_questions():
-    oldest_playlist, newest_playlist = common.get_age(Playlist.start_time)
-    parameterized_questions = [
-        ["When did KFJC begin collecting this data?",
-        oldest_playlist,
-        "We began collecting this data on:"],
-        ["Just how fresh is this data?",
-        newest_playlist, 
-        "The last data scrape for this page was on:"]
-    ]
-    for jj in parameterized_questions:
-        make_a_date_question(
-            question_str=jj[0],
-            isoformat_date_time_str=jj[1],
-            display_answer=jj[2])
-
-def seed_all_question_types():
-    make_count_questions()
-    make_duration_questions()
-    make_date_questions()
-    db.session.commit()
-
-
-def make_dj_date_questions(n=10):
-    for _ in range(n):
-        rando_dj_id = playlists.get_random_dj_id()
-        _, date_time_first_show, _ = playlists.a_dj_is_born(dj_id=rando_dj_id)
-        air_name, date_time_last_show, _ = playlists.last_show_by_dj_id(dj_id=rando_dj_id)
-        create_question(
-            question=f"When was {air_name}'s first show?",
-            question_type="date",
-            acceptable_answers=[date_time_first_show])
-        create_question(
-            question=f"When was {air_name}'s last show?",
-            question_type="date",
-            acceptable_answers=[date_time_last_show])
-    db.session.commit() 
-
-def get_random_question():
-    """Get a random question."""
-    # We're going to be deleting question rows dring development...
-    # Keeping a pristine index for such a small table seems less efficient.
-    random_question_id = choice(db.session.query(Question.question_id).distinct())
-    return Question.query.get(random_question_id)
 
 def get_unique_question(user_id):
     """Make sure the user has never been asked this question before."""
+ 
     users_answers = Answer.query.filter(Answer.user_id == user_id).all()
     user_already_answered = [users_answer.question_id for users_answer in users_answers]
     question_ids = [one_question.question_id for one_question in get_questions()]
     allowed_pool = list(set(question_ids) - set(user_already_answered))
     if allowed_pool:
         random_question_id = choice(allowed_pool)
-        return Question.query.get(random_question_id)
+        return get_question_by_id(question_id=random_question_id)
     else:
         return "You've answered EVERY question! How about listening to some music?"
 
@@ -172,7 +57,7 @@ def get_one_right_answer(question_instance):
     """Get an acceptable_answer for multiple choice question."""
     if question_instance.question_type in ["number", "date", "duration"]:
         # There is only one choice for these types:
-        return question_instance.acceptable_answers["answer_choice"]
+        return question_instance.acceptable_answers["display_answer"]
     else:
         return ""
 
