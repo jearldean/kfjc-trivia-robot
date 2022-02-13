@@ -8,6 +8,10 @@ from model import db, connect_to_db, Playlist
 from sqlalchemy.sql.expression import func, distinct
 import common
 
+MIN_SHOW_COUNT = 40
+# Might do tuning and raise this... The first 14 playlists by any DJ are training missions
+# and more playlists are required to become a DJ relevant enough to ask questions on.
+
 
 def create_playlist(kfjc_playlist_id, dj_id, air_name, start_time, end_time):
     """Create and return a new playlist."""
@@ -54,12 +58,6 @@ def get_all_dj_ids():
     return unique_dj_ids, count_dj_ids
     
 
-def get_4_random_dj_ids():
-    """For "Who has been on the air the longest?"
-    and "Who has the most shows?" questions."""
-    
-    return sample(get_all_dj_ids(), k=4)
-
 
 def get_playlists_by_dj(dj_id):
     """Shows by a DJ."""
@@ -67,18 +65,9 @@ def get_playlists_by_dj(dj_id):
     return Playlist.query.filter(Playlist.dj_id == dj_id).all()
 
 
-def get_random_dj_id():
-    """Select a random dj_id from the pile."""
-
-    unique_dj_ids, _ = get_all_dj_ids()
-    return choice(unique_dj_ids)
-
 def get_all_playlists_by_dj_id(dj_id=None):
     """Get the body of work for a dj_id. If not specified, returns a random one."""
 
-    if not dj_id:
-        dj_id = get_random_dj_id()
-    air_name = dj_id_to_airname(dj_id=dj_id)
     their_playlists = get_playlists_by_dj(dj_id=dj_id)
     count_playlists = len(their_playlists)
 
@@ -87,61 +76,39 @@ def get_all_playlists_by_dj_id(dj_id=None):
     last_show = Playlist.query.order_by(Playlist.start_time.desc()).filter(
         Playlist.dj_id == dj_id).limit(1).first().start_time
 
-    return air_name, count_playlists, first_show, last_show, their_playlists
-
-def dj_id_to_airname(dj_id):
-    """Translate dj_id for computers into air_name for humans."""
-
-    return Playlist.query.filter(Playlist.dj_id == dj_id).first().air_name
-
-def a_dj_is_born(dj_id):
-    """When did dj_id log their first show?"""
-
-    first_playlist = db.session.query(Playlist).filter(
-        Playlist.dj_id == dj_id).order_by(Playlist.start_time).first()
-    air_name = dj_id_to_airname(dj_id)
-    return air_name, first_playlist.start_time, f"{air_name}'s first show was on {first_playlist.start_time}."
+    return count_playlists, first_show, last_show, their_playlists
 
 
-def last_show_by_dj_id(dj_id):
-    """When did dj_id log their last show?"""
+def dj_stats():
+    prolific_djs = f"""SELECT dj_id 
+                        FROM playlists 
+                        GROUP by dj_id 
+                        HAVING count(dj_id) > {MIN_SHOW_COUNT} """
+    first_last_count = f"""SELECT dj_id, min(start_time) as FIRSTSHOW, max(start_time) as LASTSHOW, count(dj_id) as SHOWCOUNT 
+                        FROM playlists 
+                        GROUP by dj_id 
+                        HAVING dj_id in ({prolific_djs}) """
+    dj_id_to_air_name = f"""SELECT dj_id, air_name 
+                        FROM (
+                            SELECT *, ROW_NUMBER() OVER (PARTITION BY dj_id ORDER BY dj_id) rn
+                            FROM playlists) q
+                        WHERE rn = 1
+                        AND dj_id != 431
+                        AND dj_id != -1
+                        AND air_name NOT LIKE '%KFJC%'
+                        AND air_name NOT LIKE '%rebroadcast%'
+                        ORDER BY dj_id"""
+    air_names_by_firstshow = f"""SELECT dj_id_to_air_name.air_name, first_last_count.dj_id, first_last_count.SHOWCOUNT, first_last_count.LASTSHOW, first_last_count.FIRSTSHOW
+                        FROM ({first_last_count}) first_last_count
+                        LEFT JOIN ({dj_id_to_air_name}) dj_id_to_air_name
+                        ON (first_last_count.dj_id = dj_id_to_air_name.dj_id)
+                        WHERE first_last_count.dj_id != 431
+                        AND first_last_count.dj_id != -1
+                        ORDER BY first_last_count.FIRSTSHOW
+                        """
+    result = db.session.execute(air_names_by_firstshow)
+    return result
 
-    last_playlist = db.session.query(Playlist).filter(
-        Playlist.dj_id == dj_id).order_by(Playlist.start_time.desc()).first()
-    air_name = dj_id_to_airname(dj_id)
-    return air_name, last_playlist.start_time, f"{air_name}'s first show was on {last_playlist.start_time}."
-
-
-def get_air_names_by_age():
-    air_names_by_age = OrderedDict()
-    for playlist in db.session.query(Playlist).order_by(Playlist.start_time).all():
-        if playlist.dj_id not in air_names_by_age and (
-            playlist.air_name) and "KFJC" not in playlist.air_name:
-                air_names_by_age[playlist.dj_id] = [playlist.air_name, playlist.start_time]
-    return air_names_by_age
-
-def get_air_names_by_show_count():
-    air_names_by_show_count = []
-    for dj_id in get_all_dj_ids():
-        air_name, count_playlists, _their_playlists = get_all_playlists_by_dj_id(dj_id=dj_id)
-        if air_name and "KFJC" not in air_name:
-            air_names_by_show_count.append([air_name, count_playlists])
-
-    air_names_by_show_count = common.sort_nested_lists(
-        a_list_of_lists=air_names_by_show_count, by_key=1, reverse=False)
-    return air_names_by_show_count
-
-def all_dj_birthdays():
-    """A sanity check for a_dj_is_born()."""
-    
-    birthdays = []
-    for dj_id in get_all_dj_ids():
-        #if int(dj_id) > 0:
-        _, _, sentence  = a_dj_is_born(dj_id)
-        birthdays.append(sentence)
-
-    for j in birthdays:
-        print(j)
 
 if __name__ == '__main__':
     """Will connect you to the database when you run playlists.py interactively"""

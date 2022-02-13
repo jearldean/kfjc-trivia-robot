@@ -1,14 +1,18 @@
 """Question operations for KFJC Trivia Robot."""
 
 import datetime
-from sqlalchemy.sql.expression import func, distinct
+import random
+from sqlalchemy.sql.expression import func, distinct, select
+
+from operator import itemgetter
 
 from model import db, connect_to_db, Playlist, PlaylistTrack, Album, Track
 import common
 import questions
 import playlists
 
-DJ_MINIMUM_SHOWS = 20  # So that obscure and impossible to guess DJs don't show up in the survey.
+NUM_POP_Q = 20
+
 
 def make_questions():
 
@@ -86,44 +90,82 @@ def make_questions():
 
 
 def dj_popularity_questions():
-    """{
-    'Brian Damage': {
-        'dj_id': 443, 
-        'shows': 1, 
-        'first_show': datetime.datetime(2021, 12, 1, 2, 0, 49), 
-        'last_show': datetime.datetime(2021, 12, 1, 2, 0, 49), 
-        'playlist_ids': [66050]}
-    """
-    dj_popularity_dict_shows = {}
-    dj_popularity_dict_first_show = {}
-    dj_popularity_dict = {}
-    unique_dj_ids, _ = playlists.get_all_dj_ids()
-    for dj_id in unique_dj_ids:
-        air_name, count_playlists, first_show, last_show, their_playlists = (
-            playlists.get_all_playlists_by_dj_id(dj_id=dj_id))
-        playlist_ids = [playlist.kfjc_playlist_id for playlist in their_playlists]
-        if count_playlists > DJ_MINIMUM_SHOWS and air_name and "KFJC" not in air_name:
-            dj_popularity_dict_shows[air_name] = count_playlists
-            dj_popularity_dict_first_show[air_name] = int(first_show.timestamp())
-            dj_popularity_dict[air_name] = {
-                "dj_id": dj_id,
-                "shows": count_playlists,
-                "first_show": first_show,
-                "last_show": last_show,
-                "playlist_ids": playlist_ids}
+    """195 DJs with 40+ shows."""
 
-    #print(common.print_a_popularity_dict_in_order(dj_popularity_dict_shows)) 
-    #print(common.print_a_popularity_dict_in_order(dj_popularity_dict_first_show, high_to_low=False))
+    dj_stats = playlists.dj_stats()
 
-    #print(dj_popularity_dict['Robert Emmett'])
-    #print(dj_popularity_dict["Spliff Skankin'"])
+    dj_info_deck = {}
+    for i in dj_stats:
+        dj_info_deck[i[1]] = {
+            'air_name': i[0], 
+            'show_count': i[2], 
+            'last_show': i[3], 
+            'first_show': i[4]}
 
-    """
-    Where is Robert Emmett (62)? Where is splif skankin (177)?
-    most_shows = max(int(d["shows"]) for d in dj_popularity_dict.values())
-    first_on_air = min(int(d["first_show"]) for d in dj_popularity_dict.values())
-    print(most_shows)
-    print(first_on_air)"""
+    dj_ids = list(dj_info_deck.keys())
+
+    for _ in range(NUM_POP_Q):
+        four_random_djs = random.choices(dj_ids, k=4)
+        show_counts = [dj_info_deck[dj_id]['show_count'] for dj_id in four_random_djs]
+        top_show_count = max(show_counts)
+
+        winner = []
+        losers = []
+        display_all_answers = {}
+        for dj_id in four_random_djs:
+            dj_show_count = dj_info_deck[dj_id]['show_count']
+            dj_air_name = dj_info_deck[dj_id]['air_name']
+            if dj_show_count == top_show_count:
+                winner.append(dj_air_name)
+            else:
+                losers.append(dj_air_name)
+            display_all_answers[dj_show_count] = dj_air_name
+            #display_all_answers.append(f"{dj_show_count} shows | {dj_info_deck[dj_id]['air_name']} ")
+        sorted(display_all_answers.items())
+        
+        questions.create_question(
+            question="Who has the most shows?",
+            question_type="most_shows",
+            acceptable_answers={
+                "calculate_answer": winner[0],
+                "display_answer": winner[0],
+                "display_incorrect_answers": losers,
+                "rephrase_the_question": "This DJ has the most shows:",
+                "display_all_answers": display_all_answers})
+
+    
+    for _ in range(NUM_POP_Q):
+        four_random_djs = random.choices(dj_ids, k=4)
+        first_show = [dj_info_deck[dj_id]['first_show'] for dj_id in four_random_djs]
+        earliest_show = min(first_show)
+
+        winner = []
+        losers = []
+        display_all_answers = {}
+        for dj_id in four_random_djs:
+            #dj_first_show = common.make_date_pretty(dj_info_deck[dj_id]['first_show'].strftime('%Y-%m-%d %H:%M:%S'))
+            dj_first_show = dj_info_deck[dj_id]['first_show'].strftime('%Y-%m-%d %H:%M:%S')
+            dj_air_name = dj_info_deck[dj_id]['air_name']
+            if dj_info_deck[dj_id]['first_show'] == earliest_show:
+                winner.append(dj_air_name)
+            else:
+                losers.append(dj_air_name)
+            display_all_answers[dj_first_show] = dj_air_name
+            #display_all_answers.append(f"{dj_show_count} shows | {dj_info_deck[dj_id]['air_name']} ")
+        sorted(display_all_answers.items())
+        
+        questions.create_question(
+            question="Who was on the air first?",
+            question_type="earliest_show",
+            acceptable_answers={
+                "calculate_answer": winner[0],
+                "display_answer": winner[0],
+                "display_incorrect_answers": losers,
+                "rephrase_the_question": "This DJ was on the air first:",
+                "display_all_answers": display_all_answers})
+
+    db.session.commit()
+
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 """Server for KFJC Trivia Robot app."""
 
 import os
+import re
 from flask import (Flask, render_template, request, flash, session,
                    redirect)
 from model import connect_to_db, db
@@ -9,6 +10,8 @@ import users
 import questions
 import answers
 from operator import itemgetter
+import collections
+import common
 
 from jinja2 import StrictUndefined
 
@@ -119,7 +122,7 @@ def ask_question():
         return redirect('/important')
 
     next_question = questions.get_unique_question(user_id=session["user_id"])
-    if isinstance(next_question, str):
+    if isinstance(next_question, str):  # TODO use try/except instead of returning 2 different data types.
         error_message = next_question
         flash(error_message)
         return redirect("/leaderboard")
@@ -167,13 +170,29 @@ def answer_question():
     question_instance = questions.get_question_by_id(
         question_id=session["question_id"])
 
+    if question_instance.question_type == "most_shows":
+        right_answer = collections.OrderedDict(reversed(sorted(question_instance.acceptable_answers["display_all_answers"].items())))
+        table_display = True
+    elif question_instance.question_type == "earliest_show":
+        # dj_first_show = common.make_date_pretty(dj_info_deck[dj_id]['first_show'].strftime('%Y-%m-%d %H:%M:%S'))
+        right_answer = collections.OrderedDict(sorted(question_instance.acceptable_answers["display_all_answers"].items()))
+        right_answer_pretty = collections.OrderedDict()
+        for key in right_answer:
+            right_answer_pretty[common.make_date_pretty(key)] = right_answer[key]
+        table_display = True
+        right_answer = right_answer_pretty
+    else:
+        right_answer = question_instance.acceptable_answers["display_answer"]
+        table_display = False
+
     return render_template(
         'answer.html',
         random_robot_img=random_robot_image(),
         user_msg=user_msg,
         answer_correct=answer_correct,
         restate_the_question=question_instance.acceptable_answers["rephrase_the_question"],
-        right_answer=question_instance.acceptable_answers["display_answer"])
+        table_display=table_display,
+        right_answer=right_answer)
         
 
 @app.route("/infopage")

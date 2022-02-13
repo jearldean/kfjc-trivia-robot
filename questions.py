@@ -43,13 +43,18 @@ def get_unique_question(user_id):
     if allowed_pool:
         random_question_id = choice(allowed_pool)
         return get_question_by_id(question_id=random_question_id)
+        # TODO use try/except instead of returning 2 different data types.
     else:
         return "You've answered EVERY question! How about listening to some music?"
 
 
 def get_answer_pile(question_instance):
-    answer_pile = get_three_wrong_answers(question_instance)
-    answer_pile.append(get_one_right_answer(question_instance))
+    if question_instance.question_type in ["most_shows", "earliest_show"]:
+        answer_pile = question_instance.acceptable_answers["display_incorrect_answers"]
+        answer_pile.append(question_instance.acceptable_answers["display_answer"])
+    else:
+        answer_pile = get_three_wrong_answers(question_instance)
+        answer_pile.append(get_one_right_answer(question_instance))
     shuffle(answer_pile)
     return answer_pile
 

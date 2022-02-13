@@ -38,6 +38,21 @@ def coerce_imported_data(one_cell):
     27
     >>> coerce_imported_data('Wave of the West, The ')
     'The Wave of the West'
+
+
+
+
+     TODO: Map the bad Dr. Doug to the good one:
+        (-1391, 'Dr Doug', datetime.datetime(2019, 11, 26, 2, 1, 15))
+        (391, 'dr doug', datetime.datetime(2020, 6, 16, 1, 54, 9))
+
+
+
+    TODO: Fix DJ CLICK:     DJ Click, Click, ^
+    47690,47946,324,DJ Click,2015-01-20 21:57:03.000000,2015-01-21 02:00:26.000000
+    47759,48016,324,Click,2015-01-30 06:06:30.000000,2015-01-30 09:58:55.000000
+    48671,48944,324,^,2015-06-08 21:59:44.000000,2015-06-09 02:08:35.000000
+
     """
 
     if one_cell in [

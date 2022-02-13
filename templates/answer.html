@@ -23,11 +23,21 @@
         {% else %}
           <p id="incorrect"> {{ user_msg }} </p>
         {% endif %}
-
         <p> {{ restate_the_question }} </p>
-        <p> {{ right_answer }} </p>
+       
+        {% if table_display %}
+        <table>
+          {% for ii in right_answer %}
+          <tr>
+            <td>{{ ii }} </td>
+            <td>{{ right_answer[ii] }} </td> 
+          </tr>
+          {% endfor %}
+        </table>
+        {% else %}
+          <p> {{ right_answer }} </p>
+        {% endif %}
      </div>
-     
      <br>
      <br>
      <br>

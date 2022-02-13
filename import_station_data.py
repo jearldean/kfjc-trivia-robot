@@ -144,8 +144,6 @@ def create_tracks(row):
         title=common.coerce_imported_data(row[1]),
         indx=common.coerce_imported_data(row[3]))
 
-def create_questions():
-    pass
 
 
 if __name__ == "__main__":    
