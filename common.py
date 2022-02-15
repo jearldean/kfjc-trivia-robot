@@ -40,13 +40,9 @@ def coerce_imported_data(one_cell):
     'The Wave of the West'
 
 
-
-
      TODO: Map the bad Dr. Doug to the good one:
         (-1391, 'Dr Doug', datetime.datetime(2019, 11, 26, 2, 1, 15))
         (391, 'dr doug', datetime.datetime(2020, 6, 16, 1, 54, 9))
-
-
 
     TODO: Fix DJ CLICK:     DJ Click, Click, ^
     47690,47946,324,DJ Click,2015-01-20 21:57:03.000000,2015-01-21 02:00:26.000000
@@ -65,18 +61,6 @@ def coerce_imported_data(one_cell):
         return datetime.fromisoformat(one_cell)
     else:
         return fix_titles(some_title=one_cell)
-
-def time_shift(one_datetime_cell, shift=3):
-    """
-    >>> time_shift('2000-07-27 10:30:00')
-    '2000-07-27 13:30:00'
-
-    >>> time_shift('2000-07-27 10:30:00', -3)
-    '2000-07-27 07:30:00'
-    """
-
-    return (datetime.fromisoformat(one_datetime_cell) + 
-        timedelta(hours=shift)).strftime('%Y-%m-%d %H:%M:%S')
 
 def fix_titles(some_title):
     """Fixes radio-station-naming-convention titles to English Readable titles.
@@ -147,7 +131,21 @@ def fix_playlist_times(start_time, end_time):
     
     return start_time, end_time
 
+def time_shift(one_datetime_cell, shift=3):
+    """
+    >>> time_shift('2000-07-27 10:30:00')
+    '2000-07-27 13:30:00'
+
+    >>> time_shift('2000-07-27 10:30:00', -3)
+    '2000-07-27 07:30:00'
+    """
+
+    return (datetime.fromisoformat(one_datetime_cell) + 
+        timedelta(hours=shift)).strftime('%Y-%m-%d %H:%M:%S')
+
 def minutes_to_years(minutes):
+    """
+    """
     number_of_days = minutes / (60 * 24)
     years = int(number_of_days / 365)
     weeks = int((number_of_days % 365) / 7)
@@ -156,12 +154,17 @@ def minutes_to_years(minutes):
     return f"{years} years, {weeks} weeks, and {days} days"
 
 def sort_nested_lists(a_list_of_lists, by_key=0, reverse_=False):
-
+    """"""
     a_list_of_lists = sorted(a_list_of_lists, key=itemgetter(by_key), reverse=reverse_)
     return a_list_of_lists
 
 def percent_correct(passed_count, failed_count):
-    """For scorekeeping, leaderboards."""
+    """For scorekeeping, leaderboards.
+    >>> percent_correct(0, 0)
+    0.0
+    >>> percent_correct(20, 80)
+    20.0
+    """
 
     try:
         percent = round(float(passed_count) * 100 / (passed_count + failed_count), 1)

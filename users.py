@@ -65,12 +65,6 @@ def does_password_match(plain_text_password, hashed_password):
     """
     
     return bcrypt.checkpw(plain_text_password, hashed_password)
-
-
-def count_users():
-    """How many unique users?"""
-
-    return common.get_count(User.user_id, unique=True)
     
     
 if __name__ == '__main__':
