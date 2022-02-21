@@ -1,6 +1,6 @@
 """Track operations for KFJC Trivia Robot."""
 
-from model import db, connect_to_db, Track
+from model import db, connect_to_db, Track, Album
 
 
 def create_track(kfjc_album_id, artist, title, indx):
@@ -17,27 +17,27 @@ def create_track(kfjc_album_id, artist, title, indx):
 
     return track
 
+# -=-=-=-=-=-=-=-=-=-=-=- Tracks on an Album -=-=-=-=-=-=-=-=-=-=-=-
 
-def album_tracks(kfjc_album_id):
-    """Search and return tracks from an album in play order."""
+def get_tracks_by_kfjc_album_id(kfjc_album_id):
+    """Get artist, album title and track from a kfjc_album_id."""
 
-    compilation_determination = (
-        f""" SELECT artist
-        FROM tracks 
-        WHERE kfjc_album_id = {kfjc_album_id}
-        ORDER BY indx """)
+    album = Album.query.get(kfjc_album_id)
+    return get_tracks(album)
 
-    artists = set([row[0] for row in db.session.execute(compilation_determination)])
-    include_artist = ", artist " if len(artists) != 1 else ""
+def get_tracks(album):
+    """Get artist, album title and track from a kfjc_album_id."""
 
-    album_tracks = (
-        f""" SELECT indx, title {include_artist}
-        FROM tracks 
-        WHERE kfjc_album_id = {kfjc_album_id}
-        ORDER BY indx """)
-
-    return db.session.execute(album_tracks)
+    unpacked_tracks = []
+    for track in album.tracks:  # Using the relationship we made.
+        if track.artist:
+            unpacked_tracks.append([track.indx, track.artist, album.title, track.title])
+        else:
+            # Try the albums table for the Artist:
+            unpacked_tracks.append([track.indx, album.artist, album.title, track.title])
     
+    return unpacked_tracks
+
 
 if __name__ == '__main__':
     """Will connect you to the database when you run tracks.py interactively"""

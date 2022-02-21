@@ -1,10 +1,17 @@
 """Answer operations for KFJC Trivia Robot."""
 
 from datetime import datetime
+from sqlalchemy import func
+from random import choice
 
 from model import db, connect_to_db, Answer
-import common
-import users
+
+
+PRAISE_MSG = ["Aw, yeah!", "Oh, yeah!", "Sch-weet!", "Cool!", "Yay!", "Right!", "Correct!",
+    "You're right!", "You are Correct!", "Awesome!", "You're a wiz!"]
+CONSOLATION_MSG = ["Shucks", "Bad luck.", "Too bad.", "Better luck next time!", 
+    "Awwww...", "Oh no!", "Sorry, wrong..."]
+INFO_MSG = ["Here's what I found:", "I found these:", "Here's your answer:"]
 
 
 def create_answer(user_instance, question_instance, answer_given):
@@ -23,16 +30,20 @@ def create_answer(user_instance, question_instance, answer_given):
     return user_answer
 
 
-def get_answers():
-    """Return all user_answers."""
-
-    return Answer.query.all()
-
-
 def get_one_users_answers(user_instance):
     """Return all user_answers for one user."""
 
     return Answer.query.filter(Answer.user_id == user_instance.user_id).all()
+
+def handle_incoming_answer(question, answer):
+    """TODO"""
+    if answer.answer_correct:
+        user_msg = choice(PRAISE_MSG) + "\n\n" + choice(INFO_MSG)
+    else:
+        user_msg = choice(CONSOLATION_MSG) + "\n\n" + choice(INFO_MSG)
+    restate_the_question = question.present_answer
+    right_answer = question.wrong_answers[1]
+    return user_msg, restate_the_question, right_answer
 
 
 def is_answer_correct(question_instance, answer_given):
@@ -41,17 +52,13 @@ def is_answer_correct(question_instance, answer_given):
     if answer_given == "SKIP":
         return  # For the skipped question case.
     else:
-        if answer_given in question_instance.acceptable_answers["display_answer"]:
+        if answer_given in question_instance.acceptable_answers:
             return True
         return False  # If we didn't hit by now, it's wrong.
 
 
 def get_user_score(user_instance):
     """Return user play stats."""
-
-    # TODO: Update the data model to include answer_correct with states:
-    # true, false and null. Be careful about your handling because null
-    # seems to behave false-y.
 
     passed = 0
     failed = 0
@@ -60,6 +67,11 @@ def get_user_score(user_instance):
     percent = 0.0
 
     users_answers = get_one_users_answers(user_instance)
+
+    """ TODO   MAKE a solution that uses more sql alchemy:
+    a = db.session.query(func.count(Answer.answer_correct)).group_by(
+        Answer.answer_correct).all()
+    print(a)"""
 
     for user_answer_instance in users_answers:
         num_questions += 1
@@ -72,7 +84,7 @@ def get_user_score(user_instance):
         else:
             print("That's weird.")
 
-    percent = common.percent_correct(passed_count=passed, failed_count=failed)
+    percent = percent_correct(passed_count=passed, failed_count=failed)
 
     user_score = {'passed': passed, 'failed': failed, 'skipped': skipped,
         'questions': num_questions, 'percent': percent}
@@ -80,53 +92,20 @@ def get_user_score(user_instance):
     return user_score
 
 
-def grade_all_answers():
-    """Sanity check for get_user_score()."""
-
-    user_answer_printout = []
-    all_passed = 0
-    all_failed = 0
-    all_skipped = 0
-    all_num_questions = 0
-    all_percent = 0.0
-
-    for user_answer_instance in users.get_users():
-        user_score = get_user_score(user_answer_instance)
-        all_passed += user_score['passed']
-        all_failed += user_score['failed']
-        all_skipped += user_score['skipped']
-        all_num_questions += user_score['questions']
-        user_answer_printout.append(user_score)
-        
-    for dd in user_answer_printout:
-        print(dd)
+def percent_correct(passed_count, failed_count):
+    """For scorekeeping, leaderboards.
     
-    all_percent = common.percent_correct(passed_count=all_passed, failed_count=all_failed)
+    >>> percent_correct(0, 0)
+    0.0
+    >>> percent_correct(20, 80)
+    20.0
+    """
 
-    all_users_score = {'passed': all_passed, 'failed': all_failed, 'skipped': all_skipped,
-        'questions': all_num_questions, 'percent': all_percent}
-
-    return all_users_score
-
-def display_answer(question_instance):
-    if len(question_instance.acceptable_answers) == 1:
-        return question_instance.acceptable_answers[0]
-    elif question_instance.question_type == 'album_tracks':
-        display_album_tracks = "<table>"
-        display_album_tracks = "<tr><b><td>TRACK NUMBER</td><td>TITLE</td></b></tr>"
-        for ii in question_instance.acceptable_answers:
-            display_album_tracks += f"<tr><td>{ii.indx}</td><td>{ii.track}</td></tr>"
-        display_album_tracks += "</table>"
-        return display_album_tracks
-    elif question_instance.question_type == 'artist_album_track':
-        display_artist_album_track = "<table>"
-        display_artist_album_track += f"<tr><b><td>ARTIST</td><td>ALBUM</td><td>TRACK</td></b></tr>"
-        for ii in question_instance.acceptable_answers:
-            display_artist_album_track += f"<tr><td>{ii.artist}</td><td>{ii.album}</td><td>{ii.track}</td></tr>"
-        display_artist_album_track += "</table>"
-        return display_artist_album_track
-    else:
-        return
+    try:
+        percent = round(float(passed_count) * 100 / (passed_count + failed_count), 1)
+    except ZeroDivisionError:
+        percent = 0.0
+    return percent
 
 
 if __name__ == '__main__':

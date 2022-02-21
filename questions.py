@@ -1,232 +1,389 @@
 """Question operations for KFJC Trivia Robot."""
 
-from random import choice, randrange, shuffle  # choices, randint, 
+from datetime import datetime, timedelta, date
+from operator import itemgetter
+from random import randrange, choice, choices, shuffle
 
-from model import db, connect_to_db, Question, Answer, Playlist, PlaylistTrack, Album, Track
-import common
+from model import Answer, db, connect_to_db, Question, Album
 import playlists
+import playlist_tracks
+import tracks
+import common
 
+SEED_QUESTION_COUNT = 30
 
-def create_question(question, question_type, acceptable_answers):
+def create_question(question_type, ask_question, present_answer, acceptable_answers, wrong_answers):
     """Create and return a new question."""
 
     question = Question(
-        question=question,
         question_type=question_type,
-        acceptable_answers=acceptable_answers)
+        ask_question=ask_question,
+        present_answer=present_answer,
+        acceptable_answers=acceptable_answers,
+        wrong_answers=wrong_answers)
 
     db.session.add(question)
     # Don't forget to call model.db.session.commit() when done adding items.
 
     return question
 
-
-def get_questions():
-    """Get all questions."""
-
-    return Question.query.all()
-
-
 def get_question_by_id(question_id):
-    """Return one question."""
-
     return Question.query.get(question_id)
+     
+# -=-=-=-=-=-=-=-=-=-=-=- Seed Questions Table -=-=-=-=-=-=-=-=-=-=-=-
 
+def make_all_the_questions():
+    #who_is_the_oldest_dj()  # works
+    #who_is_the_newest_dj()  # works
+    #who_has_the_most_shows()  # works
+    # which_is_djs_favorite_artist()  # works
+    # which_is_djs_favorite_album()  # works
+    # which_is_djs_favorite_track()  # works
+    # top_ten_artist()
+    # top_ten_album()
+    # top_ten_track()
+    # last_play_of_artist()
+    # last_play_of_album()
+    # last_play_of_track()
+    # tracks_on_an_album()
+    # when_was_dj_last_on_the_air()
+    pass
+
+def question_engine(
+        resultproxy, answer_column, ask_questions, present_answers,
+        search_key, reverse_display_answers):
+    answer_key = common.unpack_a_result_proxy(resultproxy=resultproxy)
+    winners = answer_key[:SEED_QUESTION_COUNT]  # list of dicts
+    losers = answer_key[SEED_QUESTION_COUNT:]
+    for the_right_answer in winners:
+        three_wrong_answers = choices(losers, k=3)
+        answer_pile = [the_right_answer] + three_wrong_answers
+        present_answer_data = []
+        display_shuffled_answers = []
+
+        if search_key in ['firstshow', 'lastshow']:
+            for zz in sorted(answer_pile, key=itemgetter(search_key), reverse=reverse_display_answers):
+                item_value = common.make_date_pretty(date_time_string=zz[search_key])
+                present_answer_data.append([zz[answer_column], item_value])
+                display_shuffled_answers.append(zz[answer_column])
+        elif search_key in ['showcount']:
+            for zz in sorted(answer_pile, key=itemgetter(search_key), reverse=reverse_display_answers):
+                item_value = common.format_an_int_with_commas(your_int=zz[search_key])
+                present_answer_data.append([zz[answer_column], item_value])
+                display_shuffled_answers.append(zz[answer_column])
+        else:
+            for zz in sorted(answer_pile, key=itemgetter(search_key), reverse=reverse_display_answers):
+                item_value = item_value=zz[search_key]
+                present_answer_data.append([zz[answer_column], item_value])
+                display_shuffled_answers.append(zz[answer_column])
+
+        acceptable_answers = [display_shuffled_answers[0]]
+        shuffle(display_shuffled_answers)
+        create_question(
+            question_type=answer_column,
+            ask_question=choice(ask_questions),
+            present_answer=choice(present_answers),
+            acceptable_answers=acceptable_answers,
+            wrong_answers=[display_shuffled_answers, present_answer_data])
+    db.session.commit()
+
+def who_is_the_oldest_dj():
+    resultproxy = playlists.get_djs_by_first_show(reverse=False)
+    answer_column = "air_name"
+    ask_questions = [
+        "Who was on the air first?", "Who was first on the air?",
+        "Who was a DJ before any of the others?"]
+    present_answers = [
+        "This person was on the air first:", "This person hit the airwaves first:",
+        "This DJ was first on the air:"]
+    search_key = 'firstshow'
+    reverse_display_answers = False
+    question_engine(
+        resultproxy=resultproxy, answer_column=answer_column,
+        ask_questions=ask_questions, present_answers=present_answers,
+        search_key=search_key, reverse_display_answers=reverse_display_answers)
+
+def who_is_the_newest_dj():
+    resultproxy = playlists.get_djs_by_first_show(reverse=True)
+    answer_column = "air_name"
+    ask_questions = [
+        "Who is the newest DJ?", "Spot the greenhorn! Who is our newest DJ?",
+        "Pick the rookie - who is the most recent DJ?"]
+    present_answers = [
+        "This person appeared on the air last:", "This person is newest to our airwaves:",
+        "Here's the newest DJ from that lot:", "The newest DJ is:"]
+    search_key = 'firstshow'
+    reverse_display_answers = True
+    question_engine(
+        resultproxy=resultproxy, answer_column=answer_column,
+        ask_questions=ask_questions, present_answers=present_answers,
+        search_key=search_key, reverse_display_answers=reverse_display_answers)
+
+def who_has_the_most_shows():
+    resultproxy = playlists.get_djs_by_show_count()
+    answer_column = "air_name"
+    ask_questions = [
+        "Who has the most shows?", "Who has done the most shows?",
+        "Which DJ has the most shows?"]
+    present_answers = [
+        "This person has done the most shows:", "This person has the most shows:",
+        "This DJ has more shows:"]
+    search_key = 'showcount'
+    reverse_display_answers = True
+    question_engine(
+        resultproxy=resultproxy, answer_column=answer_column,
+        ask_questions=ask_questions, present_answers=present_answers,
+        search_key=search_key, reverse_display_answers=reverse_display_answers)
+
+def which_is_djs_favorite_artist():
+    dj_id_pool = playlists.get_all_dj_ids()
+    random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
+    for dj_id in random_dj_ids:
+        resultproxy = playlist_tracks.get_favorite_artists(dj_id=dj_id, reverse=True, min_plays=5)
+        answer_key = common.unpack_a_result_proxy(resultproxy=resultproxy)
+        try:
+            air_name = playlists.get_airname(dj_id)
+        except AttributeError:
+            continue  # Dudd DJ.
+        if len(answer_key) < 20:
+            continue  # Dudd DJ.
+        answer_column = "artist"
+        winners = answer_key[:10]
+        losers = answer_key[10:]
+        for the_right_answer in winners:
+            ask_questions = [
+                f"Who does {air_name} like most?", f"Which artist is {air_name}'s favorite?",
+                f"Who has {air_name} played the most?"]
+            present_answers = [
+                f"{air_name} likes this artist the most:", f"{air_name} has played this artist the most:",
+                f"This artist is played by {air_name} a lot:"]
+            three_wrong_answers = choices(losers, k=3)
+            answer_pile = [the_right_answer] + three_wrong_answers
+            present_answer_data = []
+            display_shuffled_answers = []
+            for zz in sorted(answer_pile, key=itemgetter('plays'), reverse=True):
+                present_answer_data.append([zz['artist'], zz['plays']])
+                display_shuffled_answers.append(zz['artist'])
+            shuffle(display_shuffled_answers)
+            create_question(
+                question_type=answer_column,
+                ask_question=choice(ask_questions),
+                present_answer=choice(present_answers),
+                acceptable_answers=[the_right_answer['artist']],
+                wrong_answers=[display_shuffled_answers, present_answer_data])
+        db.session.commit()
+
+def which_is_djs_favorite_album():
+    dj_id_pool = playlists.get_all_dj_ids()
+    random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
+    for dj_id in random_dj_ids:
+        resultproxy = playlist_tracks.get_favorite_albums(dj_id=dj_id, reverse=True, min_plays=5)
+        answer_key = common.unpack_a_result_proxy(resultproxy=resultproxy)
+        try:
+            air_name = playlists.get_airname(dj_id)
+        except AttributeError:
+            continue  # Dudd DJ.
+        if len(answer_key) < 20:
+            continue  # Dudd DJ.
+        answer_column = "album_title"
+        winners = answer_key[:10]
+        losers = answer_key[10:]
+        for the_right_answer in winners:
+            ask_questions = [
+                f"Which does {air_name} play most?", f"Which album is {air_name}'s favorite?",
+                f"Which album has {air_name} played the most?"]
+            present_answers = [
+                f"{air_name} likes this album the most:", f"{air_name} has played this album the most:",
+                f"This album is played by {air_name} a lot:"]
+            three_wrong_answers = choices(losers, k=3)
+            answer_pile = [the_right_answer] + three_wrong_answers
+            present_answer_data = []
+            display_shuffled_answers = []
+            for zz in sorted(answer_pile, key=itemgetter('plays'), reverse=True):
+                present_answer_data.append([zz[answer_column], zz['plays']])
+                display_shuffled_answers.append(zz[answer_column])
+            shuffle(display_shuffled_answers)
+            create_question(
+                question_type=answer_column,
+                ask_question=choice(ask_questions),
+                present_answer=choice(present_answers),
+                acceptable_answers=[the_right_answer[answer_column]],
+                wrong_answers=[display_shuffled_answers, present_answer_data])
+        db.session.commit()
+
+def which_is_djs_favorite_track():
+    dj_id_pool = playlists.get_all_dj_ids()
+    random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
+    for dj_id in random_dj_ids:
+        resultproxy = playlist_tracks.get_favorite_tracks(dj_id=dj_id, reverse=True, min_plays=5)
+        answer_key = common.unpack_a_result_proxy(resultproxy=resultproxy)
+        try:
+            air_name = playlists.get_airname(dj_id)
+        except AttributeError:
+            continue  # Dudd DJ.
+        if len(answer_key) < 20:
+            continue  # Dudd DJ.
+        answer_column = "track_title"
+        winners = answer_key[:10]
+        losers = answer_key[10:]
+        for the_right_answer in winners:
+            ask_questions = [
+                f"Which track did {air_name} play most?", f"Which track is {air_name}'s favorite?",
+                f"Which track has {air_name} played the most?"]
+            present_answers = [
+                f"{air_name} likes this one the most:", f"{air_name} has played this track the most:",
+                f"This song is played by {air_name} a lot:"]
+            three_wrong_answers = choices(losers, k=3)
+            answer_pile = [the_right_answer] + three_wrong_answers
+            present_answer_data = []
+            display_shuffled_answers = []
+            for zz in sorted(answer_pile, key=itemgetter('plays'), reverse=True):
+                present_answer_data.append([zz[answer_column], zz['plays']])
+                display_shuffled_answers.append(zz[answer_column])
+            shuffle(display_shuffled_answers)
+            create_question(
+                question_type=answer_column,
+                ask_question=choice(ask_questions),
+                present_answer=choice(present_answers),
+                acceptable_answers=[the_right_answer[answer_column]],
+                wrong_answers=[display_shuffled_answers, present_answer_data])
+        db.session.commit()
+
+def top_ten_artist():
+    resultproxy = playlist_tracks.get_top10_artists(start_date, end_date, n=10)
+    question_type = "artist"
+    ask_questions = [
+        f"Who appeared in the top ten during the week of {start_date}?",
+        f"Which artist was in the top 10 in {start_date}?",
+        f"During the week of {start_date}, which artist was in the top ten?"]
+    present_answers = [
+        f"This artist appeared in the top ten during the week of {start_date}:",
+        f"This artist was in the top 10 in {start_date}:",
+        f"During the week of {start_date}, this artist was in the top ten:"]
+        
+def top_ten_album():
+    resultproxy = playlist_tracks.get_top10_albums(start_date, end_date, n=10)
+    question_type = "album"
+    ask_questions = [
+        f"Who appeared in the top ten during the week of {start_date}?",
+        f"Which album was in the top 10 in {start_date}?",
+        f"During the week of {start_date}, which album was in the top ten?"]
+    present_answers = [
+        f"This album appeared in the top ten during the week of {start_date}:",
+        f"This album was in the top 10 in {start_date}:",
+        f"During the week of {start_date}, this album was in the top ten:"]
+
+def top_ten_track():
+    resultproxy = playlist_tracks.get_top10_tracks(start_date, end_date, n=10)
+    question_type = "track"
+    ask_questions = [
+        f"Who appeared in the top ten during the week of {start_date}?",
+        f"Which track was in the top 10 in {start_date}?",
+        f"During the week of {start_date}, which track was in the top ten?"]
+    present_answers = [
+        f"This track appeared in the top ten during the week of {start_date}:",
+        f"This track was in the top 10 in {start_date}:",
+        f"During the week of {start_date}, this track was in the top ten:"]
+
+def last_play_of_artist():
+    resultproxy = playlist_tracks.get_last_play_of_artist(artist, reverse=False)
+    question_type = "artist"
+    ask_questions = [
+        f"When was the last time we played {artist}?",
+        f"When was the last play of {artist} on KFJC?",
+        f"When was the last time {artist} was played?"]
+    present_answers = [
+        f"This is the last time we played {artist}:",
+        f"The last play of {artist} on KFJC was:",
+        f"The last time {artist} was played was:"]
+
+def last_play_of_album():
+    resultproxy = playlist_tracks.get_last_play_of_album(album, reverse=False)
+    question_type = "album"
+    ask_questions = [
+        f"When was the last time we played {album}?",
+        f"When was the last play of {album} on KFJC?",
+        f"When was the last time {album} was played?"]
+    present_answers = [
+        f"This is the last time we played {album}:",
+        f"The last play of {album} on KFJC was:",
+        f"The last time {album} was played was:"]
+
+def last_play_of_track():
+    resultproxy = playlist_tracks.get_last_play_of_track(track, reverse=False)
+    question_type = "track"
+    ask_questions = [
+        f"When was the last time we played {track}?",
+        f"When was the last play of {track} on KFJC?",
+        f"When was the last time {track} was played?"]
+    present_answers = [
+        f"This is the last time we played {track}:",
+        f"The last play of {track} on KFJC was:",
+        f"The last time {track} was played was:"]
+
+def tracks_on_an_album():
+    # get 20 random albums with at least 9 tracks.
+    resultproxy = tracks.get_tracks_by_kfjc_album_id(kfjc_album_id)
+
+    album = Album.query.get(kfjc_album_id)
+    
+    question_type = "track"
+    ask_questions = [
+        f"Name a track from the album {album.title}:",
+        f"Can you pick the track that's from the {album.title} album?",
+        f"Pick the track that's off the album {album.title}:"]
+    present_answers = [
+        f"This track is from the album {album.title}:",
+        f"Here's a track that's from the {album.title} album:",
+        f"{album.title} contains these tracks:"]
+        
+def when_was_dj_last_on_the_air():
+    answer_key = playlists.get_djs_by_last_show(reverse=False)
+    dj_id_pool = playlists.get_all_dj_ids()
+    random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
+    random_date_surrounding_another_date()
+
+# -=-=-=-=-=-=-=-=-=-=-=- Make Fake Answers -=-=-=-=-=-=-=-=-=-=-=-
+
+def random_number_within_percent(target_number, percent=40, k=1):
+    """Make convincing fake answers for number questions."""
+    high_value = int(target_number * (1 + (percent / 100)))
+    low_value = int(target_number * (1 - (percent / 100)))
+    if k != 1:
+        random_numbers = []
+        for _ in range(k):
+            random_numbers.append(randrange(low_value, high_value))
+        return random_numbers
+    else:
+        return randrange(low_value, high_value)
+
+def random_date_surrounding_another_date(target_date_time, k=1):
+    """Forget the time... just return a date."""
+    
+    days_from_now = (date.today() - date.fromisoformat(target_date_time[:10])).days
+    
+    random_days = random_number_within_percent(target_number=days_from_now, percent=20, k=k)
+    
+    random_dates = []
+    for dd in random_days:
+        random_dates.append(common.make_date_pretty(date_time_string=(
+            datetime.now() - timedelta(days=dd))))
+    return random_dates
+
+# -=-=-=-=-=-=-=-=-=-=-=- Choose Random Question -=-=-=-=-=-=-=-=-=-=-=-
 
 def get_unique_question(user_id):
-    """Make sure the user has never been asked this question before."""
- 
+    """TODO"""
     users_answers = Answer.query.filter(Answer.user_id == user_id).all()
     user_already_answered = [users_answer.question_id for users_answer in users_answers]
-    question_ids = [one_question.question_id for one_question in get_questions()]
+    question_ids = [one_question.question_id for one_question in Question.query.all()]
     allowed_pool = list(set(question_ids) - set(user_already_answered))
-    if allowed_pool:
-        random_question_id = choice(allowed_pool)
-        return get_question_by_id(question_id=random_question_id)
-        # TODO use try/except instead of returning 2 different data types.
-    else:
-        return "You've answered EVERY question! How about listening to some music?"
-
-
-def get_answer_pile(question_instance):
-    if question_instance.question_type in ["most_shows", "earliest_show"]:
-        answer_pile = question_instance.acceptable_answers["display_incorrect_answers"]
-        answer_pile.append(question_instance.acceptable_answers["display_answer"])
-    else:
-        answer_pile = get_three_wrong_answers(question_instance)
-        answer_pile.append(get_one_right_answer(question_instance))
-    shuffle(answer_pile)
-    return answer_pile
-
-def get_one_right_answer(question_instance):
-    """Get an acceptable_answer for multiple choice question."""
-    if question_instance.question_type in ["number", "date", "duration"]:
-        # There is only one choice for these types:
-        return question_instance.acceptable_answers["display_answer"]
-    else:
-        return ""
-
-def get_three_wrong_answers(question_instance, k=3, percent=40):
-    """Get three unacceptable yet mildly convincing answers for
-    multiple choice questions."""
-    if question_instance.question_type == "number":
-        raw_numbers = common.random_number_within_percent(
-            target_number=question_instance.acceptable_answers["calculate_answer"],
-            percent=40, k=4)
-        some_randos = []
-        for ii in raw_numbers:
-            some_randos.append(f'{ii:,}')
-    elif question_instance.question_type == "date":
-        some_randos = common.random_date_surrounding_another_date(
-            target_date_time=question_instance.acceptable_answers["calculate_answer"], k=4)
-    elif question_instance.question_type == "duration":
-        # Cheap way of doing it for now:
-        some_randos = []
-        for _ in range(4):
-            years = randrange(3, 15)
-            weeks = randrange(0, 52)
-            days = randrange(1, 8)
-            day_fraction = randrange(0, 10)
-            some_randos.append(f"{years} years, {weeks} weeks, and {days}.{day_fraction} days")
-    else:
-        print(f"No handler for question_type={question_instance.question_type}")
-        return []
-    # Selecting 3 from a pack of 4 values will allow the 
-    # answer number to sometimes appear as the max or min of values presented:
-    return some_randos[:3]
-
-
-"""
-def four_djs_walk_into_a_bar():
-    dj_ids_list = playlists.get_4_random_dj_ids()
-    display_names = []
-    ages = []
-    num_playlists = []
-    for dj_id in dj_ids_list:
-        air_name, birthday, statement = playlists.a_dj_is_born(dj_id=dj_id)
-        air_name, count_playlists, their_playlists = playlists.get_all_playlists_by_dj_id(dj_id=dj_id)
-        display_names.append(air_name)
-        ages.append(birthday)
-        num_playlists.append(count_playlists)
-    create_question(
-        question="Who has been on the air the longest?",
-        question_type="date",
-        acceptable_answers=[min(birthday)])
-    create_question(
-        question="Who has the most shows?",
-        question_type="number",
-        acceptable_answers=[max(count_playlists)])
+    if not allowed_pool:
+        return  # You've answered all the questions!
     
-def popular_artist_by_dj_id(dj_id):
-    playlist_track_artists = {}
-    djs_playlists = playlists.get_all_playlists_by_dj_id(dj_id=dj_id)
-    for djs_playlist in djs_playlists:
-        playlist_track_rows = playlist_tracks.get_playlist_tracks_by_user_id(playlist_id=user_ids_playlist.playlist_id)
-        for playlist_track_row in playlist_track_rows:
-            playlist_track_artist = playlist_track_row.artist
-            if playlist_track_artist not in ['NULL', ""]:
-                playlist_track_artists[playlist_track_artist] = (
-                    playlist_track_artists.get(playlist_track_artist, 0) + 1)
-    return playlist_track_artists
-
-def add_qs_tracks_with_rando_word_in_title():
-    pass
-    #db.session.commit()
-
-def seed_tracks_with_word_in_title():
-    for word in ['moon', 'bird', 'dirty', 'blues', 'man', 'woman']:
-        question = f"Can you name a song with '{word}' in the title?"
-        acceptable_answer_objects = get_all_tracks_with_word_in_title(word)
-        acceptable_answers = []
-        for each_obj in acceptable_answer_objects:
-            acceptable_answers.append(each_obj.title)
-        create_question(
-            question=question,
-            acceptable_answers=acceptable_answers,
-            acceptable_answer_objects=acceptable_answer_objects)
-
-def get_all_tracks_with_word_in_title(word):
-    a = collection_tracks.get_collection_tracks_with_word_in_title(word)
-    b = tracks.get_tracks_with_word_in_title(word)
-    return a + b
-
-def seed_q_random_album_by_a_djs_top_artist(num_djs=5, num_artists=3):
-    # call add_q_random_album_by_a_djs_top_artist() in an efficient manner:
-    # for a few DJs and for a few of their fave artists.
-    for dd in range(num_djs):
-        user_id, air_name = get_random_dj()
-        top_artists = user_ids_top_n_artists(user_id=user_id, n=num_artists)
-        for rando_artist in top_artists:  #  Maybe it's fewer than num_artists for a new DJ?
-            rando_verb = choice(["likes to play", "plays a lot of", "seems to play a lot of", 
-                "sure likes to play", "often plays", "has played"])
-            all_albums_by_artist = albums.get_albums_by_artist(artist=rando_artist)
-            try:
-                rando_album = choice(all_albums_by_artist)
-            except IndexError:  # IndexError: list index out of range, I think there was no album found for the artist?
-                continue
-            acceptable_answer_objects = rando_album
-            acceptable_answers = albums.lookup_track_names(rando_album)
-            question=(
-                f"KFJC DJ {air_name} {rando_verb} the artist {rando_artist}. Can you name a track from their album {rando_album.title}?")
-            create_question(
-                question=question,
-                acceptable_answers=acceptable_answers,
-                acceptable_answer_objects=acceptable_answer_objects)
-
-def add_q_random_album_by_a_djs_top_artist():
-    # TODO: getting the top_n list is what takes a lot of time.
-    # For each time we do that, seed about 3-5 questions from top_n.
-    air_name, rando_artist, album_title, acceptable_answers = random_album_by_a_djs_top_artist()
-    #dj_moniker = ["DJ", "KFJC DJ", "Dee-J"]
-    verbs = ["likes to play", "plays a lot of", "seems to play a lot of", 
-        "sure likes to play", "often plays"]
-    rando_verb = choice(verbs)
-    create_question(
-        question=f"KFJC DJ {air_name} {rando_verb} the artist {rando_artist}. Can you name a track from their album '{album_title}'?",
-        acceptable_answers=acceptable_answers)
-
-def random_album_by_a_djs_top_artist():
-    air_name, top_artists = random_djs_top_artists()
-    rando_artist = choice(top_artists)
-    all_albums_by_artist = albums.get_albums_by_artist(artist=rando_artist)
-    rando_album = choice(all_albums_by_artist)
-    acceptable_answers = albums.lookup_track_names(album_instance=rando_album)
-    return air_name, rando_artist, rando_album.title, acceptable_answers
+    random_question_id = choice(allowed_pool)
+    return get_question_by_id(question_id=random_question_id)
     
-def random_djs_top_artists(n=10):
-    user_id, air_name = get_random_dj()
-    top_artists = user_ids_top_n_artists(user_id=user_id, n=n)
-    return air_name, top_artists
-
-def user_ids_top_n_artists(user_id, n=10):
-    playlist_track_artists = popular_artist_by_user_id(user_id=user_id)
-    top_artists = common.top_n(
-        popularity_dict=playlist_track_artists, n=n)
-    return top_artists
-
-def print_sir_c_most_popular_artists():
-    playlist_track_artists = popular_artist_by_user_id(user_id=255)
-    common.print_a_popularity_dict_in_order(
-        popularity_dict=playlist_track_artists, min_items_required=10)
-    return playlist_track_artists
-
-def popular_artist_by_user_id(user_id):
-    playlist_track_artists = {}
-    user_ids_playlists = playlists.get_playlists_by_user_id(user_id=user_id)
-    for user_ids_playlist in user_ids_playlists:
-        playlist_track_rows = playlist_tracks.get_playlist_tracks_by_user_id(playlist_id=user_ids_playlist.playlist_id)
-        for playlist_track_row in playlist_track_rows:
-            playlist_track_artist = playlist_track_row.artist
-            if playlist_track_artist not in ['NULL', ""]:
-                playlist_track_artists[playlist_track_artist] = (
-                    playlist_track_artists.get(playlist_track_artist, 0) + 1)
-    return playlist_track_artists
-
-def get_random_dj():
-    user_id, air_name = playlists.get_random_air_name()
-    return user_id, air_name
-
-"""
 
 if __name__ == '__main__':
     """Will connect you to the database when you run questions.py interactively"""

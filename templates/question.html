@@ -17,21 +17,13 @@
     <div class="col">
       <div class="row justify-content-center">
         {{ question }}
-        <form action="/answer" id="{{ answer_a }}" method="POST">
-          <button id="a" name="q" value="{{ answer_a }}" class="orange_button">{{ answer_a }}</button>
+        {% for answer in shuffled_answers %}
+        <form action="/answer" id="{{ answer }}" method="POST">
+          <button id="answer" name="q" value="{{ answer }}" class="orange_button">{{ answer }}</button>
         </form>
-        <form action="/answer" id="{{ answer_b }}" method="POST">
-          <button id="b" name="q" value="{{ answer_b }}" class="orange_button">{{ answer_b }}</button>
-        </form>
-        <form action="/answer" id="{{ answer_c }}" method="POST">
-          <button id="c" name="q" value="{{ answer_c }}" class="orange_button">{{ answer_c }}</button>
-        </form>
-        <form action="/answer" id="{{ answer_d }}" method="POST">
-          <button id="d" name="q" value="{{ answer_d }}" class="orange_button">{{ answer_d }}</button>
-        </form>
+        {% endfor %}
         <br>
       <div>
-        <br>
         <br>
         <br>
         <form action="/answer" id="skip" method="POST">

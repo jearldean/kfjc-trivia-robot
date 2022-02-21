@@ -1,9 +1,9 @@
 """Playlist Track operations for KFJC Trivia Robot."""
 
-from sqlalchemy import func, text
+from sqlalchemy import text
 
 from model import db, connect_to_db, PlaylistTrack
-
+import common
 
 def create_playlist_track(
     kfjc_playlist_id, indx, kfjc_album_id, album_title, artist, track_title,
@@ -24,90 +24,125 @@ def create_playlist_track(
 
     return playlist_track
 
+# -=-=-=-=-=-=-=-=-=-=-=- DJ Favorites -=-=-=-=-=-=-=-=-=-=-=-
 
-def djs_favorite(dj_id, artist=None, album=None, track=None, min_plays=5):
-    """Search and return a DJ's favorite artist, album or track."""
+def get_favorite_artists(dj_id, reverse=True, min_plays=5):
+    """Search and return a list of DJ's favorite artists."""
+    return djs_favorite(dj_id=dj_id, sql_variable="artist", reverse=reverse, min_plays=min_plays)
 
-    if artist:
-        sql_variable = "artist"
-    elif album:
-        sql_variable = "album_title"
-    elif track:
-        sql_variable = "track_title"
-    else:
-        return  # You need to put in one of the three.
+def get_favorite_albums(dj_id, reverse=True, min_plays=5):
+    """Search and return a list of DJ's favorite albums."""
+    return djs_favorite(dj_id=dj_id, sql_variable="album_title", reverse=reverse, min_plays=min_plays)
 
+def get_favorite_tracks(dj_id, reverse=True, min_plays=5):
+    """Search and return a list of DJ's favorite tracks."""
+    return djs_favorite(dj_id=dj_id, sql_variable="track_title", reverse=reverse, min_plays=min_plays)
+
+def djs_favorite(dj_id, sql_variable, reverse=True, min_plays=5):
+    """Search and return a DJ's favorite artists, albums or tracks."""
+    reverse_it = "DESC" if reverse else ""
     djs_playlists = (
         f"""SELECT kfjc_playlist_id 
         FROM playlists 
         WHERE dj_id = {dj_id} """)
     djs_favorite = (
-        f"""SELECT {sql_variable}, count({sql_variable}) 
+        f"""SELECT {sql_variable}, count({sql_variable}) as plays
         FROM playlist_tracks 
         WHERE kfjc_playlist_id in ({djs_playlists}) 
         GROUP BY {sql_variable} 
         HAVING count({sql_variable}) > {min_plays} 
-        ORDER BY count({sql_variable}) DESC """)
+        ORDER BY count({sql_variable}) {reverse_it} """)
 
-    return db.session.execute(djs_favorite)
+    reply = db.session.execute(djs_favorite)
+    # common.print_a_query_reply(reply)
+    return reply
 
+# -=-=-=-=-=-=-=-=-=-=-=- Top10, Top10, Most Plays -=-=-=-=-=-=-=-=-=-=-=-
 
-def last_time_played(artist=None, album=None, track=None):
-    """Search and return the last time any DJ played an artist, album or track."""
+def get_top10_artists(start_date, end_date, n=10):
+    """Going to make it a discoverable feature in REST API that they can ask for the
+    top 40, 29 or 123 artists if they so desire.
 
-    if artist:
-        sql_variable = "artist"
-        search_variable = artist.lower()
-    elif album:
-        sql_variable = "album_title"
-        search_variable = album.lower()
-    elif track:
-        sql_variable = "track_title"
-        search_variable = track.lower()
-    else:
-        return  # You need to put in one of the three.
+    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
 
-    who_played_it_when = (
-        f""" SELECT p.air_name, pt.artist, pt.album_title, pt.track_title, pt.time_played 
-        FROM playlists as p 
-        INNER JOIN playlist_tracks as pt 
-        ON (p.kfjc_playlist_id = pt.kfjc_playlist_id) 
-        WHERE LOWER(pt.{sql_variable}) LIKE '%{search_variable}%' 
-        AND pt.time_played IS NOT NULL 
-        ORDER BY pt.time_played """)
+    return get_top_plays(
+        start_date=start_date, end_date=end_date, 
+        sql_variable="artist", group_by="artist, album_title, track_title", n=n)
 
-    return db.session.execute(who_played_it_when)
+def get_top10_albums(start_date, end_date, n=10):
+    """TODO"""
+    return get_top_plays(
+        start_date=start_date, end_date=end_date, 
+        sql_variable="album_title", group_by="album_title, artist, track_title", n=n)
 
+def get_top10_tracks(start_date, end_date, n=10):
+    """TODO"""
+    return get_top_plays(
+        start_date=start_date, end_date=end_date, 
+        sql_variable="track_title", group_by="track_title, artist, album_title", n=n)
 
-def top_n(start_date, end_date, top=10, artist=None, album=None, track=None):
-    """Search and return the KFJC Top10, Top40 or Top* by artist, album or track for any time period.
-    
-    Playlist time_played is only really reliable since 2012."""
+def get_top_plays(start_date, end_date, sql_variable, group_by, n=10):
+    """Get the top plays between any two dates.
 
-    if artist:
-        sql_variable = "artist"
-        group_by = "artist, album_title, track_title"
-    elif album:
-        sql_variable = "album_title"
-        group_by = "album_title, artist, track_title"
-    elif track:
-        sql_variable = "track_title"
-        group_by = "track_title, artist, album_title"
-    else:  # Just use track, then.
-        sql_variable = "track_title"
-        group_by = "track_title, artist, album_title"
+    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
 
-    top_n_search = text(
-        f""" SELECT count({sql_variable}), {group_by}
+    top_n = text(
+        f""" SELECT count({sql_variable}) as plays, {group_by}
         FROM playlist_tracks 
         WHERE time_played >= date('{start_date}') 
         AND time_played <= date('{end_date}') 
         GROUP BY {group_by}
         ORDER BY count({sql_variable}) DESC 
-        LIMIT {top} """)
+        LIMIT {n} """)
 
-    return db.session.execute(top_n_search)
+    reply = db.session.execute(top_n)
+    common.print_a_query_reply(reply)
+    return reply
 
+# -=-=-=-=-=-=-=-=-=-=-=- When is the last time someone played _ ? -=-=-=-=-=-=-=-=-=-=-=-
+
+def get_last_play_of_artist(artist, reverse=False):
+    """Search and return the last plays of an artist.
+
+    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
+
+    return last_time_played(search_column_name="artist", search_for_item=artist, reverse=reverse)
+
+def get_last_play_of_album(album, reverse=False):
+    """Search and return the last plays of an album.
+
+    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
+
+    return last_time_played(search_column_name="album_title", search_for_item=album, reverse=reverse)
+
+def get_last_play_of_track(track, reverse=False):
+    """Search and return the last plays of a track.
+
+    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
+
+    return last_time_played(search_column_name="track_title", search_for_item=track, reverse=reverse)
+
+def last_time_played(search_column_name, search_for_item, reverse=False):
+    """Search and return the last time any DJ played an artist, album or track."""
+
+    reverse_it = "DESC" if reverse else ""
+    who_played_it_when = (
+        f""" SELECT p.air_name, pt.artist, pt.album_title, pt.track_title, pt.time_played 
+        FROM playlists as p 
+        INNER JOIN playlist_tracks as pt 
+        ON (p.kfjc_playlist_id = pt.kfjc_playlist_id) 
+        WHERE LOWER(pt.{search_column_name}) LIKE LOWER('%{search_for_item}%') 
+        AND pt.time_played IS NOT NULL 
+        ORDER BY pt.time_played {reverse_it} """)
+
+    reply = db.session.execute(who_played_it_when)
+    common.print_a_query_reply(reply)
+    return reply
+
+# -=-=-=-=-=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-=-=-=-=-
+
+def how_many_tracks():
+    return common.get_count(PlaylistTrack.id_)
 
 if __name__ == '__main__':
     """Will connect you to the database when you run playlist_tracks.py interactively"""

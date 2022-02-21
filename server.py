@@ -1,49 +1,36 @@
 """Server for KFJC Trivia Robot app."""
 
 import os
-import re
-from flask import (Flask, render_template, request, flash, session,
-                   redirect)
-from model import connect_to_db, db
 from random import choice
+from flask import (Flask, render_template, request, flash, session, redirect)
+from jinja2 import StrictUndefined
+from operator import itemgetter
+
+from model import connect_to_db, db
+import playlists
+import playlist_tracks
+import users
+import common
 import users
 import questions
 import answers
-from operator import itemgetter
-import collections
-import common
-
-from jinja2 import StrictUndefined
 
 app = Flask(__name__)
 app.secret_key = os.environ['APP_SECRET_KEY']
 app.jinja_env.undefined = StrictUndefined
 
-PRAISE_MSG = ["Aw, yeah!", "Oh, yeah!", "Sch-weet!", "Cool!", "Yay!", "Right!", "Correct!",
-    "You're right!", "You are Correct!", "Awesome!", "You're a wiz!"]
-CONSOLATION_MSG = ["Shucks", "Bad luck.", "Too bad.", "Better luck next time!", 
-    "Awwww...", "Oh no!", "Sorry, wrong..."]
-SKIP_MSG = ["Sorry you're not a fan of that one.", "I'll try to do better next time.",
-    "No problem."]
-INFO_MSG = ["Here's what I found:", "I found these:", "Here's your answer:"]
-ROBOT_MSG = ["Robot loves you!", "Pretty good, meatbag!", "Well done, bag of mostly water!"]
 TOP_N_USERS = 10  # Displayed on Leaderboard
+ROBOT_MSG = ["Robot loves you!", "Pretty good, meatbag!", "Well done, bag of mostly water!"]
 
-def random_robot_image():
-    """Give a path to a robot image."""
-    
-    robot_picture_idx = choice(range(1, 13))
-
-    return f"static/img/robot{robot_picture_idx}.png"
-
+# -=-=-=-=-=-=-=-=-=-=-=- Routes -=-=-=-=-=-=-=-=-=-=-=-
 
 @app.route("/")
 def homepage():
     """Display homepage."""
 
     return render_template(
-        'homepage.html', random_robot_img=random_robot_image())
-
+        'homepage.html', random_robot_img=random_robot_image(),
+        greeting = assemble_greeting())
 
 @app.route("/play")
 def shall_we_play():
@@ -56,7 +43,6 @@ def shall_we_play():
     else:
         # Send user to KFJC.org "Listen Now".
         return redirect('https://kfjc.org/player')
-
 
 @app.route('/login', methods=['POST'])
 def login_process():
@@ -115,86 +101,6 @@ def logout():
     flash("Logged Out.")
     return redirect("/")
 
-@app.route("/question")
-def ask_question():
-    """Offer a question to user."""
-    if "user_id" not in session:
-        return redirect('/important')
-
-    next_question = questions.get_unique_question(user_id=session["user_id"])
-    if isinstance(next_question, str):  # TODO use try/except instead of returning 2 different data types.
-        error_message = next_question
-        flash(error_message)
-        return redirect("/leaderboard")
-    else:
-        session["question_id"] = next_question.question_id
-        answer_pile = questions.get_answer_pile(question_instance=next_question)
-
-        return render_template(
-            'question.html',
-            random_robot_img=random_robot_image(),
-            question=next_question.question,
-            answer_a=answer_pile[0],
-            answer_b=answer_pile[1],
-            answer_c=answer_pile[2],
-            answer_d=answer_pile[3])
-
-@app.route("/answer", methods = ["POST"])
-def answer_question():
-    """Deal with response from user."""
-
-    answer_given=request.form.get("q")
-
-    user_id=session["user_id"]
-    user_instance = users.get_user_by_id(user_id=user_id)
-
-    question_instance = questions.get_question_by_id(
-        question_id=session["question_id"])
-
-    record_answer = answers.create_answer(
-        user_instance=user_instance, 
-        question_instance=question_instance, 
-        answer_given=answer_given)
-    db.session.commit()
-
-    if answer_given == "SKIP":  # That's a skip.
-        return redirect('/question')
-
-    if record_answer.answer_correct:
-        user_msg = choice(PRAISE_MSG) + "\n\n" + choice(INFO_MSG)
-        answer_correct = True
-    else:
-        user_msg = choice(CONSOLATION_MSG) + "\n\n" + choice(INFO_MSG)
-        answer_correct = False
-
-    question_instance = questions.get_question_by_id(
-        question_id=session["question_id"])
-
-    if question_instance.question_type == "most_shows":
-        right_answer = collections.OrderedDict(reversed(sorted(question_instance.acceptable_answers["display_all_answers"].items())))
-        table_display = True
-    elif question_instance.question_type == "earliest_show":
-        # dj_first_show = common.make_date_pretty(dj_info_deck[dj_id]['first_show'].strftime('%Y-%m-%d %H:%M:%S'))
-        right_answer = collections.OrderedDict(sorted(question_instance.acceptable_answers["display_all_answers"].items()))
-        right_answer_pretty = collections.OrderedDict()
-        for key in right_answer:
-            right_answer_pretty[common.make_date_pretty(key)] = right_answer[key]
-        table_display = True
-        right_answer = right_answer_pretty
-    else:
-        right_answer = question_instance.acceptable_answers["display_answer"]
-        table_display = False
-
-    return render_template(
-        'answer.html',
-        random_robot_img=random_robot_image(),
-        user_msg=user_msg,
-        answer_correct=answer_correct,
-        restate_the_question=question_instance.acceptable_answers["rephrase_the_question"],
-        table_display=table_display,
-        right_answer=right_answer)
-        
-
 @app.route("/infopage")
 def infopage():
     return render_template(
@@ -216,9 +122,69 @@ def myscore():
         fname=user_instance.fname,
         user_score=user_score)
 
+@app.route("/question")
+def ask_question():
+    """Offer a question to user."""
+    if "user_id" not in session:
+        return redirect('/important')
+
+    next_question = questions.get_unique_question(user_id=session["user_id"])
+
+    if not next_question:
+        flash("You've answered all the questions! I'm exhausted.")
+        return redirect("/leaderboard")
+    else:
+        session["question_id"] = next_question.question_id
+
+        return render_template(
+            'question.html',
+            random_robot_img=random_robot_image(),
+            question=next_question.ask_question,
+            shuffled_answers = next_question.wrong_answers[0])
+
+@app.route("/ask")
+def user_asks():
+    """Offer a question to user."""
+    if "user_id" not in session:
+        return redirect('/important')
+
+    return render_template(
+        'ask.html',
+        random_robot_img=random_robot_image())
+
+@app.route("/answer", methods = ["POST"])
+def answer_question():
+    """TODO"""
+
+    answer_given=request.form.get("q")
+    user = users.get_user_by_id(user_id=session["user_id"])
+    question = questions.get_question_by_id(question_id=session["question_id"])
+
+    answer = answers.create_answer(
+        user_instance=user, 
+        question_instance=question, 
+        answer_given=answer_given)
+    db.session.commit()
+
+    if answer_given == "SKIP":  # That's a skip.
+        return redirect('/question')
+
+    user_msg, restate_the_question, right_answer = (
+        answers.handle_incoming_answer(question=question, answer=answer))
+
+    return render_template(
+        'answer.html',
+        random_robot_img=random_robot_image(),
+        user_msg=user_msg,
+        answer_correct=answer.answer_correct,
+        restate_the_question=restate_the_question,
+        right_answer=right_answer)
 
 @app.route("/leaderboard")
 def leaderboard():
+    """TODO: Can leaderboard be rest api?
+    TODO:  Can we use sql alchemy processing to get the leaders?"""
+
     if "user_id" not in session:
         return redirect('/important')
 
@@ -245,7 +211,37 @@ def leaderboard():
         current_user = session["user_id"],
         user_msg=user_msg,
         leaders=score_board)
+
+# -=-=-=-=-=-=-=-=-=-=-=- REST API -=-=-=-=-=-=-=-=-=-=-=-
+
+
+# -=-=-=-=-=-=-=-=-=-=-=- Python -=-=-=-=-=-=-=-=-=-=-=-
+
+def random_robot_image():
+    """Give a path to a robot image."""
     
+    robot_picture_idx = choice(range(1, 13))
+
+    return f"static/img/robot{robot_picture_idx}.png"
+
+def assemble_greeting():
+    """Gather stats for to make a compelling reason to take a database quiz."""
+
+    first_and_last_show = playlists.first_show_last_show()
+    first_show_in_db = common.make_date_pretty(first_and_last_show[0])
+    duration = common.minutes_to_years(
+        ((first_and_last_show[1] - first_and_last_show[0]).total_seconds())/60)
+    count_all_shows = common.format_an_int_with_commas(playlists.how_many_shows())
+    count_prolific_djs = common.format_an_int_with_commas(playlists.how_many_djs())
+    count_playlist_tracks = common.format_an_int_with_commas(playlist_tracks.how_many_tracks())
+
+    greeting = (
+        f"KFJC has a database going back to {first_show_in_db} "
+        f"that contains {count_all_shows} shows by {count_prolific_djs} DJs. "
+        f"They've played {count_playlist_tracks} songs in {duration}! "
+        f"Wanna play a trivia game with me?")
+    return greeting
+
 
 if __name__ == "__main__":
     connect_to_db(app)

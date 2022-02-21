@@ -25,18 +25,21 @@
         {% endif %}
         <p> {{ restate_the_question }} </p>
        
-        {% if table_display %}
         <table>
           {% for ii in right_answer %}
-          <tr>
-            <td>{{ ii }} </td>
-            <td>{{ right_answer[ii] }} </td> 
-          </tr>
+            {% if ii == right_answer[0] %}
+            <tr id="ima_leader">
+              <td>{{ ii[0] }} </td>
+              <td>{{ ii[1] }} </td> 
+            </tr>
+            {% else %}
+            <tr>
+              <td>{{ ii[0] }} </td>
+              <td>{{ ii[1] }} </td> 
+            </tr>
+            {% endif %}
           {% endfor %}
         </table>
-        {% else %}
-          <p> {{ right_answer }} </p>
-        {% endif %}
      </div>
      <br>
      <br>

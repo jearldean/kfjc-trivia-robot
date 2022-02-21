@@ -3,19 +3,19 @@
 from model import db, connect_to_db, Album
 
 
-def create_album(kfjc_album_id, artist, title):
+def create_album(kfjc_album_id, artist, title, is_collection):
     """Create and return a new album."""
 
     album = Album(
         kfjc_album_id=kfjc_album_id,
         artist=artist,
-        title=title)
+        title=title,
+        is_collection=is_collection)
 
     db.session.add(album)
     # Don't forget to call model.db.session.commit() when done adding items.
 
     return album
-
 
 if __name__ == '__main__':
     """Will connect you to the database when you run albums.py interactively"""

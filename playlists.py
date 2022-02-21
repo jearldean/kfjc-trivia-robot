@@ -1,11 +1,13 @@
 """Playlist operations for KFJC Trivia Robot."""
 
+import re
+from sqlalchemy import desc, asc, func
+
 from model import db, connect_to_db, Playlist
+import common
 
-MIN_SHOW_COUNT = 40
-# Might do tuning and raise this... The first 14 playlists by any DJ are training missions
-# and more playlists are required to become a DJ relevant enough to ask questions on.
-
+MIN_SHOW_COUNT = 14
+# A DJ is born when they complete one training excercise and 13 grave shifts.
 
 def create_playlist(kfjc_playlist_id, dj_id, air_name, start_time, end_time):
     """Create and return a new playlist."""
@@ -22,26 +24,31 @@ def create_playlist(kfjc_playlist_id, dj_id, air_name, start_time, end_time):
 
     return playlist
 
+# -=-=-=-=-=-=-=-=-=-=-=- DJ Stats -=-=-=-=-=-=-=-=-=-=-=-
 
-def dj_stats(order_by = None, reverse = False):
-    """Search and return air_name, first_show, last_show and show_count for all DJs 
-    achieving MIN_SHOW_COUNT.
-    """
-    if order_by in ['air_name']:
-        sql_variable = "dj_id_to_air_name.air_name"
-    elif order_by in ['first_show']:
-        sql_variable = "first_last_count.FIRSTSHOW"
-    elif order_by in ['last_show']:
-        sql_variable = "first_last_count.LASTSHOW"
-    elif order_by in ['show_count']:
-        sql_variable = "first_last_count.SHOWCOUNT"
-    elif order_by in ['dj_id']:
-        sql_variable = "first_last_count.dj_id"
-    else:
-        sql_variable = "first_last_count.SHOWCOUNT"
-    if reverse:
-        sql_variable += " DESC"
+def get_djs_by_dj_id(reverse=False):
+    """Return DJ Stats in order of dj_id."""
+    return dj_stats(order_by_column="first_last_count.dj_id", reverse=reverse)
 
+def get_djs_alphabetically(reverse=False):
+    """Return DJ Stats in alphabetical order of air_name."""
+    return dj_stats(order_by_column="UPPER(dj_id_to_air_name.air_name)", reverse=reverse)
+
+def get_djs_by_first_show(reverse=False):
+    """Return DJ Stats in order of their first show."""
+    return dj_stats(order_by_column="first_last_count.FIRSTSHOW", reverse=reverse)
+
+def get_djs_by_last_show(reverse=False):
+    """Return DJ Stats in order of their last show."""
+    return dj_stats(order_by_column="first_last_count.LASTSHOW", reverse=reverse)
+
+def get_djs_by_show_count(reverse=False):
+    """Return DJ Stats in order of their total shows."""
+    return dj_stats(order_by_column="first_last_count.SHOWCOUNT", reverse=reverse)
+
+def dj_stats(order_by_column, reverse=False):
+    """Everything there is to know about DJs: air_name, dj_id, showcount, firstshow and lastshow."""
+    reverse_it = "DESC" if reverse else ""
     prolific_djs = (
         f"""SELECT dj_id 
         FROM playlists 
@@ -64,15 +71,39 @@ def dj_stats(order_by = None, reverse = False):
         AND air_name NOT LIKE '%rebroadcast%' """)
     dj_stats = (
         f"""SELECT dj_id_to_air_name.air_name, first_last_count.dj_id, 
-        first_last_count.SHOWCOUNT, first_last_count.FIRSTSHOW, first_last_count.LASTSHOW 
+        first_last_count.SHOWCOUNT as showcount, first_last_count.FIRSTSHOW as firstshow,
+        first_last_count.LASTSHOW as lastshow 
         FROM ({first_last_count}) first_last_count 
         LEFT JOIN ({dj_id_to_air_name}) dj_id_to_air_name 
         ON (first_last_count.dj_id = dj_id_to_air_name.dj_id) 
-        ORDER BY {sql_variable} """)
+        WHERE dj_id_to_air_name.dj_id NOT IN (431, -1) 
+        ORDER BY {order_by_column} {reverse_it} """)
 
-    return db.session.execute(dj_stats)
+    reply = db.session.execute(dj_stats)
+    # common.print_a_query_reply(reply)
+    return reply
+
+# -=-=-=-=-=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-=-=-=-=-
+
+def first_show_last_show():
+    return common.get_ages(Playlist.start_time)
+
+def get_all_dj_ids():
+    result_tuples = db.session.query(func.count(Playlist.dj_id)).group_by(
+        Playlist.dj_id).having(func.count(Playlist.dj_id) > MIN_SHOW_COUNT).all()
+    dj_ids = [each_tuple[0] for each_tuple in result_tuples]
+    return dj_ids
+
+def how_many_djs():
+    return len(get_all_dj_ids())
 
 
+def get_airname(dj_id):
+    return Playlist.query.filter(Playlist.dj_id == dj_id).first().air_name
+
+def how_many_shows():
+    return common.get_count(Playlist.kfjc_playlist_id)
+    
 if __name__ == '__main__':
     """Will connect you to the database when you run playlists.py interactively"""
     from server import app

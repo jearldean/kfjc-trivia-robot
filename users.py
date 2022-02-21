@@ -1,8 +1,8 @@
 """User operations for KFJC Trivia Robot."""
 
-from model import db, connect_to_db, User
 import bcrypt
-import common
+
+from model import db, connect_to_db, User
 
 def create_user(username, fname, password):
     """Create and return a new user."""
@@ -37,7 +37,9 @@ def get_user_by_username(username):
 
     return User.query.filter(User.username == username).first()
 
+
 def create_a_user(username, fname, password):
+    """"""
 
     if not does_user_exist_already(username):
         new_user = create_user(

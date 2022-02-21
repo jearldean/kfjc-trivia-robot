@@ -1,6 +1,7 @@
 """Models for KFJC Trivia Robot."""
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy_json import mutable_json_type
 
@@ -31,9 +32,12 @@ class Question(db.Model):
 
     question_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     question_type = db.Column(db.String, nullable=False)
-    question = db.Column(db.String, nullable=False)
+    ask_question = db.Column(db.String, nullable=False)
+    present_answer = db.Column(db.String, nullable=False)
     # Tips at https://amercader.net/blog/beware-of-json-fields-in-sqlalchemy/
     acceptable_answers = db.Column(mutable_json_type(dbtype=JSON, nested=True))
+    wrong_answers = db.Column(mutable_json_type(dbtype=JSON, nested=True))
+    # answers = a list of Answer objects
 
     def __repr__(self):
         spaces = (25 - len(self.question)) * " "
@@ -64,18 +68,15 @@ class Playlist(db.Model):
 
     __tablename__ = 'playlists'
 
-    id_ = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    kfjc_playlist_id = db.Column(db.Integer)
-    dj_id = db.Column(db.Integer)
+    kfjc_playlist_id = db.Column(db.Integer, primary_key=True)
+    dj_id = db.Column(db.Integer)  
     air_name = db.Column(db.String(60), nullable=True)
     start_time = db.Column(db.DateTime, nullable=True)  # '2022-01-19 22:04:31'
     end_time = db.Column(db.DateTime, nullable=True)  # '2022-01-19 22:08:42'
 
-    
     def __repr__(self):
-        #return f"\n{self.playlist_id}. {self.air_name} on {self.start_time}"
-        return f"{self.id_}, {self.kfjc_playlist_id}, {self.dj_id}, {self.air_name}, {self.start_time}"
-
+        return f"\n{self.kfjc_playlist_id}. {self.air_name} on {self.start_time}"
+        
 
 class PlaylistTrack(db.Model):
     """A playlist track from the station."""
@@ -83,17 +84,22 @@ class PlaylistTrack(db.Model):
     __tablename__ = 'playlist_tracks'
 
     id_ = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    kfjc_playlist_id = db.Column(db.Integer)
+    kfjc_playlist_id = db.Column(db.Integer, ForeignKey("playlists.kfjc_playlist_id"), nullable=True)
     indx = db.Column(db.Integer, nullable=True)
-    kfjc_album_id = db.Column(db.Integer, nullable=True)
+    kfjc_album_id = db.Column(db.Integer, ForeignKey("albums.kfjc_album_id"), nullable=True)
     album_title = db.Column(db.String(100))
     artist = db.Column(db.String(100))
     track_title = db.Column(db.String(100))
     time_played = db.Column(db.DateTime, nullable=True)
+    album_kfjc_album_id = db.relationship(
+        "Album", backref="playlist_tracks", cascade="all, delete-orphan", single_parent=True,
+        primaryjoin="PlaylistTrack.kfjc_album_id == Album.kfjc_album_id")
+    playlist_kfjc_playlist_id = db.relationship(
+        "Playlist", backref="playlist_tracks", cascade="all, delete-orphan", single_parent=True,
+        primaryjoin="PlaylistTrack.kfjc_playlist_id == Playlist.kfjc_playlist_id")
 
     def __repr__(self):
-        #return f"\nPlaylist {self.playlist_id}. {self.track_title} from {self.album_title} by {self.artist} played on {self.time_played}"
-        return f"{self.kfjc_playlist_id}, {self.artist}, {self.track_title}, {self.album_title}, {self.kfjc_album_id}, {self.time_played}"
+        return f"\nPlaylist {self.kfjc_playlist_id}. {self.track_title} from {self.album_title} by {self.artist} played on {self.time_played}"
 
 
 class Album(db.Model):
@@ -101,10 +107,12 @@ class Album(db.Model):
 
     __tablename__ = 'albums'
 
-    id_ = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    kfjc_album_id = db.Column(db.Integer)
+    kfjc_album_id = db.Column(db.Integer, primary_key=True)
     artist = db.Column(db.String(100))
     title = db.Column(db.String(100))
+    is_collection = db.Column(db.Boolean)
+    # tracks = a list of Track objects
+    # playlist_tracks = a list of PlaylistTrack objects
 
     def __repr__(self):
         return f"\nAlbum {self.kfjc_album_id}: {self.artist}\t\t{self.title}"
@@ -116,13 +124,16 @@ class Track(db.Model):
     __tablename__ = 'tracks'
 
     id_ = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    kfjc_album_id = db.Column(db.Integer)
+    kfjc_album_id = db.Column(db.Integer, ForeignKey("albums.kfjc_album_id"), nullable=True)
     artist = db.Column(db.String(100), nullable=True)
     title = db.Column(db.String(100))
     indx = db.Column(db.Integer)
+    track = db.relationship(
+        "Album", backref="tracks", cascade="all, delete-orphan", single_parent=True,
+        primaryjoin="Track.kfjc_album_id == Album.kfjc_album_id")
 
     def __repr__(self):
-        return f"\nid_{self.id_}\tAlbum {self.kfjc_album_id}, Track {self.indx}: {self.title}"
+        return f"\n{self.id_}: Artist: {self.artist}, Album {self.kfjc_album_id}, Track {self.indx}: {self.title}"
 
 
 def connect_to_db(flask_app, db_uri=f"postgresql:///{DATABASE}", echo=True):
