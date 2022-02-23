@@ -42,8 +42,9 @@ def handle_incoming_answer(question, answer):
     else:
         user_msg = choice(CONSOLATION_MSG) + "\n\n" + choice(INFO_MSG)
     restate_the_question = question.present_answer
-    right_answer = question.wrong_answers[1]
-    return user_msg, restate_the_question, right_answer
+    the_right_answer = question.acceptable_answers[0]
+    display_answers = question.wrong_answers[1]
+    return user_msg, restate_the_question, the_right_answer, display_answers
 
 
 def is_answer_correct(question_instance, answer_given):

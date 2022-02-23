@@ -97,7 +97,6 @@ def get_all_dj_ids():
 def how_many_djs():
     return len(get_all_dj_ids())
 
-
 def get_airname(dj_id):
     return Playlist.query.filter(Playlist.dj_id == dj_id).first().air_name
 

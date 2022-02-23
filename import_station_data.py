@@ -118,6 +118,7 @@ def profanity_filter(title_string):
         "Fuck", f"F{replace_with_emoji}ck").replace(
         "Shit", f"Sh&#128169;t").replace(
         "Pussy", "P&#128576;ssy").replace(
+        "Cunt", "C&#128576;nt").replace(
         "[coll]:", "").replace(  # Station shorthand for collaboration tracks.
         "[Coll]:", "").replace(
         "  ", " ")
@@ -127,7 +128,7 @@ def profanity_filter(title_string):
 def add_missing_albums():
     """There are a handful of missing albums causing import failures."""
     missing_albums = [
-        {"kfjc_album_id": 0, "artist": 'Various Artists', "title": 'Unknown Compilation', "is_collection": True},
+        {"kfjc_album_id": 0, "artist": None, "title": None, "is_collection": False},
         {"kfjc_album_id": 27, "artist": 'Pete & C.L. Smooth Rock', "title": 'Mecca and the Soul Bro', "is_collection": False},
         {"kfjc_album_id": 36, "artist": 'Sharon and the Dap King Jones', "title": 'What If We All Stopped', "is_collection": False},
         {"kfjc_album_id": 5050, "artist": 'Various Artists', "title": 'Unknown Compilation', "is_collection": True},
@@ -183,12 +184,12 @@ def create_playlists(row):
     # But if both are missing, we can get rid of the row. There are only
     # 14 rows out of 66k that are bad this way.
 
+    # TODO: S/T means Self-Titled... Copy the artist over or something.
+
     # Map the bad Dr. Doug dj_id to the good one:
     # (-1391, 'Dr Doug', datetime.datetime(2019, 11, 26, 2, 1, 15))
     # (391, 'dr doug', datetime.datetime(2020, 6, 16, 1, 54, 9))
-    # (-1391, 1)  TODO didn't work.
-
-    if coerce_imported_data(row[1]) == -1391:
+    if row[1] == '-1391':
         row[1] = 391  # Reassign it.
 
     # Fix air_name of DJ CLICK:     DJ Click, Click, ^

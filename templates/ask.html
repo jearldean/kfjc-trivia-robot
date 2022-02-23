@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Welcome to the KFJC Trivia Robot™!{% endblock %}
+
+{% block body %}
+
+<h1>Ask the KFJC Trivia Robot™!</h1>
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <!-- COLUMN ONE -->
+      <div class="row justify-content-center">
+        <!--You can have as many rows as you need.-->
+        <img src={{random_robot_img}} />
+      </div>
+    </div>
+    <div class="col">
+      <div class="row justify-content-center">
+        <form action="/ask" method="GET">
+          
+        <div>
+          <label>Ask about a KFJC DJ:</label>
+          
+          {% for each_dict in dj_dump %}
+
+            <!-- {% for one_list_item in each_dj %} -->
+            <p>{{ each_dict["air_name"] }}</p>
+            <p>{{ each_dict["firstshow"] }}</p>
+            <!-- {% endfor %} -->
+          {% endfor %}
+        </div>
+
+      </div>
+      <br>
+      <br>
+      <br>
+      <br>
+     </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

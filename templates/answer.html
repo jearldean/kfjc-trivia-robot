@@ -26,8 +26,8 @@
         <p> {{ restate_the_question }} </p>
        
         <table>
-          {% for ii in right_answer %}
-            {% if ii == right_answer[0] %}
+          {% for ii in display_answers %}
+            {% if the_right_answer in ii %}
             <tr id="ima_leader">
               <td>{{ ii[0] }} </td>
               <td>{{ ii[1] }} </td> 
