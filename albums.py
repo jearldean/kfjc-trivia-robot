@@ -17,6 +17,13 @@ def create_album(kfjc_album_id, artist, title, is_collection):
 
     return album
 
+
+def get_album_by_id(kfjc_album_id):
+    """Return an album by primary key."""
+
+    return Album.query.get(kfjc_album_id)
+
+
 if __name__ == '__main__':
     """Will connect you to the database when you run albums.py interactively"""
     from server import app

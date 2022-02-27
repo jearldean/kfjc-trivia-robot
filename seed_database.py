@@ -6,6 +6,7 @@ from server import app
 from model import db, connect_to_db
 
 import import_station_data as kfjc
+import questions
 
 DB_NAME = "trivia"
 
@@ -16,10 +17,7 @@ def recreate_all_tables():
 
     connect_to_db(app)
     db.create_all()
-
-def seed_questions():
-    # TODO
-    pass
+    
 
 def nuclear_option():
     tic = time.perf_counter()
@@ -29,7 +27,7 @@ def nuclear_option():
     mins = float((toc - tic)/60)
     print(f"Importing Station Data took {mins:0.4f} minutes.")
     tic = time.perf_counter()
-    seed_questions()
+    questions.make_all_the_questions()
     toc = time.perf_counter()
     mins = float((toc - tic)/60)
     print(f"Seeding Questions took {mins:0.4f} minutes.")

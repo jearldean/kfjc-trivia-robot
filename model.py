@@ -36,7 +36,9 @@ class Question(db.Model):
     present_answer = db.Column(db.String, nullable=False)
     # Tips at https://amercader.net/blog/beware-of-json-fields-in-sqlalchemy/
     acceptable_answers = db.Column(mutable_json_type(dbtype=JSON, nested=True))
-    wrong_answers = db.Column(mutable_json_type(dbtype=JSON, nested=True))
+    display_shuffled_answers = db.Column(mutable_json_type(dbtype=JSON, nested=True))
+    present_answer_data_headings = db.Column(mutable_json_type(dbtype=JSON, nested=True))
+    present_answer_data = db.Column(mutable_json_type(dbtype=JSON, nested=True))
     # answers = a list of Answer objects
 
     def __repr__(self):

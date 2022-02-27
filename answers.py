@@ -1,10 +1,11 @@
 """Answer operations for KFJC Trivia Robot."""
 
 from datetime import datetime
-from sqlalchemy import func
 from random import choice
+from sqlalchemy import func, case
 
 from model import db, connect_to_db, Answer
+import common
 
 
 PRAISE_MSG = ["Aw, yeah!", "Oh, yeah!", "Sch-weet!", "Cool!", "Yay!", "Right!", "Correct!",
@@ -30,10 +31,13 @@ def create_answer(user_instance, question_instance, answer_given):
     return user_answer
 
 
-def get_one_users_answers(user_instance):
+def get_one_users_answers(user):
     """Return all user_answers for one user."""
 
-    return Answer.query.filter(Answer.user_id == user_instance.user_id).all()
+    answers = Answer.query.filter(Answer.user_id == user.user_id).all()
+    reply_named_tuple = common.convert_dicts_to_named_tuples(answers)
+    return reply_named_tuple
+
 
 def handle_incoming_answer(question, answer):
     """TODO"""
@@ -51,46 +55,35 @@ def is_answer_correct(question_instance, answer_given):
     """Return a boolean"""
 
     if answer_given == "SKIP":
-        return  # For the skipped question case.
+        return  # None, for the skipped question case.
     else:
         if answer_given in question_instance.acceptable_answers:
             return True
         return False  # If we didn't hit by now, it's wrong.
 
 
-def get_user_score(user_instance):
+def get_user_score(user):
     """Return user play stats."""
 
-    passed = 0
-    failed = 0
-    skipped = 0
-    num_questions = 0
-    percent = 0.0
-
-    users_answers = get_one_users_answers(user_instance)
-
-    """ TODO   MAKE a solution that uses more sql alchemy:
-    a = db.session.query(func.count(Answer.answer_correct)).group_by(
-        Answer.answer_correct).all()
-    print(a)"""
-
-    for user_answer_instance in users_answers:
-        num_questions += 1
-        if user_answer_instance.answer_correct is None:
-            skipped += 1  # Handle this case first. 
-        elif user_answer_instance.answer_correct is True:
-            passed += 1
-        elif user_answer_instance.answer_correct is False:
-            failed += 1
-        else:
-            print("That's weird.")
-
+    passed = Answer.query(func.sum(case(
+        [(Answer.answer_correct == True, 1)], else_=0))).having(
+            Answer.user_id == user.user_id)
+    failed = Answer.query(func.sum(case(
+        [(Answer.answer_correct == False, 1)], else_=0))).having(
+            Answer.user_id == user.user_id)
+    skipped = Answer.query(func.sum(case(
+        [(Answer.answer_correct == None, 1)], else_=0))).having(
+            Answer.user_id == user.user_id)
+    questions = passed + failed + skipped
     percent = percent_correct(passed_count=passed, failed_count=failed)
 
     user_score = {'passed': passed, 'failed': failed, 'skipped': skipped,
-        'questions': num_questions, 'percent': percent}
+        'questions': questions, 'percent': percent}
 
-    return user_score
+    user_score_named_tuple = common.convert_dicts_to_named_tuples(
+        list_of_dicts=[user_score])[0]
+
+    return user_score_named_tuple
 
 
 def percent_correct(passed_count, failed_count):
@@ -113,3 +106,6 @@ if __name__ == '__main__':
     """Will connect you to the database when you run answers.py interactively"""
     from server import app
     connect_to_db(app)
+
+    import doctest
+    doctest.testmod()  # python3 answers.py -v

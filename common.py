@@ -1,7 +1,7 @@
 """Common operations for KFJC Trivia Robot."""
 
 import json
-import datetime
+import collections
 from datetime import date
 from sqlalchemy.sql.expression import func, distinct
 
@@ -17,11 +17,15 @@ def get_count(table_dot_column, unique=True):
         return db.session.query(func.count(table_dot_column)).scalar()
     
 def get_ages(table_dot_column):
+    """Get oldest and newest date in a column."""
+
     oldest = db.session.query(func.min(table_dot_column)).first()[0]
     newest = db.session.query(func.max(table_dot_column)).first()[0]
     return (oldest, newest)
 
 def print_a_query_reply(sql_alchemy_object):
+    """Print results during development."""
+
     length = 0
     for i in sql_alchemy_object:
         print(i)
@@ -29,6 +33,7 @@ def print_a_query_reply(sql_alchemy_object):
     print(f"{length} rows.")
 
 def unpack_a_result_proxy(resultproxy):
+    """TODO might go with named tuples instead."""
     d, a = {}, []
     for rowproxy in resultproxy:
         # rowproxy.items() returns an array like [(key0, value0), (key1, value1)]
@@ -68,9 +73,8 @@ def minutes_to_years(minutes):
 
     return f"{years} years, {weeks} weeks, and {days} days"
 
-
 def the_right_apostrophe(air_name):
-    """TODO
+    """So that questions can have a natural conversational tone.
     
     >>> air_name = "Oscar Hox"
     >>> s = the_right_apostrophe(air_name)
@@ -87,6 +91,7 @@ def the_right_apostrophe(air_name):
     >>> f"{air_name}{s}"
     "Spliff Skankin's"
     """
+    
     if air_name[-1] in ['s']:
         return "'"
     elif air_name[-1] in ["'"]:
@@ -96,11 +101,23 @@ def the_right_apostrophe(air_name):
         return "'s"
 
 def open_json_files(file_path):
+    """Open jsons, send back data."""
 
-     with open(file_path) as f:
+    with open(file_path) as f:
          data = json.load(f)
 
-     return data
+    return data
+
+def convert_dicts_to_named_tuples(list_of_dicts):
+    """After conversion, you'll be able to use dot notation on your data."""
+
+    list_of_named_tuples = []
+
+    for each_dict in list_of_dicts:
+        converteted_dicts = collections.namedtuple('GenericDict', each_dict.keys())(**each_dict)
+        list_of_named_tuples.append(converteted_dicts)
+
+    return list_of_named_tuples
 
 if __name__ == '__main__':
     """Will connect you to the database when you run common.py interactively"""

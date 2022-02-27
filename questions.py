@@ -6,16 +6,17 @@ from random import randrange, choice, choices, shuffle
 from sqlalchemy import exc
 from psycopg2 import errors
 
-from model import Answer, db, connect_to_db, Question, Album, PlaylistTrack
+from model import Answer, db, connect_to_db, Question
 import playlists
 import playlist_tracks
-import tracks
 import common
 
 SEED_QUESTION_COUNT = 30
-EARLIEST_RELIABLE_TIME_PLAYED = '2011-05-17'
+EARLIEST_RELIABLE_TIME_PLAYED = '1995-09-19'  # I improved this.
 
-def create_question(question_type, ask_question, present_answer, acceptable_answers, wrong_answers):
+def create_question(
+    question_type, ask_question, present_answer, acceptable_answers,
+    display_shuffled_answers, present_answer_data_headings, present_answer_data):
     """Create and return a new question."""
 
     question = Question(
@@ -23,7 +24,9 @@ def create_question(question_type, ask_question, present_answer, acceptable_answ
         ask_question=ask_question,
         present_answer=present_answer,
         acceptable_answers=acceptable_answers,
-        wrong_answers=wrong_answers)
+        display_shuffled_answers=display_shuffled_answers,
+        present_answer_data_headings=present_answer_data_headings,
+        present_answer_data=present_answer_data)
 
     db.session.add(question)
     # Don't forget to call model.db.session.commit() when done adding items.
@@ -31,14 +34,33 @@ def create_question(question_type, ask_question, present_answer, acceptable_answ
     return question
 
 def get_question_by_id(question_id):
+    """Return a question by question_id."""
+
     return Question.query.get(question_id)
      
+# -=-=-=-=-=-=-=-=-=-=-=- Choose Random Question -=-=-=-=-=-=-=-=-=-=-=-
+
+def get_unique_question(user_id):
+    """Pose a question to the user that they have not answered before."""
+
+    users_answers = Answer.query.filter(Answer.user_id == user_id).all()
+    user_already_answered = [users_answer.question_id for users_answer in users_answers]
+    question_ids = [one_question.question_id for one_question in Question.query.all()]
+    allowed_pool = list(set(question_ids) - set(user_already_answered))
+    if not allowed_pool:
+        return  # You've answered all the questions!
+    
+    random_question_id = choice(allowed_pool)
+    return get_question_by_id(question_id=random_question_id)
+
 # -=-=-=-=-=-=-=-=-=-=-=- Seed Questions Table -=-=-=-=-=-=-=-=-=-=-=-
 
 def make_all_the_questions():
+    """Create SEED_QUESTION_COUNT questions for each type."""
     who_is_the_oldest_dj()
     who_is_the_newest_dj()
     who_has_the_most_shows()
+    """
     when_was_dj_last_on_the_air()
     which_is_djs_favorite_artist()
     which_is_djs_favorite_album()
@@ -49,11 +71,12 @@ def make_all_the_questions():
     last_play_of_artist()
     last_play_of_album()
     last_play_of_track()
-    tracks_on_an_album()
+    tracks_on_an_album()"""
 
 def question_engine(
         resultproxy, answer_column, ask_questions, present_answers,
         search_key, reverse_display_answers):
+    """TODO"""
     answer_key = common.unpack_a_result_proxy(resultproxy=resultproxy)
     winners = answer_key[:SEED_QUESTION_COUNT]  # list of dicts
     losers = answer_key[SEED_QUESTION_COUNT:]
@@ -68,16 +91,22 @@ def question_engine(
                 item_value = common.make_date_pretty(date_time_string=zz[search_key])
                 present_answer_data.append([zz[answer_column], item_value])
                 display_shuffled_answers.append(zz[answer_column])
+            if search_key == 'firstshow':
+                present_answer_data_headings=["Air Name", "First Show"]
+            if search_key == 'lastshow':
+                present_answer_data_headings=["Air Name", "Last Show"]
         elif search_key in ['showcount']:
             for zz in sorted(answer_pile, key=itemgetter(search_key), reverse=reverse_display_answers):
                 item_value = common.format_an_int_with_commas(your_int=zz[search_key])
                 present_answer_data.append([zz[answer_column], item_value])
                 display_shuffled_answers.append(zz[answer_column])
+            present_answer_data_headings=["Air Name", "Show Count"]
         else:
             for zz in sorted(answer_pile, key=itemgetter(search_key), reverse=reverse_display_answers):
                 item_value = item_value=zz[search_key]
                 present_answer_data.append([zz[answer_column], item_value])
                 display_shuffled_answers.append(zz[answer_column])
+            present_answer_data_headings=["Air Name", "questions.py line 110"]
 
         acceptable_answers = [display_shuffled_answers[0]]
         shuffle(display_shuffled_answers)
@@ -86,10 +115,14 @@ def question_engine(
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answers=acceptable_answers,
-            wrong_answers=[display_shuffled_answers, present_answer_data])
+            display_shuffled_answers=display_shuffled_answers,
+            present_answer_data_headings=present_answer_data_headings,
+            present_answer_data=present_answer_data)
+
     db.session.commit()
 
 def who_is_the_oldest_dj():
+    """TODO"""
     resultproxy = playlists.get_djs_by_first_show(reverse=False)
     answer_column = "air_name"
     ask_questions = [
@@ -106,6 +139,7 @@ def who_is_the_oldest_dj():
         search_key=search_key, reverse_display_answers=reverse_display_answers)
 
 def who_is_the_newest_dj():
+    """TODO"""
     resultproxy = playlists.get_djs_by_first_show(reverse=True)
     answer_column = "air_name"
     ask_questions = [
@@ -122,6 +156,7 @@ def who_is_the_newest_dj():
         search_key=search_key, reverse_display_answers=reverse_display_answers)
 
 def who_has_the_most_shows():
+    """TODO"""
     resultproxy = playlists.get_djs_by_show_count()
     answer_column = "air_name"
     ask_questions = [
@@ -138,6 +173,7 @@ def who_has_the_most_shows():
         search_key=search_key, reverse_display_answers=reverse_display_answers)
 
 def when_was_dj_last_on_the_air():
+    """TODO"""
     resultproxy = playlists.get_djs_by_last_show(reverse=False)
     answer_key = common.unpack_a_result_proxy(resultproxy=resultproxy)
     random_last_shows = choices(answer_key, k=SEED_QUESTION_COUNT)
@@ -164,10 +200,14 @@ def when_was_dj_last_on_the_air():
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answers=[the_pretty_right_answer],
-            wrong_answers=[answer_pile, present_answer_data])
+            display_shuffled_answers=answer_pile,
+            present_answer_data_headings=["Air Name", "Last Show"],
+            present_answer_data=present_answer_data)
+
     db.session.commit()
 
 def which_is_djs_favorite_artist():
+    """TODO"""
     dj_id_pool = playlists.get_all_dj_ids()
     random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
     for dj_id in random_dj_ids:
@@ -202,10 +242,14 @@ def which_is_djs_favorite_artist():
                 ask_question=choice(ask_questions),
                 present_answer=choice(present_answers),
                 acceptable_answers=[the_right_answer['artist']],
-                wrong_answers=[display_shuffled_answers, present_answer_data])
+                display_shuffled_answers=display_shuffled_answers,
+                present_answer_data_headings=["Artist", "Plays"],
+                present_answer_data=present_answer_data)
+                
         db.session.commit()
 
 def which_is_djs_favorite_album():
+    """TODO"""
     dj_id_pool = playlists.get_all_dj_ids()
     random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
     for dj_id in random_dj_ids:
@@ -240,10 +284,14 @@ def which_is_djs_favorite_album():
                 ask_question=choice(ask_questions),
                 present_answer=choice(present_answers),
                 acceptable_answers=[the_right_answer[answer_column]],
-                wrong_answers=[display_shuffled_answers, present_answer_data])
+                display_shuffled_answers=display_shuffled_answers,
+                present_answer_data_headings=["Album", "Plays"],
+                present_answer_data=present_answer_data)
+                
         db.session.commit()
 
 def which_is_djs_favorite_track():
+    """TODO"""
     dj_id_pool = playlists.get_all_dj_ids()
     random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
     for dj_id in random_dj_ids:
@@ -278,7 +326,10 @@ def which_is_djs_favorite_track():
                 ask_question=choice(ask_questions),
                 present_answer=choice(present_answers),
                 acceptable_answers=[the_right_answer[answer_column]],
-                wrong_answers=[display_shuffled_answers, present_answer_data])
+                display_shuffled_answers=display_shuffled_answers,
+                present_answer_data_headings=["Track", "Plays"],
+                present_answer_data=present_answer_data)
+                
         db.session.commit()
 
 def top_ten_artist():
@@ -322,10 +373,14 @@ def top_ten_artist():
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answers=[one_winner[question_type]],
-            wrong_answers=[display_shuffled_answers, present_answer_data])
+            display_shuffled_answers=display_shuffled_answers,
+            present_answer_data_headings=["Artist", "Plays"],
+            present_answer_data=present_answer_data)
+            
     db.session.commit()
         
 def top_ten_album():
+    """TODO"""
     days_to_choose_from = (
         datetime.now() - 
         datetime.strptime(EARLIEST_RELIABLE_TIME_PLAYED,'%Y-%m-%d')).days
@@ -365,10 +420,14 @@ def top_ten_album():
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answers=[one_winner[question_type]],
-            wrong_answers=[display_shuffled_answers, present_answer_data])
+            display_shuffled_answers=display_shuffled_answers,
+            present_answer_data_headings=["Album", "Plays"],
+            present_answer_data=present_answer_data)
+            
     db.session.commit()
 
 def top_ten_track():
+    """TODO"""
     days_to_choose_from = (
         datetime.now() - 
         datetime.strptime(EARLIEST_RELIABLE_TIME_PLAYED,'%Y-%m-%d')).days
@@ -408,11 +467,14 @@ def top_ten_track():
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answers=[one_winner[question_type]],
-            wrong_answers=[display_shuffled_answers, present_answer_data])
+            display_shuffled_answers=display_shuffled_answers,
+            present_answer_data_headings=["Track", "Plays"],
+            present_answer_data=present_answer_data)
+
         db.session.commit()
 
 def last_play_of_artist():
-    # TODO 
+    """TODO"""
     question_type = "artist"
 
     buncha_tracks = playlist_tracks.all_random_library_picks(pick_type='artist', min_appearances=3)
@@ -456,10 +518,14 @@ def last_play_of_artist():
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answers=[the_pretty_right_answer],
-            wrong_answers=[answer_pile, present_answer_data])
+            display_shuffled_answers=answer_pile,
+            present_answer_data_headings=["Air Name", "Date"],
+            present_answer_data=present_answer_data)
+            
         db.session.commit()
 
 def last_play_of_album():
+    """TODO"""
     question_type = "album"
     buncha_tracks = playlist_tracks.all_random_library_picks(pick_type='album_title', min_appearances=3)
     for track in buncha_tracks[:SEED_QUESTION_COUNT]:
@@ -502,10 +568,14 @@ def last_play_of_album():
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answers=[the_pretty_right_answer],
-            wrong_answers=[answer_pile, present_answer_data])
+            display_shuffled_answers=answer_pile,
+            present_answer_data_headings=["Air Name", "Date"],
+            present_answer_data=present_answer_data)
+            
         db.session.commit()
 
 def last_play_of_track():
+    """TODO"""
     question_type = "track"
     buncha_tracks = playlist_tracks.all_random_library_picks(pick_type='track_title', min_appearances=3)
     for track in buncha_tracks[:SEED_QUESTION_COUNT]:
@@ -548,25 +618,47 @@ def last_play_of_track():
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answers=[the_pretty_right_answer],
-            wrong_answers=[answer_pile, present_answer_data])
+            display_shuffled_answers=answer_pile,
+            present_answer_data_headings=["Air Name", "Date"],
+            present_answer_data=present_answer_data)
+            
     db.session.commit()
 
 def tracks_on_an_album():
+    """TODO"""
     random_album = playlist_tracks.get_a_random_album()
     # get 20 random albums with at least 9 tracks.
-    resultproxy = tracks.get_tracks_by_kfjc_album_id(kfjc_album_id)
-
-    album = Album.query.get(kfjc_album_id)
-    
+    tracks = tracks.get_tracks_by_kfjc_album_id(
+        kfjc_album_id=random_album.kfjc_album_id)
     question_type = "track"
     ask_questions = [
-        f"Name a track from the album {album.title}:",
-        f"Can you pick the track that's from the {album.title} album?",
-        f"Pick the track that's off the album {album.title}:"]
+        f"Name a track from the album {random_album.title}:",
+        f"Can you pick the track that's from the {random_album.title} album?",
+        f"Pick the track that's off the album {random_album.title}:"]
     present_answers = [
-        f"This track is from the album {album.title}:",
-        f"Here's a track that's from the {album.title} album:",
-        f"{album.title} contains these tracks:"]
+        f"This track is from the album {random_album.title}:",
+        f"Here's a track that's from the {random_album.title} album:",
+        f"{random_album.title} contains these tracks:"]
+
+    track_titles = [track.title for track in tracks]
+    present_answer_data = [[track.artist, track.title] for track in tracks]
+
+    answer_pile = []
+    answer_pile.append(playlist_tracks.random_library_pick())
+    answer_pile.append(playlist_tracks.random_library_pick())
+    answer_pile.append(playlist_tracks.random_library_pick())
+    shuffle(answer_pile)
+    
+    create_question(
+        question_type=question_type,
+        ask_question=choice(ask_questions),
+        present_answer=choice(present_answers),
+        acceptable_answers=track_titles,
+        display_shuffled_answers=answer_pile,
+        present_answer_data_headings=["Artist", "Track"],
+        present_answer_data=present_answer_data)
+            
+    db.session.commit()
         
 # -=-=-=-=-=-=-=-=-=-=-=- Make Fake Answers -=-=-=-=-=-=-=-=-=-=-=-
 
@@ -600,21 +692,6 @@ def random_date_surrounding_another_date(target_date_time, k=1):
         random_dates.append(common.make_date_pretty(date_time_string=(
             datetime.now() - timedelta(days=dd))))
     return random_dates
-
-# -=-=-=-=-=-=-=-=-=-=-=- Choose Random Question -=-=-=-=-=-=-=-=-=-=-=-
-
-def get_unique_question(user_id):
-    """Pose a question to the user that they have not answered before."""
-    users_answers = Answer.query.filter(Answer.user_id == user_id).all()
-    user_already_answered = [users_answer.question_id for users_answer in users_answers]
-    question_ids = [one_question.question_id for one_question in Question.query.all()]
-    allowed_pool = list(set(question_ids) - set(user_already_answered))
-    if not allowed_pool:
-        return  # You've answered all the questions!
-    
-    random_question_id = choice(allowed_pool)
-    return get_question_by_id(question_id=random_question_id)
-    
 
 if __name__ == '__main__':
     """Will connect you to the database when you run questions.py interactively"""

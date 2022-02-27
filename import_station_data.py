@@ -1,9 +1,11 @@
 """Import Station Data from csv Files."""
 
+import re
 import csv
 import itertools
 from random import choice
 from datetime import datetime, timedelta
+from sqlalchemy.exc import IntegrityError
 
 from server import app
 from model import db, connect_to_db
@@ -55,21 +57,27 @@ def coerce_imported_data(one_cell):
     >>> coerce_imported_data("1969-12-31 16:00:00")
     >>> coerce_imported_data(-3)
     -3
+    >>> coerce_imported_data('-3')
+    -3
     >>> coerce_imported_data(27)
     27
     >>> coerce_imported_data('Wave of the West, The ')
     'The Wave of the West'
     """
 
+    try:
+        return int(one_cell)
+    except (ValueError, TypeError):
+        pass
+
     if one_cell in [
         'NULL', "Null", '', " ", "?", ".", "..", "...", "*", "-", ",",
         "\""] + BAD_TIMES:
-        return None
-    elif isinstance(one_cell, int):
-        return int(one_cell)
+        return None  # No Data *IS* No Data.
     elif isinstance(one_cell, datetime):
         return datetime.fromisoformat(one_cell)
     else:
+        # Strings go through the "String Fixer":
         return fix_titles(some_title=one_cell)
 
 def fix_titles(some_title):
@@ -79,27 +87,27 @@ def fix_titles(some_title):
     'Harry Connick Jr.'
     >>> fix_titles("Brown, James")
     'James Brown'
+    >>> fix_titles("Hendrix, Jimi Experience")
+    'Jimi Hendrix Experience'
     """
+    if not some_title:
+        return
 
     some_title = profanity_filter(title_string=some_title)
 
-    if ", the" in some_title.lower():
-        without_the = some_title.replace(", the", "").replace(", The", "")
+    if ", the" in some_title.lower() or ",the" in some_title.lower():
+        without_the = some_title.replace(
+            ", the", "").replace(",the", "").replace(
+                ", The", "").replace(",The", "")
         return f"The {without_the}".strip()
     elif "," in some_title:
-        # "Connick, Harry Jr."
-        if " Jr." in some_title:
-            some_title = some_title.replace(" Jr.", "")
-            parts = some_title.split(",")
-            new_string = " ".join(parts[1:]) + " " + parts[0]
-            return new_string.strip() + " Jr."
-
-        parts = some_title.split(",")
-        # Incase there are 2 commas:
-        new_string = " ".join(parts[1:]) + " " + parts[0]
-        return new_string.strip()
-
-    return some_title
+        some_title = some_title.replace(",", " ")
+        some_title = some_title.replace("  ", " ")
+        parts = some_title.split(" ")
+        # Swap the first 2 items. Keep everything else in the same order.
+        parts[0], parts[1] = parts[1], parts[0]
+        some_title = " ".join(parts)
+    return some_title.strip()
 
 def profanity_filter(title_string):
     """
@@ -121,97 +129,126 @@ def profanity_filter(title_string):
         "Cunt", "C&#128576;nt").replace(
         "[coll]:", "").replace(  # Station shorthand for collaboration tracks.
         "[Coll]:", "").replace(
-        "  ", " ")
+        "  ", " ").replace(
+        "______________________________", "")
 
     return title_string.strip()
 
-def add_missing_albums():
-    """There are a handful of missing albums causing import failures."""
-    missing_albums = [
-        {"kfjc_album_id": 0, "artist": None, "title": None, "is_collection": False},
-        {"kfjc_album_id": 27, "artist": 'Pete & C.L. Smooth Rock', "title": 'Mecca and the Soul Bro', "is_collection": False},
-        {"kfjc_album_id": 36, "artist": 'Sharon and the Dap King Jones', "title": 'What If We All Stopped', "is_collection": False},
-        {"kfjc_album_id": 5050, "artist": 'Various Artists', "title": 'Unknown Compilation', "is_collection": True},
-        {"kfjc_album_id": 269197, "artist": 'Al Larsen', "title": '\x01\t\x02', "is_collection": False},
-        {"kfjc_album_id": 666070, "artist": 'The Gits', "title": 'Best Of: Music From and Inspired By The Film', "is_collection": False},
-        {"kfjc_album_id": 684930, "artist": 'Pueblo', "title": 'Pueblo', "is_collection": False},
-        {"kfjc_album_id": 736499, "artist": 'Various Artists', "title": 'Unknown Compilation', "is_collection": True}]
-
-    for album in missing_albums:
-        albums.create_album(
-            kfjc_album_id=album["kfjc_album_id"], artist=album["artist"], 
-            title=album["title"], is_collection=album["is_collection"])
-
-def add_missing_playlists():
-    """The playlist table is a swiss cheese of data voids causing import failures."""
-    missing_playlists = [
-        26, 27, 28, 29, 30, 31, 32, 33, 
-        24509, 24511, 24513, 24516, 24518, 24519, 24520, 24521, 24522, 24523, 24524, 24525, 24526, 24527, 
-        24528, 24530, 24750, 24752, 24753, 24755, 24757, 24567, 24772, 24773, 24775, 30008, 30054, 30067, 
-        30270, 30973, 38296, 39715, 41100, 41101, 41368, 41539, 41704, 41729, 42354, 42500, 42523, 42580, 
-        42662, 42829, 43031, 43271, 43272, 43507, 43538, 43659, 43800, 43869, 43899, 44069, 44254, 44285, 
-        44286, 44397, 44541, 44775, 44807, 45221, 45354, 45477, 45478, 45479, 45480, 45481, 45482, 45483, 
-        45497, 45512, 45522, 45533, 45630, 45698, 45699, 45729, 45795, 45796, 46105, 46149, 46271, 46370, 
-        46372, 46576, 46689, 46812, 46813, 46962, 47065, 47262, 47330, 47448, 47449, 47450, 47553, 47665, 
-        47751, 47805, 48014, 48089, 48184, 48185, 48350, 48429, 48453, 48480, 48490, 48506, 48613, 48614, 
-        48664, 48740, 48751, 48772, 48802, 48979, 49011, 49120, 49216, 49425, 49426, 49439, 49465, 49610, 
-        49718, 49833, 49912, 50016, 50017, 50018, 50188, 50852, 51156, 52603, 55156, 55993, 56002, 56052, 
-        57516, 57541, 57655, 58153, 58249, 58406, 58669, 58670, 58873, 59317, 59318, 59319, 59344, 59539, 
-        59621, 59622, 59623, 59624, 59625, 59862, 59863, 59928, 59929, 59930, 59982, 60118, 60119, 60120, 
-        60121, 60436, 60674, 60687, 60805, 61144, 61598, 61669, 61957, 62003, 62026, 62029, 62030, 62031, 
-        62004, 62341, 62575, 62665, 62786, 62811, 62847, 63045, 63063, 63518, 63530, 64316, 64513, 65013, 
-        65584, 65682, 66253, 66466, 64514]
-
-    for kfjc_playlist_id in missing_playlists:
-        playlists.create_playlist(
-            kfjc_playlist_id=kfjc_playlist_id, dj_id=-1, 
-            air_name=None, start_time=None, end_time=None)
-
 # -=-=-=-=-=-=-=-=-=-=-=- Import the 5 CSV Files -=-=-=-=-=-=-=-=-=-=-=-
 
+ALBUM_DATA_PATH = 'station_data/album.csv'
 PLAYLIST_DATA_PATH = 'station_data/playlist.csv'
 PLAYLIST_TRACK_DATA_PATH = 'station_data/playlist_track.csv'
-ALBUM_DATA_PATH = 'station_data/album.csv'
-TRACK_DATA_PATH = 'station_data/track.csv'
 COLLECTION_TRACK_DATA_PATH = 'station_data/coll_track.csv'
+TRACK_DATA_PATH = 'station_data/track.csv'
+
+def create_albums(row):
+    """Add all albums rows."""
+
+    kfjc_album_id=coerce_imported_data(row[0])
+    artist=coerce_imported_data(row[1])
+    title=coerce_imported_data(row[2])
+    is_collection=bool(coerce_imported_data(row[7]))
+    title, artist, _ = fix_self_titled_items(
+        album_title=title, artist=artist, track_title=None)
+
+    albums.create_album(
+        kfjc_album_id=kfjc_album_id,
+        artist=artist,
+        title=title,
+        is_collection=is_collection)
+
+def add_a_missing_album(kfjc_album_id, artist, album_title):
+    """Add a dummy album row to avoid import conflicts."""
+
+    row = [kfjc_album_id, artist, album_title, None, None, None, None, 1]
+    create_albums(row=row)
+    db.session.commit()
 
 def create_playlists(row):
     """Add all playlists rows."""
 
-    # If we have one or the other, we can estimate the other:
+    # If if time is blank but the other isn't, 
+    # we can improve the data by estimating the other time:
     fixed_start_time, fixed_end_time = fix_playlist_times(
         start_time=row[3], end_time=row[4])
-    # But if both are missing, we can get rid of the row. There are only
-    # 14 rows out of 66k that are bad this way.
 
-    # TODO: S/T means Self-Titled... Copy the artist over or something.
-
-    # Map the bad Dr. Doug dj_id to the good one:
-    # (-1391, 'Dr Doug', datetime.datetime(2019, 11, 26, 2, 1, 15))
-    # (391, 'dr doug', datetime.datetime(2020, 6, 16, 1, 54, 9))
+    # Map the one bad Dr. Doug dj_id row to the good one:
     if row[1] == '-1391':
         row[1] = 391  # Reassign it.
 
     # Fix air_name of DJ CLICK:     DJ Click, Click, ^
-    # 47690,47946,324,DJ Click,2015-01-20 21:57:03.000000,2015-01-21 02:00:26.000000
-    # 47759,48016,324,Click,2015-01-30 06:06:30.000000,2015-01-30 09:58:55.000000
-    # 48671,48944,324,^,2015-06-08 21:59:44.000000,2015-06-09 02:08:35.000000
     if coerce_imported_data(row[2]) in ['Click', '^']:
         row[2] = 'DJ Click'  # Reassign it.
 
-    # Toss the row with kfjc_playlist_id = 0; that was the incomplete show
-    # at the time of the database dump.
-    kfjc_playlist_id = coerce_imported_data(row[0])
+    playlists.create_playlist(
+        kfjc_playlist_id=coerce_imported_data(row[0]),
+        dj_id=coerce_imported_data(row[1]),
+        air_name=coerce_imported_data(row[2]),
+        start_time=coerce_imported_data(fixed_start_time),
+        end_time=coerce_imported_data(fixed_end_time))
 
-    if fixed_start_time and fixed_end_time and kfjc_playlist_id:
-        # Drop the 14 rows we can't make a question out of.
-        # Import 2/15/22 still had these 15 rogue rows.
-        playlists.create_playlist(
-            kfjc_playlist_id=kfjc_playlist_id,
-            dj_id=coerce_imported_data(row[1]),
-            air_name=coerce_imported_data(row[2]),
-            start_time=coerce_imported_data(fixed_start_time),
-            end_time=coerce_imported_data(fixed_end_time))
+def add_a_missing_playlist(kfjc_playlist_id):
+    """Add a dummy playlist row to avoid import conflicts."""
+    row = [kfjc_playlist_id, -1, "Swiss Cheese Data", None, None]
+    create_playlists(row=row)
+    db.session.commit()
+
+def fix_self_titled_items(album_title, artist, track_title):
+    """S/T is shorthand for Self-Titled. Copy the artist or as much as we know.
+    
+    >>> fix_self_titled_items("S/T", 'Prince', None)
+    ('Prince', 'Prince', 'Prince')
+    >>> fix_self_titled_items("S/t ", None, None)
+    (None, None, None)
+    >>> fix_self_titled_items(" s/T", 'Prince', None)
+    ('Prince', 'Prince', 'Prince')
+    >>> fix_self_titled_items(None, 'Prince', " s/T ")
+    ('Prince', 'Prince', 'Prince')
+    >>> fix_self_titled_items('Prince', 'Prince', "s/t")
+    ('Prince', 'Prince', 'Prince')
+    >>> fix_self_titled_items(None, 'Prince', " S/t")
+    ('Prince', 'Prince', 'Prince')
+    >>> fix_self_titled_items('Prince', " S/t  ", None)
+    ('Prince', 'Prince', 'Prince')
+    >>> fix_self_titled_items(None, " S/T", 'Prince')
+    ('Prince', 'Prince', 'Prince')
+    >>> fix_self_titled_items('Prince', " s/t ", None)
+    ('Prince', 'Prince', 'Prince')
+    """
+    regex_test = r"(^|\s)(S|s)\/(T|t)\b"
+    if artist:
+        if bool(re.match(regex_test, artist)):
+            artist = None
+    if album_title:
+        if bool(re.match(regex_test, album_title)):
+            album_title = None
+    if track_title:
+        if bool(re.match(regex_test, track_title)):
+            track_title = None
+
+    if not track_title:
+        # track is unreliable, reassign track_title:
+        if artist:
+            track_title = artist
+        else:
+            track_title = album_title
+
+    if not album_title:
+        # album is unreliable, reassign album_title:
+        if artist:
+            album_title = artist
+        else:
+            album_title = track_title
+
+    if not artist:
+        # artist is unreliable, reassign artist:
+        if album_title:
+            artist = album_title
+        else:
+            artist = track_title
+
+    return album_title, artist, track_title
 
 def create_playlist_tracks(row):
     """Add all playlist_tracks rows."""
@@ -220,15 +257,25 @@ def create_playlist_tracks(row):
     artist = coerce_imported_data(row[3])
     track_title = coerce_imported_data(row[4])
 
+    album_title, artist, track_title = fix_self_titled_items(
+        album_title, artist, track_title)
+
     if all(v is None for v in [album_title, artist, track_title]):
-        # Not importing blank rows reduced the table size by
-        # 282,167 rows (11%) and reduced import time by 50s:
+        # Not importing blank rows reduced the table size by 11%.
         return
 
     kfjc_playlist_id = coerce_imported_data(row[0])
     indx = coerce_imported_data(row[1])
     kfjc_album_id = coerce_imported_data(row[6])
     time_played = coerce_imported_data(row[8])
+    if not time_played:
+        # 'Borrow' the time from the playlist.
+        # An estimate is better than a NULL.
+        try:
+            time_played = playlists.get_playlist_by_id(
+                kfjc_playlist_id=kfjc_playlist_id).start_time
+        except AttributeError:  # Some start_times are still blank.
+            pass
 
     playlist_tracks.create_playlist_track(
         kfjc_playlist_id=kfjc_playlist_id,
@@ -239,32 +286,89 @@ def create_playlist_tracks(row):
         track_title=track_title,
         time_played=time_played)
 
-def create_albums(row):
-    """Add all albums rows."""
-
-    albums.create_album(
-        kfjc_album_id=coerce_imported_data(row[0]),
-        artist=coerce_imported_data(row[1]),
-        title=coerce_imported_data(row[2]),
-        is_collection=bool(row[7]))   # TODO: Bug here. they're all TRUE.
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        
+        # Fix rows that cause import trouble:
+        if not albums.get_album_by_id(kfjc_album_id=kfjc_album_id):
+            add_a_missing_album(
+                kfjc_album_id=kfjc_album_id, artist=artist,
+                album_title=album_title)
+        if not playlists.get_playlist_by_id(kfjc_playlist_id=kfjc_album_id):
+            add_a_missing_playlist(kfjc_playlist_id=kfjc_album_id)
+        
+        # And try again; it should go through now:
+        playlist_tracks.create_playlist_track(
+            kfjc_playlist_id=kfjc_playlist_id,
+            indx=indx, 
+            kfjc_album_id=kfjc_album_id,
+            album_title=album_title,
+            artist=artist,
+            track_title=track_title,
+            time_played=time_played)
+        db.session.commit()
 
 def create_collection_tracks(row):
     """Add all collection tracks rows."""
 
+    kfjc_album_id=coerce_imported_data(row[0])
+    artist=coerce_imported_data(row[2])
+    title=coerce_imported_data(row[1])
+    indx=coerce_imported_data(row[3])
+    _, artist, title = fix_self_titled_items(None, artist, title)
+
     tracks.create_track(
-        kfjc_album_id=coerce_imported_data(row[0]),
-        artist=coerce_imported_data(row[2]),
-        title=coerce_imported_data(row[1]),
-        indx=coerce_imported_data(row[3]))
+        kfjc_album_id=kfjc_album_id,
+        artist=artist,
+        title=title,
+        indx=indx)
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        
+        # Fix rows that cause import trouble:
+        add_a_missing_album(
+            kfjc_album_id=kfjc_album_id, artist=artist,
+            album_title=title)
+        
+        # And try again; it should go through now:
+        tracks.create_track(
+            kfjc_album_id=kfjc_album_id,
+            artist=artist,
+            title=title,
+            indx=indx)
+        db.session.commit()
 
 def create_tracks(row):
     """Add all tracks rows without Artist."""
 
+    kfjc_album_id=coerce_imported_data(row[0])
+    title=coerce_imported_data(row[1])
+    indx=coerce_imported_data(row[3])
+
+    album = albums.get_album_by_id(kfjc_album_id=kfjc_album_id)
+    if album:
+        artist = album.artist
+    else:
+        # Fix rows that cause import trouble:
+        # If we can't get it from the album, this table can't tell you the artist.
+        artist = None
+        add_a_missing_album(
+            kfjc_album_id=kfjc_album_id, artist=artist,
+            album_title=title)
+        # track_title isn't the album_title but, it's a best guess.
+
     tracks.create_track(
-        kfjc_album_id=coerce_imported_data(row[0]),
-        artist=None,
-        title=coerce_imported_data(row[1]),
-        indx=coerce_imported_data(row[3]))
+        kfjc_album_id=kfjc_album_id,
+        artist=artist,
+        title=title,
+        indx=indx)
+
+    # We have handled the error upfont.
 
 # -=-=-=-=-=-=-=-=-=-=-=- Chunk Large Files for Import -=-=-=-=-=-=-=-=-=-=-=-
 
@@ -272,9 +376,10 @@ CHUNK_SIZE = 100000  # lines
 
 def import_all_tables():
     """Import Station Data from csv files in chunks."""
-    add_missing_albums()
-    add_missing_playlists()
-    db.session.commit()
+
+    # Add album 0 first; a much-used placeholder for skipping input of kfjc_album_id:
+    #add_a_missing_album(kfjc_album_id=0, artist=None, album_title=None)
+    #add_a_missing_playlist(kfjc_playlist_id=0)
 
     # Albums and PLaylists must be imported first since the other tables depend on them:
     data_path_and_function = [
@@ -324,3 +429,6 @@ def get_start_chunk_and_end_chunk_row_indexes(loop_number):
 
 if __name__ == "__main__":    
     connect_to_db(app)
+
+    import doctest
+    doctest.testmod()  # python3 import_station_data.py -v

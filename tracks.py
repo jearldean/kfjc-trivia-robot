@@ -1,7 +1,7 @@
 """Track operations for KFJC Trivia Robot."""
 
-from model import db, connect_to_db, Track, Album
-
+from model import db, connect_to_db, Track
+import common
 
 def create_track(kfjc_album_id, artist, title, indx):
     """Create and return a new track."""
@@ -20,23 +20,11 @@ def create_track(kfjc_album_id, artist, title, indx):
 # -=-=-=-=-=-=-=-=-=-=-=- Tracks on an Album -=-=-=-=-=-=-=-=-=-=-=-
 
 def get_tracks_by_kfjc_album_id(kfjc_album_id):
-    """Get artist, album title and track from a kfjc_album_id."""
+    """Get artist, album title and track from an album."""
 
-    album = Album.query.get(kfjc_album_id)
-    return get_tracks(album)
-
-def get_tracks(album):
-    """Get artist, album title and track from a kfjc_album_id."""
-
-    unpacked_tracks = []
-    for track in album.tracks:  # Using the relationship we made.
-        if track.artist:
-            unpacked_tracks.append([track.indx, track.artist, album.title, track.title])
-        else:
-            # Try the albums table for the Artist:
-            unpacked_tracks.append([track.indx, album.artist, album.title, track.title])
-    
-    return unpacked_tracks
+    tracks = Track.query.filter(Track.kfjc_album_id == kfjc_album_id).all()
+    reply_named_tuple = common.convert_dicts_to_named_tuples(tracks)
+    return reply_named_tuple
 
 
 if __name__ == '__main__':

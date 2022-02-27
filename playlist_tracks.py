@@ -54,16 +54,14 @@ def djs_favorite(dj_id, sql_variable, reverse=True, min_plays=5):
         ORDER BY count({sql_variable}) {reverse_it} """)
 
     reply = db.session.execute(djs_favorite)
-    # common.print_a_query_reply(reply)
-    return reply
+    reply_named_tuple = common.convert_dicts_to_named_tuples(reply)
+    return reply_named_tuple
 
 # -=-=-=-=-=-=-=-=-=-=-=- Top10, Top10, Most Plays -=-=-=-=-=-=-=-=-=-=-=-
 
 def get_top10_artists(start_date, end_date, n=10):
     """Going to make it a discoverable feature in REST API that they can ask for the
-    top 40, 29 or 123 artists if they so desire.
-
-    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
+    top 40, 29 or 123 artists if they so desire. *** """
 
     return get_top_plays(
         start_date=start_date, end_date=end_date, 
@@ -82,9 +80,7 @@ def get_top10_tracks(start_date, end_date, n=10):
         sql_variable="track_title", group_by="track_title, artist, album_title", n=n)
 
 def get_top_plays(start_date, end_date, sql_variable, group_by, n=10):
-    """Get the top plays between any two dates.
-
-    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
+    """Get the top plays between any two dates.***"""
 
     top_n = text(
         f""" SELECT count({sql_variable}) as plays, {group_by}
@@ -96,21 +92,25 @@ def get_top_plays(start_date, end_date, sql_variable, group_by, n=10):
         LIMIT {n} """)
 
     reply = db.session.execute(top_n)
-    # common.print_a_query_reply(reply)
-    return reply
+    reply_named_tuple = common.convert_dicts_to_named_tuples(reply)
+    return reply_named_tuple
 
 # -=-=-=-=-=-=-=-=-=-=-=- When is the last time someone played _ ? -=-=-=-=-=-=-=-=-=-=-=-
 
 def get_a_random_artist(min_appearances=3):
+    """"""
     return random_library_pick(pick_type='artist', min_appearances=min_appearances)
 
 def get_a_random_album(min_appearances=3):
+    """"""
     return random_library_pick(pick_type='album_title', min_appearances=min_appearances)
 
 def get_a_random_track(min_appearances=3):
+    """"""
     return random_library_pick(pick_type='track_title', min_appearances=min_appearances)
 
 def all_random_library_picks(pick_type='track_title', min_appearances=3):
+    """"""
     if pick_type in ['artist', 'Artist']:
         library_category = PlaylistTrack.artist
         pick_type = 'artist'
@@ -132,10 +132,12 @@ def all_random_library_picks(pick_type='track_title', min_appearances=3):
             continue  # Pick again if there's a problem.
         except exc.InternalError:
             continue  # Pick again if there's a problem.
-    return all_playlist_tracks_random
 
+    reply_named_tuple = common.convert_dicts_to_named_tuples(all_playlist_tracks_random)
+    return reply_named_tuple
 
 def random_library_pick(pick_type='track_title', min_appearances=3):
+    """TODO"""
     if pick_type in ['artist', 'Artist']:
         library_category = PlaylistTrack.artist
         pick_type = 'artist'
@@ -162,27 +164,28 @@ def random_library_pick(pick_type='track_title', min_appearances=3):
             continue  # Pick again if there's a problem.
         except exc.InternalError:
             continue  # Pick again if there's a problem.
-    return random_pick
 
+    reply_named_tuple = common.convert_dicts_to_named_tuples(random_pick)
+    return reply_named_tuple
+
+""" ***
+Keep in mind: playlist_tracks.time_played has only been collected since 2011 but,
+for earlier playlist_tracks, we are borrowing the playlist.start_time as the 
+playlist_tracks.time_played so we can make more questions.
+"""
 
 def get_last_play_of_artist(artist, reverse=False):
-    """Search and return the last plays of an artist.
-
-    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
+    """Search and return the last plays of an artist.***"""
 
     return last_time_played(search_column_name="artist", search_for_item=artist, reverse=reverse)
 
 def get_last_play_of_album(album, reverse=False):
-    """Search and return the last plays of an album.
-
-    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
+    """Search and return the last plays of an album.***"""
 
     return last_time_played(search_column_name="album_title", search_for_item=album, reverse=reverse)
 
 def get_last_play_of_track(track, reverse=False):
-    """Search and return the last plays of a track.
-
-    Keep in mind: playlist_tracks.time_played has only been collected since 2011. """
+    """Search and return the last plays of a track.***"""
 
     return last_time_played(search_column_name="track_title", search_for_item=track, reverse=reverse)
 
@@ -199,13 +202,13 @@ def last_time_played(search_column_name, search_for_item, reverse=False):
         AND pt.time_played IS NOT NULL 
         ORDER BY pt.time_played {reverse_it} """)
 
-    reply = db.session.execute(who_played_it_when)
-    # common.print_a_query_reply(reply)
-    return reply
+    reply_named_tuple = common.convert_dicts_to_named_tuples(who_played_it_when)
+    return reply_named_tuple
 
 # -=-=-=-=-=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-=-=-=-=-
 
 def how_many_tracks():
+    """Count all playlist_tracks for the homepage statement."""
     return common.get_count(PlaylistTrack.id_)
 
 if __name__ == '__main__':

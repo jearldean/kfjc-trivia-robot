@@ -1,7 +1,6 @@
 """Playlist operations for KFJC Trivia Robot."""
 
-import re
-from sqlalchemy import desc, asc, func
+from sqlalchemy import func
 
 from model import db, connect_to_db, Playlist
 import common
@@ -23,6 +22,11 @@ def create_playlist(kfjc_playlist_id, dj_id, air_name, start_time, end_time):
     # Don't forget to call model.db.session.commit() when done adding items.
 
     return playlist
+
+def get_playlist_by_id(kfjc_playlist_id):
+    """Return an album by primary key."""
+
+    return Playlist.query.get(kfjc_playlist_id)
 
 # -=-=-=-=-=-=-=-=-=-=-=- DJ Stats -=-=-=-=-=-=-=-=-=-=-=-
 
@@ -86,21 +90,26 @@ def dj_stats(order_by_column, reverse=False):
 # -=-=-=-=-=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-=-=-=-=-
 
 def first_show_last_show():
+    """TODO"""
     return common.get_ages(Playlist.start_time)
 
 def get_all_dj_ids():
+    """TODO"""
     result_tuples = db.session.query(func.count(Playlist.dj_id)).group_by(
         Playlist.dj_id).having(func.count(Playlist.dj_id) > MIN_SHOW_COUNT).all()
     dj_ids = [each_tuple[0] for each_tuple in result_tuples]
     return dj_ids
 
 def how_many_djs():
+    """Count all DJs for the homepage statement."""
     return len(get_all_dj_ids())
 
 def get_airname(dj_id):
+    """TODO"""
     return Playlist.query.filter(Playlist.dj_id == dj_id).first().air_name
 
 def how_many_shows():
+    """Count all playlists for the homepage statement."""
     return common.get_count(Playlist.kfjc_playlist_id)
     
 if __name__ == '__main__':

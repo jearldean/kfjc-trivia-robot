@@ -1,8 +1,6 @@
 """Server for KFJC Trivia Robot app."""
 
 import os
-import json
-import requests
 from random import choice
 from flask import (Flask, render_template, request, flash, session, redirect, jsonify)
 from jinja2 import StrictUndefined
@@ -449,7 +447,6 @@ class AlbumTracks(Resource):
         return album_tracks_schema.dump(album_tracks)
 
 api.add_resource(AlbumTracks, '/album_tracks/<int:kfjc_album_id>')
-
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
