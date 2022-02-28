@@ -1,8 +1,12 @@
+"""Tests for the KFJC Trivia Robot"""
+
+from typing import NamedTuple
 import unittest
 import datetime
+import collections
 
 from server import app
-from model import db, connect_to_db
+from model import Playlist, db, connect_to_db
 import import_station_data
 import playlists
 import playlist_tracks
@@ -109,24 +113,27 @@ class RobotTestsDatabase(unittest.TestCase):
     def make_users(self):
         """Add users from self.test_data."""
         for one_user in self.test_data["users"]:
-            a, b, c = one_user  # unpack
-            users.create_user(username=a, fname=b, password=c)
+            username, fname, password = one_user  # unpack
+            users.create_a_user(username=username, fname=fname, password=password)
+        db.session.commit()
 
     def make_answers(self):
         """Make 3 answers for each user: One PASS, FAIL, SKIP."""
+        question = questions.get_question_by_id(question_id=1)
+        cheat_peek_at_answer = question.acceptable_answers[0]
         for each_user in users.get_users():
             answers.create_answer(
                 user_instance=each_user,
-                question_instance=questions.get_question_by_id(question_id=1),
+                question_instance=question,
                 answer_given='SKIP')
             answers.create_answer(
                 user_instance=each_user,
-                question_instance=questions.get_question_by_id(question_id=1),
+                question_instance=question,
                 answer_given='Sir Cumference')
             answers.create_answer(
                 user_instance=each_user,
-                question_instance=questions.get_question_by_id(question_id=1),
-                answer_given="Spliff Skankin")
+                question_instance=question,
+                answer_given=cheat_peek_at_answer)
                 
     def test_kfjc_trivia_robot_parts(self):
         """
@@ -147,20 +154,15 @@ class RobotTestsDatabase(unittest.TestCase):
 
         # Import Station Data:
         import_station_data.import_all_tables()
-
-        questions.SEED_QUESTION_COUNT = 1
-        questions.make_all_the_questions()
-
-        self.make_users()
-        """
-        self.make_answers()
-
+        
         #695055,"Hiatt, John","Open Road, The","C","C","F",NULL,"0","L",NULL,"2010-04-07","2010-06-04",20088,1,0,"0000-00-00","0000-00-00"
         #694447,"[coll]: Sister Funk 2","Sister Funk 2","G","V","F",NULL,"1","L",NULL,"2010-03-24","2010-06-04",8871,NULL,0,"0000-00-00","0000-00-00"
         self.assertTrue(albums.get_album_by_id(kfjc_album_id=694447).is_collection)
         self.assertFalse(albums.get_album_by_id(kfjc_album_id=695055).is_collection)
         
-        # TODO   get_ages(table_dot_column)
+        oldest, newest = common.get_ages(Playlist.start_time)
+        self.assertEqual(oldest.isoformat(), "2000-08-13T16:00:00")
+        self.assertEqual(newest.isoformat(), "2022-02-16T02:00:30")
 
         self.assertNotIn("Fuck", albums.get_album_by_id(kfjc_album_id=140533).title)
         self.assertNotIn("Pussy", albums.get_album_by_id(kfjc_album_id=140533).title)
@@ -175,63 +177,71 @@ class RobotTestsDatabase(unittest.TestCase):
         # TODO   playlist_tracks.get_top10_artists(start_date, end_date, n=10)
         # TODO   playlist_tracks.get_top10_albums(start_date, end_date, n=10)
         # TODO   playlist_tracks.get_top10_tracks(start_date, end_date, n=10)
-
-        self.assertEqual('The Meditations', playlist_tracks.get_a_random_artist(min_appearances=3))
-        self.assertIn(playlist_tracks.get_a_random_album(min_appearances=3), [
-            "Greatest Hits", "Message From the Meditations", 
-            'Another Monty Python Record', "Monty Python's Previous Record", 
-            'Matching Tie & Handkerchief', "Monty Python's Contractual Obligation Album"])
+        # self.assertEqual('The Meditations', playlist_tracks.get_favorite_artists(dj_id=255, min_plays=3))
+       #  self.assertEqual('The Meditations', playlist_tracks.get_a_random_artist(min_appearances=3))
+        #self.assertIn(playlist_tracks.get_a_random_album(min_appearances=3), [
+        #    "Greatest Hits", "Message From the Meditations", 
+        #    'Another Monty Python Record', "Monty Python's Previous Record", 
+        #    'Matching Tie & Handkerchief', "Monty Python's Contractual Obligation Album"])
         # TODO self.assertIn(playlist_tracks.get_a_random_track(min_appearances=2), [])
         # TODO playlist_tracks.get_a_random_track(min_appearances=0)
-        # TODO playlist_tracks.get_last_play_of_artist(artist, reverse=False)
-        # TODO playlist_tracks.get_last_play_of_album(album, reverse=False)
-        # TODO playlist_tracks.get_last_play_of_track(track, reverse=False)
+        # self.assertEqual('Zion Train Dub', playlist_tracks.get_a_random_track(min_appearances=2))
         
+        self.assertEqual('Dr Doug', playlist_tracks.get_last_play_of_artist(artist="Brother Ali")[0].air_name)
+        self.assertEqual('Dr Doug', playlist_tracks.get_last_play_of_album(album="Shadows on the Sun")[0].air_name)
+        self.assertEqual('Dr Doug', playlist_tracks.get_last_play_of_track(track="Star Quality")[0].air_name)
+
         # Also tests: common.get_count(table_dot_column, unique=True)
-        self.assertEqual(89, playlist_tracks.how_many_tracks())
+        self.assertEqual(120, playlist_tracks.how_many_tracks())
 
         playlists.MIN_SHOW_COUNT = 0
-        self.assertEqual('Cy Thoth', playlists.get_djs_by_dj_id().first()[0])
-        self.assertEqual("Dr Doug", playlists.get_djs_by_dj_id(reverse=True).first()[0])
+        self.assertEqual('Cy Thoth', playlists.get_djs_by_dj_id()[0].air_name)
+        self.assertEqual("Dr Doug", playlists.get_djs_by_dj_id(reverse=True)[0].air_name)
 
-        self.assertEqual('Cy Thoth', playlists.get_djs_alphabetically().first()[0])
-        self.assertEqual("Spliff Skankin", playlists.get_djs_alphabetically(reverse=True).first()[0])
+        self.assertEqual('Cy Thoth', playlists.get_djs_alphabetically()[0].air_name)
+        self.assertEqual("Spliff Skankin'", playlists.get_djs_alphabetically(reverse=True)[0].air_name)
 
-        self.assertEqual("Spliff Skankin", playlists.get_djs_by_first_show().first()[0])
-        self.assertEqual('Dr Doug', playlists.get_djs_by_first_show(reverse=True).first()[0])
-
-        self.assertIn(
-            playlists.get_djs_by_last_show().first()[0],
-            ["Robert Emmett", 'Dr Doug'])
-        self.assertEqual("Dr Doug", playlists.get_djs_by_last_show(reverse=True).first()[0])
+        self.assertEqual("Spliff Skankin'", playlists.get_djs_by_first_show()[0].air_name)
+        self.assertEqual('Dr Doug', playlists.get_djs_by_first_show(reverse=True)[0].air_name)
 
         self.assertIn(
-            playlists.get_djs_by_show_count().first()[0],
+            playlists.get_djs_by_last_show()[0].air_name,
             ["Robert Emmett", 'Dr Doug'])
-        self.assertEqual("Spliff Skankin", playlists.get_djs_by_show_count(reverse=True).first()[0])
+        self.assertEqual("Dr Doug", playlists.get_djs_by_last_show(reverse=True)[0].air_name)
+
+        self.assertIn(
+            playlists.get_djs_by_show_count()[0].air_name,
+            ["Robert Emmett", 'Dr Doug'])
+        self.assertEqual("Spliff Skankin'", playlists.get_djs_by_show_count(reverse=True)[0].air_name)
         
         self.assertEqual(
             (datetime.datetime(2000, 8, 13, 16, 0), 
             datetime.datetime(2022, 2, 16, 2, 0, 30)), 
             playlists.first_show_last_show())
         
-        self.assertIn(255, playlists.get_all_dj_ids())
+        self.assertEqual(1, playlists.get_dj_ids_and_show_counts()[0].showcount)
+        self.assertEqual(431, playlists.get_dj_ids_and_show_counts()[0].dj_id)
         self.assertEqual(8, playlists.how_many_djs())
 
         self.assertEqual("Sir Cumference", playlists.get_airname(dj_id=255))
         self.assertEqual("DJ Click", playlists.get_airname(dj_id=324))
         self.assertEqual("Dr Doug", playlists.get_airname(dj_id=391))
 
-        self.assertEqual(15, playlists.how_many_shows())
-
-        # TODO   questions.get_unique_question(user_id)  # Can't be answered already.
-
-        for track in tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=397830):
-            self.assertEqual('Dolly Parton', track[1])
-
-        self.assertEqual('Jolene', tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=397830))
+        self.assertEqual(14, playlists.how_many_shows())
 
         """
+        questions.SEED_QUESTION_COUNT = 1
+        questions.make_all_questions()
+
+        # TODO   questions.get_unique_question(user_id)  # Can't be answered already.
+        """
+        for track in tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=397830):
+            self.assertEqual('Dolly Parton', track.artist)
+
+        self.assertEqual(
+            'Jolene', tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=397830)[0].title)
+
+        self.make_users()
         self.assertEqual("Percy", users.get_user_by_id(user_id=5).fname)
         self.assertEqual(
              "Charlie", 
@@ -241,24 +251,41 @@ class RobotTestsDatabase(unittest.TestCase):
              users.get_user_by_username(username='arthur@ministry_of_magic.gov').fname)
         self.assertTrue(users.does_user_exist_already(username='arthur@ministry_of_magic.gov'))
         self.assertFalse(users.does_user_exist_already(username='severus@death_eaters.org'))
-        self.assertTrue(users.does_password_match(
-            plain_text_password="test",
-            hashed_password=users.get_user_by_id(user_id=5).hashed_password))
-        self.assertFalse(users.does_password_match(
-            plain_text_password="test",
-            hashed_password="$2a$12$dSEOzALlm5qA8GHItk/u1.BlK.DHarFUdiEvvR7CPRDWW8tNH0.IK"))
+        #self.assertTrue(users.does_password_match(
+        #    plain_text_password="prefect",
+        #    hashed_password=users.get_user_by_id(user_id=5).hashed_password))
+        #self.assertFalse(users.does_password_match(
+        #    plain_text_password="noMatch",
+        #    hashed_password="$2a$12$dSEOzALlm5qA8GHItk/u1.BlK.DHarFUdiEvvR7CPRDWW8tNH0.IK"))
+        
+        
+        questions.SEED_QUESTION_COUNT = 1
+        questions.who_is_the_oldest_dj()
+        questions.who_is_the_newest_dj()
+        questions.who_has_the_most_shows()
+        questions.when_was_dj_last_on_the_air()
+        questions.which_is_djs_favorite_artist()
+        questions.which_is_djs_favorite_album()
+        questions.which_is_djs_favorite_track()
+        questions.top_ten_artist()
+        questions.top_ten_album()
+        questions.top_ten_track()
+        questions.albums_by_an_artist()
+        questions.artist_of_an_album()
+        #questions.tracks_on_an_album()  # too few tracks...
+        questions.last_play_of_artist()
+        questions.last_play_of_album()
+        questions.last_play_of_track()
 
-        """
+        self.make_answers()
         # Also tests: answers.is_answer_correct(question_instance, answer_given)
-        percys_score = answers.get_user_score(user_instance=users.get_user_by_id(user_id=5))
+        percys_score = answers.get_user_score(user_id=5)
         self.assertEqual(1, percys_score['passed'])
         self.assertEqual(1, percys_score['failed'])
         self.assertEqual(1, percys_score['skipped'])
         self.assertEqual(3, percys_score['questions'])
         self.assertEqual(50, percys_score['percent'])
-        #result = self.client.get("dj_stats/order_by=dj_id&reverse=1")
-        #self.assertIn(b"Spliff Skankin", result.data[0]['air_name'])
-        """
+        
 
     def tearDown(self):
         """Stuff that runs after every def test_ function."""

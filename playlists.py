@@ -93,16 +93,20 @@ def first_show_last_show():
     """TODO"""
     return common.get_ages(Playlist.start_time)
 
-def get_all_dj_ids():
-    """TODO"""
-    result_tuples = db.session.query(func.count(Playlist.dj_id)).group_by(
+def get_dj_ids_and_show_counts():
+    """TODO GenericDict(showcount=26, dj_id=53)"""
+    result_tuples = db.session.query(
+        func.count(Playlist.dj_id).label('showcount'), Playlist.dj_id).group_by(
         Playlist.dj_id).having(func.count(Playlist.dj_id) > MIN_SHOW_COUNT).all()
-    dj_ids = [each_tuple[0] for each_tuple in result_tuples]
-    return dj_ids
+    return common.convert_list_o_dicts_to_list_o_named_tuples(
+        list_of_dicts=result_tuples)
+
+def get_all_dj_ids():
+    return [x.dj_id for x in get_dj_ids_and_show_counts()]
 
 def how_many_djs():
     """Count all DJs for the homepage statement."""
-    return len(get_all_dj_ids())
+    return len(get_dj_ids_and_show_counts())
 
 def get_airname(dj_id):
     """TODO"""

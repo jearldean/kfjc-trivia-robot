@@ -7,7 +7,7 @@ from model import db, connect_to_db, User
 def create_user(username, fname, password):
     """Create and return a new user."""
 
-    hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     user = User(
         username=username,
@@ -66,7 +66,7 @@ def does_password_match(plain_text_password, hashed_password):
     # Using bcrypt, the salt is saved into the hash itself
     """
     
-    return bcrypt.checkpw(plain_text_password, hashed_password)
+    return bcrypt.checkpw(plain_text_password.encode('utf-8'), hashed_password)
     
     
 if __name__ == '__main__':

@@ -85,7 +85,7 @@ def make_all_questions():
         "using SEED_QUESTION_COUNT={SEED_QUESTION_COUNT}.")
 
 def who_is_the_oldest_dj():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     results_named_tuple = playlists.get_djs_by_first_show(reverse=False)
     question_type = "A Question about DJs:"
     ask_questions = [
@@ -127,7 +127,7 @@ def who_is_the_oldest_dj():
     db.session.commit()
 
 def who_is_the_newest_dj():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     results_named_tuple = playlists.get_djs_by_first_show(reverse=True)
     question_type = "A Question about DJs:"
     ask_questions = [
@@ -169,7 +169,7 @@ def who_is_the_newest_dj():
     db.session.commit()
 
 def who_has_the_most_shows():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     results_named_tuple = playlists.get_djs_by_show_count()
     question_type = "A Question about DJs:"
     ask_questions = [
@@ -209,7 +209,7 @@ def who_has_the_most_shows():
     db.session.commit()
 
 def when_was_dj_last_on_the_air():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     results_named_tuple = playlists.get_djs_by_last_show(reverse=False)
     random_last_shows = choices(results_named_tuple, k=SEED_QUESTION_COUNT)
     question_type = "A Question about DJs:"
@@ -242,7 +242,7 @@ def when_was_dj_last_on_the_air():
     db.session.commit()
 
 def which_is_djs_favorite_artist():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     question_type = "A Question about Artists:"
     dj_id_pool = playlists.get_all_dj_ids()
     random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
@@ -284,7 +284,7 @@ def which_is_djs_favorite_artist():
         db.session.commit()
 
 def which_is_djs_favorite_album():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     question_type = "A Question about Albums:"
     dj_id_pool = playlists.get_all_dj_ids()
     random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
@@ -325,7 +325,7 @@ def which_is_djs_favorite_album():
         db.session.commit()
 
 def which_is_djs_favorite_track():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     question_type = "A Question about Tracks:"
     dj_id_pool = playlists.get_all_dj_ids()
     random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
@@ -366,7 +366,7 @@ def which_is_djs_favorite_track():
         db.session.commit()
 
 def top_ten_artist():
-    """TODO   Docstrings, distill these bloated functions smaller..."""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     old, _ = common.get_ages(PlaylistTrack.time_played)
     # I improved this to go back to 1995-09-19.
     days_to_choose_from = (datetime.now() - old).days
@@ -414,7 +414,7 @@ def top_ten_artist():
     db.session.commit()
         
 def top_ten_album():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     old, _ = common.get_ages(PlaylistTrack.time_played)
     # I improved this to go back to 1995-09-19.
     days_to_choose_from = (datetime.now() - old).days
@@ -462,7 +462,7 @@ def top_ten_album():
     db.session.commit()
 
 def top_ten_track():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     old, _ = common.get_ages(PlaylistTrack.time_played)
     # I improved this to go back to 1995-09-19.
     days_to_choose_from = (datetime.now() - old).days
@@ -510,7 +510,7 @@ def top_ten_track():
         db.session.commit()
 
 def get_four_random_albums():
-    """TODO"""
+    """TODO: All these methods are woefully bloated and in need of consolidation."""
     four_random_albums = []
     for _ in range(4):
         # Get 4 random albums:
@@ -520,7 +520,9 @@ def get_four_random_albums():
     return four_random_albums
 
 def albums_by_an_artist():
-    """Formulate a question about albums by an artist."""
+    """Formulate a question about albums by an artist.
+    
+    TODO: All these methods are woefully bloated and in need of consolidation."""
     question_type = "A Question about an Album:"
     for _ in range(SEED_QUESTION_COUNT):
         four_random_albums = get_four_random_albums()
@@ -552,7 +554,9 @@ def albums_by_an_artist():
     db.session.commit()
         
 def artist_of_an_album():
-    """Formulate a question about artist of an album."""
+    """Formulate a question about artist of an album.
+    
+    TODO: All these methods are woefully bloated and in need of consolidation."""
     question_type = "A Question about an Artist:"
     for _ in range(SEED_QUESTION_COUNT):
         four_random_albums = get_four_random_albums()
@@ -584,7 +588,9 @@ def artist_of_an_album():
     db.session.commit()
 
 def tracks_on_an_album():
-    """Formulate a question about tracks on an album."""
+    """Formulate a question about tracks on an album.
+    
+    TODO: All these methods are woefully bloated and in need of consolidation."""
     question_type = "A Question about a Track:"
     for _ in range(SEED_QUESTION_COUNT):
         four_random_albums = get_four_random_albums()
@@ -625,7 +631,9 @@ def tracks_on_an_album():
     db.session.commit()
 
 def last_play_of_artist():
-    """Create a question about the last time an Artist was played."""
+    """Create a question about the last time an Artist was played.
+    
+    TODO: All these methods are woefully bloated and in need of consolidation."""
     question_type = "A Question about an Artist:"
     for _ in range(SEED_QUESTION_COUNT):
         random_artist = playlist_tracks.get_a_random_artist()
@@ -677,7 +685,9 @@ def last_play_of_artist():
     db.session.commit()
 
 def last_play_of_album():
-    """Create a question about the last time at Album was played."""
+    """Create a question about the last time at Album was played.
+    
+    TODO: All these methods are woefully bloated and in need of consolidation."""
     question_type = "A Question about an Album:"
     for _ in range(SEED_QUESTION_COUNT):
         random_album = playlist_tracks.get_a_random_album()
@@ -731,7 +741,9 @@ def last_play_of_album():
     db.session.commit()
 
 def last_play_of_track():
-    """Create a question about the last time at Track was played."""
+    """Create a question about the last time at Track was played.
+    
+    TODO: All these methods are woefully bloated and in need of consolidation."""
     question_type = "A Question about a Track:"
     for _ in range(SEED_QUESTION_COUNT):
         random_track = playlist_tracks.get_a_random_track()

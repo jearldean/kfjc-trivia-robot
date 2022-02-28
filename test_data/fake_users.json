@@ -3,47 +3,47 @@
        [
            "arthur@ministry_of_magic.gov",
            "Arthur",
-           "test"
+           "muggle_tech"
        ],
        [
            "molly@theburrough.com",
            "Molly",
-           "test"
+           "scourgify"
        ],
        [
            "bill@ministry_of_magic.gov",
            "Bill",
-           "test"
+           "curse!breaker"
        ],
        [
            "charlie@dragon_preserve.ro",
            "Charlie",
-           "test"
+           "dragonsRcool"
        ],
        [
            "percy@hogwarts.edu",
            "Percy",
-           "test"
+           "prefect"
        ],
        [
            "fred@weasleyswizardingwheezes.com",
            "Fred",
-           "test"
+           "georgeDidIt"
        ],
        [
            "george@weasleyswizardingwheezes.com",
            "George",
-           "test"
+           "fredDidIt"
        ],
        [
            "ron@hogwarts.edu",
            "Ron",
-           "test"
+           "IheartHermione"
        ],
        [
            "ginny@hogwarts.edu",
            "Ginny",
-           "test"
+           "IheartHarry"
        ]
    ]
 }
