@@ -83,9 +83,9 @@ def dj_stats(order_by_column, reverse=False):
         WHERE dj_id_to_air_name.dj_id NOT IN (431, -1) 
         ORDER BY {order_by_column} {reverse_it} """)
 
-    reply = db.session.execute(dj_stats)
-    # common.print_a_query_reply(reply)
-    return reply
+    results = db.session.execute(dj_stats)
+    reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(results)
+    return reply_named_tuple
 
 # -=-=-=-=-=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-=-=-=-=-
 

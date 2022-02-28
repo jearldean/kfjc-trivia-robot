@@ -268,4 +268,4 @@ class RobotTestsDatabase(unittest.TestCase):
         db.drop_all()
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main()  # pytest --tb=long

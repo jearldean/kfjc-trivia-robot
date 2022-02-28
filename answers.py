@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from random import choice
-from sqlalchemy import func, case
 
 from model import db, connect_to_db, Answer
 import common
@@ -30,26 +29,13 @@ def create_answer(user_instance, question_instance, answer_given):
 
     return user_answer
 
-
-def get_one_users_answers(user):
-    """Return all user_answers for one user."""
-
-    answers = Answer.query.filter(Answer.user_id == user.user_id).all()
-    reply_named_tuple = common.convert_dicts_to_named_tuples(answers)
-    return reply_named_tuple
-
-
-def handle_incoming_answer(question, answer):
+def get_user_msg(answer):
     """TODO"""
     if answer.answer_correct:
         user_msg = choice(PRAISE_MSG) + "\n\n" + choice(INFO_MSG)
     else:
         user_msg = choice(CONSOLATION_MSG) + "\n\n" + choice(INFO_MSG)
-    restate_the_question = question.present_answer
-    the_right_answer = question.acceptable_answers[0]
-    display_answers = question.wrong_answers[1]
-    return user_msg, restate_the_question, the_right_answer, display_answers
-
+    return user_msg
 
 def is_answer_correct(question_instance, answer_given):
     """Return a boolean"""
@@ -60,31 +46,6 @@ def is_answer_correct(question_instance, answer_given):
         if answer_given in question_instance.acceptable_answers:
             return True
         return False  # If we didn't hit by now, it's wrong.
-
-
-def get_user_score(user):
-    """Return user play stats."""
-
-    passed = Answer.query(func.sum(case(
-        [(Answer.answer_correct == True, 1)], else_=0))).having(
-            Answer.user_id == user.user_id)
-    failed = Answer.query(func.sum(case(
-        [(Answer.answer_correct == False, 1)], else_=0))).having(
-            Answer.user_id == user.user_id)
-    skipped = Answer.query(func.sum(case(
-        [(Answer.answer_correct == None, 1)], else_=0))).having(
-            Answer.user_id == user.user_id)
-    questions = passed + failed + skipped
-    percent = percent_correct(passed_count=passed, failed_count=failed)
-
-    user_score = {'passed': passed, 'failed': failed, 'skipped': skipped,
-        'questions': questions, 'percent': percent}
-
-    user_score_named_tuple = common.convert_dicts_to_named_tuples(
-        list_of_dicts=[user_score])[0]
-
-    return user_score_named_tuple
-
 
 def percent_correct(passed_count, failed_count):
     """For scorekeeping, leaderboards.
@@ -100,6 +61,39 @@ def percent_correct(passed_count, failed_count):
     except ZeroDivisionError:
         percent = 0.0
     return percent
+
+def get_one_users_answers(user_id):
+    """Return all user_answers for one user.
+    
+    for i in answers:
+        print(i.answer_given)
+        print(i.answer_correct)
+    """
+
+    return Answer.query.filter(Answer.user_id == user_id).all()
+
+def get_user_score(user_id):
+    """Return user play stats.
+    
+    NICE-TO-HAVE: get counts using SQL.
+    NICE-TO-HAVE: return a named tuple. """
+    passed=0
+    failed=0
+    skipped=0
+    for jj in get_one_users_answers(user_id=user_id):
+        if jj.answer_correct is True:
+            passed += 1
+        elif jj.answer_correct is False:
+            failed += 1
+        elif jj.answer_correct is None:
+            skipped += 1
+    questions = passed + failed + skipped
+    percent = percent_correct(passed_count=passed, failed_count=failed)
+    scores = {
+        'passed': passed, 'failed': failed, 'skipped': skipped,
+        'questions': questions, 'percent': percent}
+
+    return scores
 
 
 if __name__ == '__main__':

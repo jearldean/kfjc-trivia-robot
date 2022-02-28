@@ -32,17 +32,6 @@ def print_a_query_reply(sql_alchemy_object):
         length += 1
     print(f"{length} rows.")
 
-def unpack_a_result_proxy(resultproxy):
-    """TODO might go with named tuples instead."""
-    d, a = {}, []
-    for rowproxy in resultproxy:
-        # rowproxy.items() returns an array like [(key0, value0), (key1, value1)]
-        for column, value in rowproxy.items():
-            # build up the dictionary
-            d = {**d, **{column: value}}
-        a.append(d)
-    return a
-
 def format_an_int_with_commas(your_int):
     """
     >>> format_an_int_with_commas(1000000)
@@ -108,16 +97,22 @@ def open_json_files(file_path):
 
     return data
 
-def convert_dicts_to_named_tuples(list_of_dicts):
+def convert_list_o_dicts_to_list_o_named_tuples(list_of_dicts):
     """After conversion, you'll be able to use dot notation on your data."""
 
     list_of_named_tuples = []
 
     for each_dict in list_of_dicts:
-        converteted_dicts = collections.namedtuple('GenericDict', each_dict.keys())(**each_dict)
+        converteted_dicts = convert_dict_to_named_tuple(each_dict)
         list_of_named_tuples.append(converteted_dicts)
 
     return list_of_named_tuples
+
+def convert_dict_to_named_tuple(a_dict):
+    """After conversion, you'll be able to use dot notation on your data."""
+
+    return collections.namedtuple('GenericDict', a_dict.keys())(**a_dict)
+
 
 if __name__ == '__main__':
     """Will connect you to the database when you run common.py interactively"""

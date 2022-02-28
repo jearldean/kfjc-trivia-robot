@@ -1,7 +1,6 @@
 """Track operations for KFJC Trivia Robot."""
 
 from model import db, connect_to_db, Track
-import common
 
 def create_track(kfjc_album_id, artist, title, indx):
     """Create and return a new track."""
@@ -20,11 +19,12 @@ def create_track(kfjc_album_id, artist, title, indx):
 # -=-=-=-=-=-=-=-=-=-=-=- Tracks on an Album -=-=-=-=-=-=-=-=-=-=-=-
 
 def get_tracks_by_kfjc_album_id(kfjc_album_id):
-    """Get artist, album title and track from an album."""
+    """Get artist, album title and track from an album.
+    
+    tracks.artist column has already been united with album.artist."""
 
     tracks = Track.query.filter(Track.kfjc_album_id == kfjc_album_id).all()
-    reply_named_tuple = common.convert_dicts_to_named_tuples(tracks)
-    return reply_named_tuple
+    return tracks
 
 
 if __name__ == '__main__':

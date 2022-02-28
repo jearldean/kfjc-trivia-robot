@@ -42,6 +42,10 @@ img {
     border: 4px outset #1C6EA4;
 }
 
+#table_heading {
+  font-weight: bold;
+}
+
 input[type="text"] {
     width: 200px;
     vertical-align: top;

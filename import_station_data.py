@@ -2,6 +2,7 @@
 
 import re
 import csv
+import time
 import itertools
 from random import choice
 from datetime import datetime, timedelta
@@ -146,8 +147,8 @@ def create_albums(row):
     """Add all albums rows."""
 
     kfjc_album_id=coerce_imported_data(row[0])
-    artist=coerce_imported_data(row[1])
-    title=coerce_imported_data(row[2])
+    artist=str(coerce_imported_data(row[1]))
+    title=str(coerce_imported_data(row[2]))  # Charlie Forsyth has an int for album name.
     is_collection=bool(coerce_imported_data(row[7]))
     title, artist, _ = fix_self_titled_items(
         album_title=title, artist=artist, track_title=None)
@@ -181,12 +182,37 @@ def create_playlists(row):
     if coerce_imported_data(row[2]) in ['Click', '^']:
         row[2] = 'DJ Click'  # Reassign it.
 
+    kfjc_playlist_id=coerce_imported_data(row[0])
+    dj_id=coerce_imported_data(row[1])
+    air_name=str(coerce_imported_data(row[2]))
+    start_time=coerce_imported_data(fixed_start_time)
+    end_time=coerce_imported_data(fixed_end_time)
+
     playlists.create_playlist(
-        kfjc_playlist_id=coerce_imported_data(row[0]),
-        dj_id=coerce_imported_data(row[1]),
-        air_name=coerce_imported_data(row[2]),
-        start_time=coerce_imported_data(fixed_start_time),
-        end_time=coerce_imported_data(fixed_end_time))
+        kfjc_playlist_id=kfjc_playlist_id,
+        dj_id=dj_id,
+        air_name=air_name,
+        start_time=start_time,
+        end_time=end_time)
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        
+        # Fix rows that cause import trouble:
+        add_a_missing_playlist(kfjc_playlist_id=kfjc_playlist_id)
+        
+        # And try again; it should go through now:
+        playlists.create_playlist(
+            kfjc_playlist_id=kfjc_playlist_id,
+            dj_id=dj_id,
+            air_name=air_name,
+            start_time=start_time,
+            end_time=end_time)
+
+        db.session.commit()
+
 
 def add_a_missing_playlist(kfjc_playlist_id):
     """Add a dummy playlist row to avoid import conflicts."""
@@ -253,9 +279,9 @@ def fix_self_titled_items(album_title, artist, track_title):
 def create_playlist_tracks(row):
     """Add all playlist_tracks rows."""
 
-    album_title = coerce_imported_data(row[5])
-    artist = coerce_imported_data(row[3])
-    track_title = coerce_imported_data(row[4])
+    album_title = str(coerce_imported_data(row[5]))
+    artist = str(coerce_imported_data(row[3]))
+    track_title = str(coerce_imported_data(row[4]))
 
     album_title, artist, track_title = fix_self_titled_items(
         album_title, artist, track_title)
@@ -296,8 +322,8 @@ def create_playlist_tracks(row):
             add_a_missing_album(
                 kfjc_album_id=kfjc_album_id, artist=artist,
                 album_title=album_title)
-        if not playlists.get_playlist_by_id(kfjc_playlist_id=kfjc_album_id):
-            add_a_missing_playlist(kfjc_playlist_id=kfjc_album_id)
+        if not playlists.get_playlist_by_id(kfjc_playlist_id=kfjc_playlist_id):
+            add_a_missing_playlist(kfjc_playlist_id=kfjc_playlist_id)
         
         # And try again; it should go through now:
         playlist_tracks.create_playlist_track(
@@ -314,8 +340,8 @@ def create_collection_tracks(row):
     """Add all collection tracks rows."""
 
     kfjc_album_id=coerce_imported_data(row[0])
-    artist=coerce_imported_data(row[2])
-    title=coerce_imported_data(row[1])
+    artist=str(coerce_imported_data(row[2]))
+    title=str(coerce_imported_data(row[1]))
     indx=coerce_imported_data(row[3])
     _, artist, title = fix_self_titled_items(None, artist, title)
 
@@ -347,7 +373,7 @@ def create_tracks(row):
     """Add all tracks rows without Artist."""
 
     kfjc_album_id=coerce_imported_data(row[0])
-    title=coerce_imported_data(row[1])
+    title=str(coerce_imported_data(row[1]))
     indx=coerce_imported_data(row[3])
 
     album = albums.get_album_by_id(kfjc_album_id=kfjc_album_id)
@@ -377,10 +403,6 @@ CHUNK_SIZE = 100000  # lines
 def import_all_tables():
     """Import Station Data from csv files in chunks."""
 
-    # Add album 0 first; a much-used placeholder for skipping input of kfjc_album_id:
-    #add_a_missing_album(kfjc_album_id=0, artist=None, album_title=None)
-    #add_a_missing_playlist(kfjc_playlist_id=0)
-
     # Albums and PLaylists must be imported first since the other tables depend on them:
     data_path_and_function = [
         (ALBUM_DATA_PATH, create_albums),
@@ -389,9 +411,14 @@ def import_all_tables():
         (COLLECTION_TRACK_DATA_PATH, create_collection_tracks),
         (TRACK_DATA_PATH, create_tracks)]
 
+    tic = time.perf_counter()
+    # Importing takes 4 1/2 hours but it will handle all it's own errors.
     for each_tuple in data_path_and_function:
         file_path, row_handler = each_tuple  # unpack
         seed_a_large_csv(file_path=file_path, row_handler=row_handler)
+    toc = time.perf_counter()
+    mins = float((toc - tic)/60)
+    print(f"Importing Station Data took {mins:0.4f} minutes.")
 
 def seed_a_large_csv(file_path, row_handler):
     """Large files must be broken into chunks."""

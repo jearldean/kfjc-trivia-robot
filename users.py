@@ -39,7 +39,7 @@ def get_user_by_username(username):
 
 
 def create_a_user(username, fname, password):
-    """"""
+    """TODO"""
 
     if not does_user_exist_already(username):
         new_user = create_user(

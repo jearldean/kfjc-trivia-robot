@@ -23,10 +23,14 @@
         {% else %}
           <p id="incorrect"> {{ user_msg }} </p>
         {% endif %}
-        <p> {{ restate_the_question }} </p>
+        <p> {{ present_answer }} </p>
        
         <table>
-          {% for ii in display_answers %}
+          <tr id="table_heading">
+            <td>{{ present_answer_data_headings[0] }} </td>
+            <td>{{ present_answer_data_headings[1] }} </td> 
+          </tr>
+          {% for ii in present_answer_data %}
             {% if the_right_answer in ii %}
             <tr id="ima_leader">
               <td>{{ ii[0] }} </td>

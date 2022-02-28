@@ -36,6 +36,20 @@ def homepage():
         'homepage.html', random_robot_img=random_robot_image(),
         greeting = assemble_greeting())
 
+
+@app.route("/play")
+def shall_we_play():
+    """Proceed with game or not."""
+
+    game_on = request.args.get("game-on")  # Bool
+
+    if game_on == 'true':
+        return redirect('/question')
+    else:
+        # Send user to KFJC.org "Listen Now".
+        return redirect('https://kfjc.org/player')
+
+
 @app.route('/login', methods=['POST'])
 def login_process():
     """Process login."""
@@ -45,7 +59,7 @@ def login_process():
     user_instance = users.get_user_by_username(username=username)
 
     if not user_instance:
-        flash("No one with that email found.")
+        flash("No one with that username found.")
         return redirect("/")
     if users.does_password_match(
             plain_text_password=password,
@@ -104,15 +118,16 @@ def myscore():
     if "user_id" not in session:
         return redirect('/important')
 
-    user_instance=users.get_user_by_id(user_id=session["user_id"])
-
-    user_score = answers.get_user_score(user_instance=user_instance)
+    user_id=session["user_id"]
+    user=users.get_user_by_id(user_id=user_id)
+    user_score_named_tuple = answers.get_user_score(user_id=user_id)
 
     return render_template(
         'score.html',
+        robot_msg=choice(ROBOT_MSG),
         random_robot_img=random_robot_image(),
-        fname=user_instance.fname,
-        user_score=user_score)
+        fname=user.fname,
+        user_score=user_score_named_tuple)
 
 @app.route("/question")
 def ask_question():
@@ -131,61 +146,9 @@ def ask_question():
         return render_template(
             'question.html',
             random_robot_img=random_robot_image(),
-            question=next_question.ask_question,
-            shuffled_answers = next_question.wrong_answers[0])
-
-@app.route("/ask")
-def user_asks():
-    """Offer a question to user."""
-    if "user_id" not in session:
-        return redirect('/important')
-
-    dj_id=request.args.get("dj_id")
-    
-    dj_selected = int(dj_id)
-    
-    if not dj_selected:
-        dj_selected = 177
-    dj_stat = assemble_dj_stat(dj_id=dj_selected)
-
-    print(dj_stat)
-    
-    #url = "/dj_stats"
-    #from_the_rest_api = requests.get(url)
-    #dj_dump_json = from_the_rest_api.text
-    #dj_dump = json.loads(dj_dump_json)
-
-    #return render_template(
-    #    'ask.html',
-    #    random_robot_img=random_robot_image(),
-    #    dj_dump=dj_dump)
-
-
-    return render_template(
-        'ajax.html',
-        random_robot_img=random_robot_image(),
-        dj_list = session["dj_list"],
-        #dj_dict=session["dj_dict"],
-        #dj_selected=dj_id,
-        dj_stat=dj_stat)
-
-@app.route('/ajax', methods=['GET'])
-def profile():
-    """Return results from profile form."""
-
-    profile_pack = {}
-    profile_pack['name'] = request.json.get('name')
-    profile_pack['age'] = request.json.get('age')
-    profile_pack['occupation'] = request.json.get('occupation')
-    profile_pack['salary'] = request.json.get('salary')
-    profile_pack['education'] = request.json.get('education')
-    profile_pack['state'] = request.json.get('state')
-    profile_pack['interests'] = request.json.get('interests')
-    profile_pack['garden'] = request.json.get('garden')
-    profile_pack['tv'] = request.json.get('tv')
-
-    return jsonify(profile_pack)
-
+            question_type=next_question.question_type,
+            ask_question=next_question.ask_question,
+            display_shuffled_answers=next_question.display_shuffled_answers)
 
 @app.route("/answer", methods = ["POST"])
 def answer_question():
@@ -204,17 +167,41 @@ def answer_question():
     if answer_given == "SKIP":  # That's a skip.
         return redirect('/question')
 
-    user_msg, restate_the_question, the_right_answer, display_answers = (
-        answers.handle_incoming_answer(question=question, answer=answer))
-
+    user_msg = answers.get_user_msg(answer=answer)
+        
     return render_template(
         'answer.html',
         random_robot_img=random_robot_image(),
         user_msg=user_msg,
         answer_correct=answer.answer_correct,
-        restate_the_question=restate_the_question,
-        the_right_answer=the_right_answer,
-        display_answers=display_answers)
+        present_answer=question.present_answer,
+        the_right_answer=question.acceptable_answers[0],
+        present_answer_data_headings=question.present_answer_data_headings,
+        present_answer_data=question.present_answer_data)
+
+@app.route("/ask")
+def user_asks():
+    """Offer a question to user."""
+    if "user_id" not in session:
+        return redirect('/important')
+
+    dj_id=request.args.get("dj_id")
+    
+    dj_selected = int(dj_id)
+    
+    if not dj_selected:
+        dj_selected = 177
+    dj_stat = assemble_dj_stat(dj_id=dj_selected)
+
+    print(dj_stat)
+
+    return render_template(
+        'ajax.html',
+        random_robot_img=random_robot_image(),
+        dj_list = session["dj_list"],
+        #dj_dict=session["dj_dict"],
+        #dj_selected=dj_id,
+        dj_stat=dj_stat)
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -226,10 +213,11 @@ def leaderboard():
 
     score_board = []
 
-    for user_instance in users.get_users():
-        user_score = answers.get_user_score(user_instance=user_instance)
+    for user in users.get_users():
+        user_id=user.user_id
+        user_score = answers.get_user_score(user_id=user_id)
         user_percent = user_score['percent']
-        score_board.append([user_instance.user_id, user_percent, f"{user_percent}% {user_instance.fname}"])
+        score_board.append([user_id, user_percent, f"{user_percent}% {user.fname}"])
     
     score_board.sort(key=itemgetter(1), reverse=True)
 

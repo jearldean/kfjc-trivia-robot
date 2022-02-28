@@ -1,6 +1,6 @@
 """Playlist Track operations for KFJC Trivia Robot."""
 
-from sqlalchemy import text, func, select, exc
+from sqlalchemy import text, func, exc
 
 from model import db, connect_to_db, PlaylistTrack
 import common
@@ -54,7 +54,7 @@ def djs_favorite(dj_id, sql_variable, reverse=True, min_plays=5):
         ORDER BY count({sql_variable}) {reverse_it} """)
 
     reply = db.session.execute(djs_favorite)
-    reply_named_tuple = common.convert_dicts_to_named_tuples(reply)
+    reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(reply)
     return reply_named_tuple
 
 # -=-=-=-=-=-=-=-=-=-=-=- Top10, Top10, Most Plays -=-=-=-=-=-=-=-=-=-=-=-
@@ -92,7 +92,7 @@ def get_top_plays(start_date, end_date, sql_variable, group_by, n=10):
         LIMIT {n} """)
 
     reply = db.session.execute(top_n)
-    reply_named_tuple = common.convert_dicts_to_named_tuples(reply)
+    reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(reply)
     return reply_named_tuple
 
 # -=-=-=-=-=-=-=-=-=-=-=- When is the last time someone played _ ? -=-=-=-=-=-=-=-=-=-=-=-
@@ -105,68 +105,35 @@ def get_a_random_album(min_appearances=3):
     """"""
     return random_library_pick(pick_type='album_title', min_appearances=min_appearances)
 
+def get_a_random_kfjc_album_id(min_appearances=3):
+    """"""
+    return random_library_pick(pick_type='kfjc_album_id', min_appearances=min_appearances)
+
 def get_a_random_track(min_appearances=3):
     """"""
     return random_library_pick(pick_type='track_title', min_appearances=min_appearances)
 
-def all_random_library_picks(pick_type='track_title', min_appearances=3):
-    """"""
-    if pick_type in ['artist', 'Artist']:
-        library_category = PlaylistTrack.artist
-        pick_type = 'artist'
-    elif pick_type in ['album', 'Album', 'album_title']:
-        library_category = PlaylistTrack.album_title
-        pick_type = 'album'
-    else:  # Just give 'em a track, I guess.
-        library_category = PlaylistTrack.track_title
-        pick_type = 'track'
-
-    all_playlist_tracks_random = None
-    while not all_playlist_tracks_random:
-        try:
-            all_playlist_tracks_random = db.session.query(library_category).filter(
-                PlaylistTrack.time_played.isnot(None)).group_by(
-                library_category).having(func.count(library_category) > min_appearances).order_by(
-                    func.random()).all()
-        except exc.ProgrammingError:
-            continue  # Pick again if there's a problem.
-        except exc.InternalError:
-            continue  # Pick again if there's a problem.
-
-    reply_named_tuple = common.convert_dicts_to_named_tuples(all_playlist_tracks_random)
-    return reply_named_tuple
-
 def random_library_pick(pick_type='track_title', min_appearances=3):
-    """TODO"""
+    """Get one random item from the library."""
     if pick_type in ['artist', 'Artist']:
         library_category = PlaylistTrack.artist
-        pick_type = 'artist'
     elif pick_type in ['album', 'Album', 'album_title']:
         library_category = PlaylistTrack.album_title
-        pick_type = 'album'
+    elif pick_type in ['kfjc_album_id']:
+        library_category = PlaylistTrack.kfjc_album_id
     else:  # Just give 'em a track, I guess.
         library_category = PlaylistTrack.track_title
-        pick_type = 'track'
 
-    random_pick = None
-    while not random_pick:
-        try:
-            one_playlist_item = db.session.query(library_category).group_by(
-                library_category).having(func.count(library_category) > min_appearances).order_by(
-                    func.random()).first()
-            if pick_type == 'artist':
-                random_pick = one_playlist_item.artist
-            elif pick_type == 'album':
-                random_pick = one_playlist_item.album_title
-            else:  # elif pick_type == 'track':
-                random_pick = one_playlist_item.track_title
-        except exc.ProgrammingError:
-            continue  # Pick again if there's a problem.
-        except exc.InternalError:
-            continue  # Pick again if there's a problem.
-
-    reply_named_tuple = common.convert_dicts_to_named_tuples(random_pick)
-    return reply_named_tuple
+    try:
+        return db.session.query(library_category).group_by(
+            library_category).having(func.count(library_category) > min_appearances).order_by(
+                func.random()).first()[0]
+    except exc.ProgrammingError:
+        # Pick again if there's a problem.
+        return
+    except exc.InternalError:
+        # Pick again if there's a problem.
+        return
 
 """ ***
 Keep in mind: playlist_tracks.time_played has only been collected since 2011 but,
@@ -202,7 +169,9 @@ def last_time_played(search_column_name, search_for_item, reverse=False):
         AND pt.time_played IS NOT NULL 
         ORDER BY pt.time_played {reverse_it} """)
 
-    reply_named_tuple = common.convert_dicts_to_named_tuples(who_played_it_when)
+    results = db.session.execute(who_played_it_when)
+    reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(
+        results)
     return reply_named_tuple
 
 # -=-=-=-=-=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-=-=-=-=-
