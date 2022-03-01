@@ -1,10 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}Welcome to the KFJC Trivia Robot™!{% endblock %}
+
+{% block title %}Answer{% endblock %}
 
 {% block body %}
-
-<h1>Ask the KFJC Trivia Robot™!</h1>
-
+<h1>Ask the Robot!</h1>
 <div class="container">
   <div class="row">
     <div class="col">
@@ -16,28 +15,125 @@
     </div>
     <div class="col">
       <div class="row justify-content-center">
-        <form action="/ask" method="GET">
-          
-        <div>
-          <label>Ask about a KFJC DJ:</label>
-          
-          {% for each_dict in dj_dump %}
-
-            <!-- {% for one_list_item in each_dj %} -->
-            <p>{{ each_dict["air_name"] }}</p>
-            <p>{{ each_dict["firstshow"] }}</p>
-            <!-- {% endfor %} -->
-          {% endfor %}
-        </div>
-
-      </div>
-      <br>
-      <br>
-      <br>
-      <br>
-     </div>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ask the Robot!</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/css/site.css">
+</head>
+<body>
+<div id="profile">
+  <h2>You can ask about DJs</h2>
+  <form id="dj-info" method="GET">
+    <div>
+      <label>Air Name: </label>
+      <select onchange="this.form.submit()" name="dj_id" id="dj-picker">
+        {% for ii in dj_airnames %}
+          {% if ii[0] == dj_selected %}
+            <option selected value="{{ dj_selected }}">{{ ii[1] }}</option>
+          {% else %}
+            <option value="{{ ii[0] }}">{{ ii[1] }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </form>
     </div>
+    {% if dj_stat %}
+      {{ dj_stat }}
+    {% endif %}
+    <div>
+
+  <form id="dj-most-plays" method="GET" action="dj-most-plays">
+      <label> DJ's Most Plays: </label>
+        <input type="radio" name="dj-favorite" value="artist" class="dj" checked/>Artist
+        <input type="radio" name="dj-favorite" value="album" class="dj"/>Album
+        <input type="radio" name="dj-favorite" value="track" class="dj"/>Track
+    </div>
+    <div>
+      <button class="orange_button" type="submit" id="dj-most-plays">DJ's Top Plays</button>
+    </div>
+  </form>
+    </div>
+    {% if dj_most_plays_headings %}
+    <table>
+      <tr id="table_heading">
+        <td>{{ dj_most_plays_headings[0] }} </td>
+        <td>{{ dj_most_plays_headings[1] }} </td> 
+      </tr>
+      {% for ii in response %}
+        <tr>
+          <td>{{ ii[0] }} </td>
+          <td>{{ ii[1] }} </td> 
+        </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    <div>
+  
+  <div>
+  <h2>You can ask about Last Plays</h2>
+  <form id="artist-last-plays" method="GET" action="last-plays">
+      <label>An Artist:</label>
+        <input class="orange_button" id="artist-last-plays" type="submit" value="Artist" style="float: right" />
+        <div style="overflow: hidden; padding-right: .5em;">
+           <input type="text" style="width: 100%;" placeholder="Pink Floyd" />
+        </div>
+    </form>
+
+  <form id="album-last-plays" method="GET" action="last-plays">
+      <label>An Album:</label>
+        <input class="orange_button" id="album-last-plays" type="submit" value="Album" style="float: right" />
+        <div style="overflow: hidden; padding-right: .5em;">
+           <input type="text" style="width: 100%;" placeholder="Dark Side of the Moon" />
+        </div>
+    </form>
+
+  <form id="track-last-plays" method="GET" action="last-plays">
+    <label>A Track:</label>
+      <input class="orange_button" id="track-last-plays" type="submit" value="Track" style="float: right" />
+      <div style="overflow: hidden; padding-right: .5em;">
+          <input type="text" style="width: 100%;" placeholder="Eclipse" />
+      </div>
+
+  </div>
+
+
+  <h2>You can ask about Top Plays</h2>
+  <form id="top-plays" method="GET">
+    <div>
+      <label>Top: </label>
+        <input type="radio" name="top-n" value=10 class="top-plays" checked/>Top 10
+        <input type="radio" name="top-n" value=40 class="top-plays"/>Top 40
+    </div>
+
+    <div>
+      <label>By: </label>
+        <input type="radio" name="top-plays" value="artist" class="top-plays" checked/>Artist
+        <input type="radio" name="top-plays" value="album" class="top-plays"/>Album
+        <input type="radio" name="top-plays" value="track" class="top-plays"/>Track
+    </div>
+
+    <div>
+      <label>Start Date: 
+      <input class="form-control" type="date" name="start_date" id="start_date" 
+        placeholder="2022-01-01" onfocus="(this.type='date')"></label>
+      <label>End Date: 
+      <input class="form-control" type="date" name="end_date" id="end_date"
+        placeholder="2022-01-08" onfocus="(this.type='date')">
+    </div>
+      
+    <div>
+      <button class="orange_button" type="submit" id="top-plays">Submit</button>
+    </div>
+      
+  </form>
+  <div id="requested_stat">
   </div>
 </div>
-
+</div>
+</div>
+</div>
+<script src="/static/js/listeners.js"></script>
 {% endblock %}

@@ -218,7 +218,6 @@ def when_was_dj_last_on_the_air():
         three_wrong_answers = random_date_surrounding_another_date(the_right_answer, k=3)
         the_pretty_right_answer = common.make_date_pretty(date_time_string=the_right_answer)
         answer_pile = [the_pretty_right_answer] + three_wrong_answers
-        print(answer_pile)
         air_name = last_show.air_name
         ask_questions = [
             f"Can you guess when {air_name} played their last show?",
@@ -610,14 +609,12 @@ def tracks_on_an_album():
         answer_pile = []
         present_answer_data = []
         for each_album in four_random_albums:
-            print(each_album)
             album_tracks = tracks.get_tracks_by_kfjc_album_id(
                 kfjc_album_id=each_album.kfjc_album_id)
             random_track = choice(album_tracks)
             answer_pile.append(random_track.title)
             present_answer_data.append([each_album.artist, random_track.title])
         shuffle(answer_pile)
-        print(present_answer_data, answer_pile)
     
         create_question(
             question_type=question_type,
@@ -821,7 +818,10 @@ def random_date_surrounding_another_date(target_date_time, k=1):
         days_from_now = date.today() - target_date_time
     else:
         print("Not too sure about this date format.")
-    random_days = random_number_within_percent(target_number=days_from_now, percent=20, k=k)
+    if days_from_now < 90:
+        # Some very recent events do not get much scramble room. So, let's pad that value:
+        days_from_now = 90
+    random_days = random_number_within_percent(target_number=days_from_now, percent=30, k=k)
     
     random_dates = []
     for dd in random_days:

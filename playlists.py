@@ -90,16 +90,17 @@ def dj_stats(order_by_column, reverse=False):
 # -=-=-=-=-=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-=-=-=-=-
 
 def first_show_last_show():
-    """TODO"""
+    """Get the head and tail of the Playlist.start_time."""
     return common.get_ages(Playlist.start_time)
 
 def get_dj_ids_and_show_counts():
-    """TODO GenericDict(showcount=26, dj_id=53)"""
+    """Return a list of named tuples of dj_ids and their showcount."""
     result_tuples = db.session.query(
         func.count(Playlist.dj_id).label('showcount'), Playlist.dj_id).group_by(
         Playlist.dj_id).having(func.count(Playlist.dj_id) > MIN_SHOW_COUNT).all()
     return common.convert_list_o_dicts_to_list_o_named_tuples(
         list_of_dicts=result_tuples)
+    # [GenericDict(showcount=26, dj_id=53), ...]
 
 def get_all_dj_ids():
     return [x.dj_id for x in get_dj_ids_and_show_counts()]
@@ -109,8 +110,12 @@ def how_many_djs():
     return len(get_dj_ids_and_show_counts())
 
 def get_airname(dj_id):
-    """TODO"""
+    """Get air_name from dj_id."""
     return Playlist.query.filter(Playlist.dj_id == dj_id).first().air_name
+
+def get_dj_id(air_name):
+    """Get dj_id from air_name."""
+    return Playlist.query.filter(Playlist.air_name == air_name).first().dj_id
 
 def how_many_shows():
     """Count all playlists for the homepage statement."""

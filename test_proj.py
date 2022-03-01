@@ -1,9 +1,7 @@
 """Tests for the KFJC Trivia Robot"""
 
-from typing import NamedTuple
 import unittest
 import datetime
-import collections
 
 from server import app
 from model import Playlist, db, connect_to_db
@@ -177,12 +175,13 @@ class RobotTestsDatabase(unittest.TestCase):
         # TODO   playlist_tracks.get_top10_artists(start_date, end_date, n=10)
         # TODO   playlist_tracks.get_top10_albums(start_date, end_date, n=10)
         # TODO   playlist_tracks.get_top10_tracks(start_date, end_date, n=10)
-        # self.assertEqual('The Meditations', playlist_tracks.get_favorite_artists(dj_id=255, min_plays=3))
-       #  self.assertEqual('The Meditations', playlist_tracks.get_a_random_artist(min_appearances=3))
-        #self.assertIn(playlist_tracks.get_a_random_album(min_appearances=3), [
-        #    "Greatest Hits", "Message From the Meditations", 
-        #    'Another Monty Python Record', "Monty Python's Previous Record", 
-        #    'Matching Tie & Handkerchief', "Monty Python's Contractual Obligation Album"])
+        self.assertEqual('The Meditations', playlist_tracks.get_favorite_artists(dj_id=177, min_plays=5)[0].artist)
+        self.assertEqual(9, playlist_tracks.get_favorite_artists(dj_id=177, min_plays=5)[0].plays)
+        # self.assertEqual('The Meditations', playlist_tracks.get_a_random_artist(min_appearances=4))
+        self.assertIn(playlist_tracks.get_a_random_album(min_appearances=3), [
+            "Greatest Hits", "Message From the Meditations", 
+            'Another Monty Python Record', "Monty Python's Previous Record", 
+            'Matching Tie & Handkerchief', "Monty Python's Contractual Obligation Album"])
         # TODO self.assertIn(playlist_tracks.get_a_random_track(min_appearances=2), [])
         # TODO playlist_tracks.get_a_random_track(min_appearances=0)
         # self.assertEqual('Zion Train Dub', playlist_tracks.get_a_random_track(min_appearances=2))
@@ -192,7 +191,7 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertEqual('Dr Doug', playlist_tracks.get_last_play_of_track(track="Star Quality")[0].air_name)
 
         # Also tests: common.get_count(table_dot_column, unique=True)
-        self.assertEqual(120, playlist_tracks.how_many_tracks())
+        self.assertEqual(124, playlist_tracks.how_many_tracks())
 
         playlists.MIN_SHOW_COUNT = 0
         self.assertEqual('Cy Thoth', playlists.get_djs_by_dj_id()[0].air_name)
@@ -229,15 +228,8 @@ class RobotTestsDatabase(unittest.TestCase):
 
         self.assertEqual(14, playlists.how_many_shows())
 
-        """
-        questions.SEED_QUESTION_COUNT = 1
-        questions.make_all_questions()
-
-        # TODO   questions.get_unique_question(user_id)  # Can't be answered already.
-        """
         for track in tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=397830):
             self.assertEqual('Dolly Parton', track.artist)
-
         self.assertEqual(
             'Jolene', tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=397830)[0].title)
 
@@ -251,31 +243,15 @@ class RobotTestsDatabase(unittest.TestCase):
              users.get_user_by_username(username='arthur@ministry_of_magic.gov').fname)
         self.assertTrue(users.does_user_exist_already(username='arthur@ministry_of_magic.gov'))
         self.assertFalse(users.does_user_exist_already(username='severus@death_eaters.org'))
-        #self.assertTrue(users.does_password_match(
-        #    plain_text_password="prefect",
-        #    hashed_password=users.get_user_by_id(user_id=5).hashed_password))
-        #self.assertFalse(users.does_password_match(
-        #    plain_text_password="noMatch",
-        #    hashed_password="$2a$12$dSEOzALlm5qA8GHItk/u1.BlK.DHarFUdiEvvR7CPRDWW8tNH0.IK"))
-        
+        self.assertTrue(users.does_password_match(
+            plain_text_password="prefect",
+            hashed_password=users.get_user_by_id(user_id=5).hashed_password))
+        self.assertFalse(users.does_password_match(
+            plain_text_password="noMatch",
+            hashed_password="$2a$12$dSEOzALlm5qA8GHItk/u1.BlK.DHarFUdiEvvR7CPRDWW8tNH0.IK"))
         
         questions.SEED_QUESTION_COUNT = 1
-        questions.who_is_the_oldest_dj()
-        questions.who_is_the_newest_dj()
-        questions.who_has_the_most_shows()
-        questions.when_was_dj_last_on_the_air()
-        questions.which_is_djs_favorite_artist()
-        questions.which_is_djs_favorite_album()
-        questions.which_is_djs_favorite_track()
-        questions.top_ten_artist()
-        questions.top_ten_album()
-        questions.top_ten_track()
-        questions.albums_by_an_artist()
-        questions.artist_of_an_album()
-        #questions.tracks_on_an_album()  # too few tracks...
-        questions.last_play_of_artist()
-        questions.last_play_of_album()
-        questions.last_play_of_track()
+        questions.make_all_questions()
 
         self.make_answers()
         # Also tests: answers.is_answer_correct(question_instance, answer_given)
@@ -285,8 +261,8 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertEqual(1, percys_score['skipped'])
         self.assertEqual(3, percys_score['questions'])
         self.assertEqual(50, percys_score['percent'])
+        self.assertNotEqual(1, questions.get_unique_question(user_id=5))
         
-
     def tearDown(self):
         """Stuff that runs after every def test_ function."""
 

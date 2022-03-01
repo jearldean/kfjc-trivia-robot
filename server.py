@@ -6,6 +6,7 @@ from flask import (Flask, render_template, request, flash, session, redirect, js
 from jinja2 import StrictUndefined
 from operator import itemgetter
 from flask_restful import Api, Resource
+from flask_restful import reqparse
 from flask_marshmallow import Marshmallow
 
 from model import connect_to_db, db, Playlist
@@ -24,7 +25,9 @@ api = Api(app)
 ma = Marshmallow(app)
 
 TOP_N_USERS = 10  # Displayed on Leaderboard
-ROBOT_MSG = ["Robot loves you!", "Pretty good, meatbag!", "Well done, bag of mostly water!"]
+ROBOT_MSG = [
+    "Robot loves you!", "Pretty good, meatbag!", 
+    "Well done, bag of mostly water!"]
 
 # -=-=-=-=-=-=-=-=-=-=-=- Routes -=-=-=-=-=-=-=-=-=-=-=-
 
@@ -181,28 +184,129 @@ def answer_question():
 
 @app.route("/ask")
 def user_asks():
-    """Offer a question to user."""
+    """user can ask the robot a question!"""
     if "user_id" not in session:
         return redirect('/important')
 
-    dj_id=request.args.get("dj_id")
-    
-    dj_selected = int(dj_id)
-    
-    if not dj_selected:
-        dj_selected = 177
-    dj_stat = assemble_dj_stat(dj_id=dj_selected)
+    if "dj_dict" not in session or "dj_airnames" not in session:
+        retrieve_dj_stats_only_once()
 
-    print(dj_stat)
+    dj_id=request.args.get("dj_id")
+    if not dj_id:
+        dj_selected = choice(session["dj_airnames"])[0]
+    else:
+        dj_selected = int(dj_id)
+    session['dj_selected'] = dj_selected
+    dj_stat = session["dj_dict"][dj_selected]['dj_stats']
 
     return render_template(
-        'ajax.html',
+        'ask.html',
         random_robot_img=random_robot_image(),
-        dj_list = session["dj_list"],
-        #dj_dict=session["dj_dict"],
-        #dj_selected=dj_id,
+        dj_airnames=session["dj_airnames"],
+        dj_dict=session["dj_dict"],
+        dj_most_plays_headings=False,
+        dj_selected=session['dj_selected'],
         dj_stat=dj_stat)
 
+@app.route("/dj-info")
+def refresh_dj_stat():
+    """User can ask the robot a question!"""
+    if "user_id" not in session:
+        return redirect('/important')
+
+    if "dj_dict" not in session or "dj_airnames" not in session:
+        retrieve_dj_stats_only_once()
+
+    dj_selected = int(request.args.get("dj_id"))
+    dj_stat = session["dj_dict"][dj_selected]['dj_stats']
+    session['dj_selected'] = dj_selected
+
+    return render_template(
+        'ask.html',
+        random_robot_img=random_robot_image(),
+        dj_airnames=session["dj_airnames"],
+        dj_dict=session["dj_dict"],
+        dj_most_plays_headings=False,
+        dj_selected=session['dj_selected'],
+        dj_stat=dj_stat)
+
+@app.route("/dj-most-plays")
+def get_dj_most_plays():
+    """User can ask the robot a question!"""
+    if "user_id" not in session:
+        return redirect('/important')
+
+    if "dj_dict" not in session or "dj_airnames" not in session:
+        retrieve_dj_stats_only_once()
+
+    dj_selected = session['dj_selected']
+    print("dj_selected", dj_selected)
+    media_type = request.args.get("dj-favorite")
+
+    if media_type == 'artist':
+        response = playlist_tracks.get_favorite_artists(dj_id=dj_selected)
+        dj_most_plays_headings = ['Artist', 'Plays']
+    elif media_type == 'album':
+        response = playlist_tracks.get_favorite_albums(dj_id=dj_selected)
+        dj_most_plays_headings = ['Album', 'Plays']
+    else:  # track
+        response = playlist_tracks.get_favorite_tracks(dj_id=dj_selected)
+        dj_most_plays_headings = ['Track', 'Plays']
+
+    return render_template(
+        'ask.html',
+        random_robot_img=random_robot_image(),
+        dj_airnames=session["dj_airnames"],
+        dj_dict=session["dj_dict"],
+        dj_selected=session['dj_selected'],
+        dj_most_plays_headings=dj_most_plays_headings,
+        response=response,
+        dj_stat=False)
+
+@app.route("/top-plays")
+def refresh_top_plays():
+    
+    if "dj_dict" not in session or "dj_airnames" not in session:
+        retrieve_dj_stats_only_once()
+
+    dj_id=request.args.get("dj_id")
+    if not dj_id:
+        dj_selected = choice(session["dj_airnames"])[0]
+    else:
+        dj_selected = int(dj_id)
+    session['dj_selected'] = dj_selected
+
+    return render_template(
+        'ask.html',
+        random_robot_img=random_robot_image(),
+        dj_airnames=session["dj_airnames"],
+        dj_dict=session["dj_dict"],
+        dj_selected=session['dj_selected'],
+        dj_most_plays_headings=False,
+        dj_stat=False)
+
+@app.route("/last-plays")
+def refresh_last_plays():
+    
+    if "dj_dict" not in session or "dj_airnames" not in session:
+        retrieve_dj_stats_only_once()
+        
+    dj_id=request.args.get("dj_id")
+    if not dj_id:
+        dj_selected = choice(session["dj_airnames"])[0]
+    else:
+        dj_selected = int(dj_id)
+    session['dj_selected'] = dj_selected
+
+    return render_template(
+        'ask.html',
+        random_robot_img=random_robot_image(),
+        dj_airnames=session["dj_airnames"],
+        dj_dict=session["dj_dict"],
+        dj_selected=session['dj_selected'],
+        dj_most_plays_headings=False,
+        dj_stat=False)
+        
 @app.route("/leaderboard")
 def leaderboard():
     """TODO: Can leaderboard be rest api?
@@ -266,38 +370,31 @@ def assemble_greeting():
 def retrieve_dj_stats_only_once():
     djs_alphabetically = playlists.get_djs_alphabetically()
     dj_dict = {}
-    dj_list = []
+    dj_airnames = []
     for zz in djs_alphabetically:
-        air_name = zz[0]
-        dj_id = int(zz[1])
-        showcount = common.format_an_int_with_commas(zz[2])
-        firstshow = common.make_date_pretty(zz[3])
-        lastshow = common.make_date_pretty(zz[4])
-        # air_name, dj_id, showcount, firstshow, lastshow
+        air_name = zz.air_name
+        dj_id = zz.dj_id
+        showcount = common.format_an_int_with_commas(zz.showcount)
+        firstshow = common.make_date_pretty(zz.firstshow)
+        lastshow = common.make_date_pretty(zz.lastshow)
+        the_right_apostrophe = common.the_right_apostrophe(air_name=air_name)
+        dj_stats = (
+            f"{air_name}{the_right_apostrophe} first show was on {firstshow}, "
+            f"their last show was on {lastshow} and they have done {showcount} shows!")
         dj_dict[dj_id] = {
             'air_name': air_name,
             'showcount': showcount,
             'firstshow': firstshow,
-            'lastshow': lastshow}
-        dj_list.append([air_name, dj_id, showcount, firstshow, lastshow])
+            'lastshow': lastshow,   
+            'dj_stats': dj_stats}   
+        dj_airnames.append([dj_id, air_name])
     session["dj_dict"] = dj_dict
-    session["dj_list"] = dj_list
-    #print(session["dj_dict"][177])
-    #print(session["dj_list"][1])
-
-def assemble_dj_stat(dj_id):
-    if "dj_dict" not in session:
-        retrieve_dj_stats_only_once()
-    air_name = session["dj_dict"][dj_id]['air_name']
-    the_right_apostrophe = common.the_right_apostrophe(air_name=air_name)
-    showcount = session["dj_dict"][dj_id]['showcount']
-    firstshow = session["dj_dict"][dj_id]['firstshow']
-    lastshow = session["dj_dict"][dj_id]['lastshow']
-    return (
-        f"{air_name}{the_right_apostrophe} first show was on {firstshow}, "
-        f"their last show was on {lastshow} and they have done {showcount} shows!")
+    session["dj_airnames"] = dj_airnames
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Playlists -=-=-=-=-=-=-=-=-=-=-=-
+# http://0.0.0.0:5000/playlists   # TODO Maybe the response is too big? {}
+# http://0.0.0.0:5000/playlists/66582
+# http://0.0.0.0:5000/playlists/66581
 
 class PlaylistSchema(ma.Schema):
     class Meta:
@@ -314,14 +411,17 @@ class PlaylistListResource(Resource):
 api.add_resource(PlaylistListResource, '/playlists')
 
 class PlaylistResource(Resource):
-    def get(self, id_):
-        playlist = Playlist.query.get_or_404(id_)
+    def get(self, kfjc_playlist_id):
+        playlist = Playlist.query.get_or_404(kfjc_playlist_id)
         return playlist_schema.dump(playlist)
 
-api.add_resource(PlaylistResource, '/playlists/<int:id_>')
-# api.add_resource(PlaylistResource, '/playlists/<int:kfjc_playlist_id>')
+api.add_resource(PlaylistResource, '/playlists/<int:kfjc_playlist_id>')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: DJ Favorites -=-=-=-=-=-=-=-=-=-=-=-
+# http://0.0.0.0:5000/dj_favorites/255
+# http://0.0.0.0:5000/dj_favorites/177
+# http://0.0.0.0:5000/dj_favorites/Robert%20Emmett
+# http://0.0.0.0:5000/dj_favorites/Stingray
 
 class DJFavoritesSchema(ma.Schema):
     class Meta:
@@ -331,12 +431,23 @@ one_dj_favorites_schema = DJFavoritesSchema(many=True)
 
 class DJFavoritesResource(Resource):
     def get(self, dj_id):
-        favorites = playlist_tracks.djs_favorite(dj_id=dj_id)
+        favorites = playlist_tracks.get_favorite_artists(dj_id=dj_id, reverse=True, min_plays=5)
         return one_dj_favorites_schema.dump(favorites)
 
 api.add_resource(DJFavoritesResource, '/dj_favorites/<int:dj_id>')
 
+class DJFavoritesAirnameResource(Resource):
+    def get(self, air_name):
+        dj_id = playlists.get_dj_id(air_name=air_name)
+        favorites = playlist_tracks.get_favorite_artists(dj_id=dj_id, reverse=True, min_plays=5)
+        return one_dj_favorites_schema.dump(favorites)
+
+api.add_resource(DJFavoritesAirnameResource, '/dj_favorites/<string:air_name>')
+
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Last Played -=-=-=-=-=-=-=-=-=-=-=-
+# http://0.0.0.0:5000/last_played/artist=Pink%20Floyd
+# http://0.0.0.0:5000/last_played/album=Dark%20Side%20of%20the%20Moon
+# http://0.0.0.0:5000/last_played/track=eclipse
 
 class LastPlayedSchema(ma.Schema):
     class Meta:
@@ -346,25 +457,29 @@ last_played_schema = LastPlayedSchema(many=True)
 
 class LastPlayedByArtist(Resource):
     def get(self, artist):
-        last_time_played = playlist_tracks.last_time_played(artist=artist)
+        last_time_played = playlist_tracks.get_last_play_of_artist(artist=artist)
         return last_played_schema.dump(last_time_played)
 
 class LastPlayedByAlbum(Resource):
     def get(self, album):
-        last_time_played = playlist_tracks.last_time_played(album=album)
+        last_time_played = playlist_tracks.get_last_play_of_album(album=album)
         return last_played_schema.dump(last_time_played)
 
 class LastPlayedByTrack(Resource):
     def get(self, track):
-        last_time_played = playlist_tracks.last_time_played(track=track)
+        last_time_played = playlist_tracks.get_last_play_of_track(track=track)
         return last_played_schema.dump(last_time_played)
 
 api.add_resource(LastPlayedByArtist, '/last_played/artist=<string:artist>')
 api.add_resource(LastPlayedByAlbum, '/last_played/album=<string:album>')
 api.add_resource(LastPlayedByTrack, '/last_played/track=<string:track>')
 
-
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Top Ten -=-=-=-=-=-=-=-=-=-=-=-
+# http://0.0.0.0:5000/top_plays/top=5&order_by=artist&start_date=2020-01-02&end_date=2020-01-10
+# http://0.0.0.0:5000/top_plays/top=5&order_by=artists&start_date=2021-01-02&end_date=2021-01-10
+# http://0.0.0.0:5000/top_plays/top=5&order_by=album&start_date=2022-01-02&end_date=2022-01-10
+# http://0.0.0.0:5000/top_plays/top=5&order_by=albums&start_date=2020-01-02&end_date=2020-01-10
+# http://0.0.0.0:5000/top_plays/top=5&order_by=track&start_date=2020-01-02&end_date=2020-01-10
 
 class TopTenSchema(ma.Schema):
     class Meta:
@@ -373,7 +488,7 @@ class TopTenSchema(ma.Schema):
 top_n_artist_schema = TopTenSchema(many=True)
 
 class TopTen(Resource):
-    def get(self, start_date, end_date, order_by='track', top=10):
+    def get(self, order_by, start_date, end_date, top=10):
         if order_by in ['artist', 'artists']:
             top_10 = playlist_tracks.get_top10_artists(start_date, end_date, n=top)
         if order_by in ['album', 'albums']:
@@ -383,10 +498,25 @@ class TopTen(Resource):
 
         return top_n_artist_schema.dump(top_10)
 
-api.add_resource(TopTen, '/top_artists/top=<int:top>&start_date=<string:start_date>&end_date=<string:end_date>')
+api.add_resource(TopTen, '/top_plays/top=<int:top>&order_by=<string:order_by>&start_date=<string:start_date>&end_date=<string:end_date>')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: DJ Stats -=-=-=-=-=-=-=-=-=-=-=-
+# http://0.0.0.0:5000/dj_stats
+
+# TODO these don't work. How to make reverse optional with defined default? 
+# http://0.0.0.0:5000/dj_stats/order_by=air_name
+# http://0.0.0.0:5000/dj_stats/order_by=dj_id
+# http://0.0.0.0:5000/dj_stats/order_by=showcount
+# http://0.0.0.0:5000/dj_stats/order_by=firstshow
+# http://0.0.0.0:5000/dj_stats/order_by=lastshow
+
+# http://0.0.0.0:5000/dj_stats/order_by=air_name&reverse=1
+# http://0.0.0.0:5000/dj_stats/order_by=air_name&reverse=0
 # http://0.0.0.0:5000/dj_stats/order_by=dj_id&reverse=1
+# http://0.0.0.0:5000/dj_stats/order_by=showcount&reverse=1
+# http://0.0.0.0:5000/dj_stats/order_by=firstshow&reverse=0
+# http://0.0.0.0:5000/dj_stats/order_by=lastshow&reverse=1
+
 class DJStatsSchema(ma.Schema):
     class Meta:
         fields = ("air_name", "dj_id", "showcount", "firstshow", "lastshow")
@@ -400,7 +530,17 @@ class DJStatsNoArgs(Resource):
         return dj_stats_schema.jsonify(dj_stats)
 
 class DJStats(Resource):
-    def get(self, order_by=None, reverse=0):
+    """ # Was trying to make reverse an optional value. not working...
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('order_by', type = str, default='air_name')
+        self.reqparse.add_argument('reverse', type = int, default=0)
+        super(DJStats, self).__init__()
+
+    def get(self):
+        args = self.reqparse.parse_args()"""
+
+    def get(self, order_by='air_name', reverse=1):
         # Use 0, 1 for reverse
         if order_by in ['dj_id', 'id']:
             dj_stats = playlists.get_djs_by_dj_id(reverse=reverse)
@@ -412,9 +552,6 @@ class DJStats(Resource):
             dj_stats = playlists.get_djs_by_show_count(reverse=reverse)
         else:
             dj_stats = playlists.get_djs_alphabetically(reverse=reverse)
-        #return dj_stats_schema.dump(dj_stats)
-        #return user_asks(dj_dump=dj_stats_schema.dump(dj_stats))
-        # return dj_stats_schema.jsonify(dj_stats)
         return dj_stats_schema.jsonify(dj_stats)
 
 api.add_resource(DJStats, '/dj_stats/order_by=<string:order_by>&reverse=<int:reverse>')
@@ -423,6 +560,9 @@ api.add_resource(DJStatsNoArgs, '/dj_stats')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Album Tracks -=-=-=-=-=-=-=-=-=-=-=-
 # http://0.0.0.0:5000/album_tracks/303
+# http://0.0.0.0:5000/album_tracks/15141
+# http://0.0.0.0:5000/album_tracks/497606
+
 class AlbumTracksSchema(ma.Schema):
     class Meta:
         fields = ("indx", "title", "artist")

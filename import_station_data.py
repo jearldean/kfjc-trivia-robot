@@ -115,19 +115,19 @@ def profanity_filter(title_string):
     Data comes from an edgey Radio station. Found out I needed a Profanity Filter.
 
     >>> profanity_filter(title_string="Pussy")
-    'P&#128576;ssy'
+    'P&#x128576;ssy'
     >>> profanity_filter(title_string="Shit")
-    'Sh&#128169;t'
+    'Sh&#x128169;t'
     """
     emojis = [
-        "&#129296;", "&#129323;", "&#129325;",
-        "&#129300;", "&#128526;", "&#128520;"]
+        "&#x129296;", "&#x129323;", "&#x129325;",
+        "&#x129300;", "&#x128526;", "&#x128520;"]
     replace_with_emoji = choice(emojis)
     title_string = title_string.replace(
         "Fuck", f"F{replace_with_emoji}ck").replace(
-        "Shit", f"Sh&#128169;t").replace(
-        "Pussy", "P&#128576;ssy").replace(
-        "Cunt", "C&#128576;nt").replace(
+        "Shit", f"Sh&#x128169;t").replace(
+        "Pussy", "P&#x128576;ssy").replace(
+        "Cunt", "C&#x128576;nt").replace(
         "[coll]:", "").replace(  # Station shorthand for collaboration tracks.
         "[Coll]:", "").replace(
         "  ", " ").replace(

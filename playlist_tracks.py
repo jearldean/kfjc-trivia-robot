@@ -49,6 +49,7 @@ def djs_favorite(dj_id, sql_variable, reverse=True, min_plays=5):
         f"""SELECT {sql_variable}, count({sql_variable}) as plays
         FROM playlist_tracks 
         WHERE kfjc_playlist_id in ({djs_playlists}) 
+        AND {sql_variable} != 'None' 
         GROUP BY {sql_variable} 
         HAVING count({sql_variable}) > {min_plays} 
         ORDER BY count({sql_variable}) {reverse_it} """)
@@ -87,6 +88,7 @@ def get_top_plays(start_date, end_date, sql_variable, group_by, n=10):
         FROM playlist_tracks 
         WHERE time_played >= date('{start_date}') 
         AND time_played <= date('{end_date}') 
+        AND {sql_variable} != 'None' 
         GROUP BY {group_by}
         ORDER BY count({sql_variable}) DESC 
         LIMIT {n} """)
@@ -125,6 +127,7 @@ def random_library_pick(pick_type='track_title', min_appearances=3):
         library_category = PlaylistTrack.track_title
 
     try:
+        # .filter(library_category.isnot('None')
         return db.session.query(library_category).group_by(
             library_category).having(func.count(library_category) > min_appearances).order_by(
                 func.random()).first()[0]
@@ -167,6 +170,7 @@ def last_time_played(search_column_name, search_for_item, reverse=False):
         ON (p.kfjc_playlist_id = pt.kfjc_playlist_id) 
         WHERE LOWER(pt.{search_column_name}) LIKE LOWER('%{search_for_item}%') 
         AND pt.time_played IS NOT NULL 
+        AND pt.{search_column_name} != 'None' 
         ORDER BY pt.time_played {reverse_it} """)
 
     results = db.session.execute(who_played_it_when)
