@@ -28,12 +28,17 @@ ROBOT_MSG = [
     "Robot loves you!", "Pretty good, meatbag!", 
     "Well done, bag of mostly water!", "Pretty good for a human!",
     "Robot is proud of you!"]
+dj_dict = {}
+dj_airnames = []
 
 # -=-=-=-=-=-=-=-=-=-=-=- Routes -=-=-=-=-=-=-=-=-=-=-=-
 
 @app.route("/")
 def homepage():
     """Display homepage."""
+
+    if not dj_dict or not dj_airnames:
+        retrieve_dj_stats_only_once()
 
     return render_template(
         'homepage.html', random_robot_img=random_robot_image(),
@@ -188,9 +193,6 @@ def user_asks():
     if "user_id" not in session:
         return redirect('/important')
 
-    if "dj_dict" not in session or "dj_airnames" not in session:
-        retrieve_dj_stats_only_once()
-
     dj_id=request.args.get("dj_id")
     if not dj_id:
         dj_selected = choice(session["dj_airnames"])[0]
@@ -208,60 +210,6 @@ def user_asks():
         dj_selected=session['dj_selected'],
         dj_stat=dj_stat)
 
-@app.route("/dj-info")
-def refresh_dj_stat():
-    """User can ask the robot a question!"""
-    if "user_id" not in session:
-        return redirect('/important')
-
-    if "dj_dict" not in session or "dj_airnames" not in session:
-        retrieve_dj_stats_only_once()
-
-    dj_selected = int(request.args.get("dj_id"))
-    dj_stat = session["dj_dict"][dj_selected]['dj_stats']
-    session['dj_selected'] = dj_selected
-
-    return render_template(
-        'ask.html',
-        random_robot_img=random_robot_image(),
-        dj_airnames=session["dj_airnames"],
-        dj_dict=session["dj_dict"],
-        dj_most_plays_headings=False,
-        dj_selected=session['dj_selected'],
-        dj_stat=dj_stat)
-
-@app.route("/dj-most-plays")
-def get_dj_most_plays():
-    """User can ask the robot a question!"""
-    if "user_id" not in session:
-        return redirect('/important')
-
-    if "dj_dict" not in session or "dj_airnames" not in session:
-        retrieve_dj_stats_only_once()
-
-    dj_selected = session['dj_selected']
-    print("dj_selected", dj_selected)
-    media_type = request.args.get("dj-favorite")
-
-    if media_type == 'artist':
-        response = playlist_tracks.get_favorite_artists(dj_id=dj_selected)
-        dj_most_plays_headings = ['Artist', 'Plays']
-    elif media_type == 'album':
-        response = playlist_tracks.get_favorite_albums(dj_id=dj_selected)
-        dj_most_plays_headings = ['Album', 'Plays']
-    else:  # track
-        response = playlist_tracks.get_favorite_tracks(dj_id=dj_selected)
-        dj_most_plays_headings = ['Track', 'Plays']
-
-    return render_template(
-        'ask.html',
-        random_robot_img=random_robot_image(),
-        dj_airnames=session["dj_airnames"],
-        dj_dict=session["dj_dict"],
-        dj_selected=session['dj_selected'],
-        dj_most_plays_headings=dj_most_plays_headings,
-        response=response,
-        dj_stat=False)
         
 @app.route("/leaderboard")
 def leaderboard():
@@ -325,8 +273,6 @@ def assemble_greeting():
 
 def retrieve_dj_stats_only_once():
     djs_alphabetically = playlists.get_djs_alphabetically()
-    dj_dict = {}
-    dj_airnames = []
     for zz in djs_alphabetically:
         air_name = zz.air_name
         dj_id = zz.dj_id
@@ -344,8 +290,7 @@ def retrieve_dj_stats_only_once():
             'lastshow': lastshow,   
             'dj_stats': dj_stats}   
         dj_airnames.append([dj_id, air_name])
-    session["dj_dict"] = dj_dict
-    session["dj_airnames"] = dj_airnames
+    return dj_dict, dj_airnames
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Playlists -=-=-=-=-=-=-=-=-=-=-=-
 # http://0.0.0.0:5000/playlists   # TODO Maybe the response is too big? {}
