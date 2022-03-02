@@ -244,11 +244,11 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertTrue(users.does_user_exist_already(username='arthur@ministry_of_magic.gov'))
         self.assertFalse(users.does_user_exist_already(username='severus@death_eaters.org'))
         self.assertTrue(users.does_password_match(
-            plain_text_password="prefect",
-            hashed_password=users.get_user_by_id(user_id=5).hashed_password))
+            user_instance = users.get_user_by_id(user_id=5), 
+            password_from_form = "prefect"))
         self.assertFalse(users.does_password_match(
-            plain_text_password="noMatch",
-            hashed_password="$2a$12$dSEOzALlm5qA8GHItk/u1.BlK.DHarFUdiEvvR7CPRDWW8tNH0.IK"))
+            user_instance = users.get_user_by_id(user_id=5), 
+            password_from_form = "perCyIzAw3sum"))
         
         questions.SEED_QUESTION_COUNT = 1
         questions.make_all_questions()

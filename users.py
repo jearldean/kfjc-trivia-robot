@@ -7,12 +7,14 @@ from model import db, connect_to_db, User
 def create_user(username, fname, password):
     """Create and return a new user."""
 
-    hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
+    salt = bcrypt.gensalt()
+    # Using bcrypt, the salt is saved into the hash itself
+    hashed = bcrypt.hashpw(password.encode('UTF_8'), salt)
 
     user = User(
         username=username,
         fname=fname,
-        hashed_password=hashed_password)
+        hashed_password=hashed)
 
     db.session.add(user)
     # Don't forget to call model.db.session.commit() when done adding items.
@@ -42,11 +44,10 @@ def create_a_user(username, fname, password):
     """Check for user existence, create if new user."""
 
     if not does_user_exist_already(username):
-        utf8_password = password.encode('utf-8')
         new_user = create_user(
             username=username,
             fname=fname,
-            password=utf8_password)
+            password=password)
         db.session.commit()
         return new_user
     else:
@@ -62,13 +63,17 @@ def does_user_exist_already(username):
         return False
 
 
-def does_password_match(plain_text_password, hashed_password):
-    """Check hashed password. Returns boolean.
-    # Using bcrypt, the salt is saved into the hash itself
-    """
+def does_password_match(user_instance, password_from_form):
+    """Check hashed password. Returns boolean."""
     
-    return bcrypt.checkpw(plain_text_password.encode('utf-8'), hashed_password)
-    
+    if user_instance.hashed_password == bcrypt.hashpw(password_from_form.encode('UTF_8'), 
+        user_instance.hashed_password.encode('UTF_8')):
+        print("match")
+        return True
+    else:
+        print("does not match")
+        return False
+        
     
 if __name__ == '__main__':
     """Will connect you to the database when you run users.py interactively"""

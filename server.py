@@ -62,7 +62,7 @@ def shall_we_play():
 def login_process():
     """Process login."""
     username = request.form["username"]
-    password = request.form["password"]
+    password_from_form = request.form["password"]
 
     user_instance = users.get_user_by_username(username=username)
 
@@ -70,8 +70,8 @@ def login_process():
         flash("No one with that username found.")
         return redirect("/")
     if users.does_password_match(
-            plain_text_password=password,
-            hashed_password=user_instance.hashed_password):
+            user_instance=user_instance,
+            password_from_form=password_from_form):
         session["user_id"] = user_instance.user_id
         return redirect("/question")
     else:
@@ -485,4 +485,4 @@ if __name__ == "__main__":
     app.jinja_env.auto_reload = True
     app.config['TEMPLATES_AUTO_RELOAD'] = False
 
-    app.run(host="0.0.0.0", debug=False)
+    app.run(host="0.0.0.0", debug=True)
