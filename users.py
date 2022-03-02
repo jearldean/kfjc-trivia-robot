@@ -7,7 +7,7 @@ from model import db, connect_to_db, User
 def create_user(username, fname, password):
     """Create and return a new user."""
 
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
 
     user = User(
         username=username,
@@ -39,13 +39,14 @@ def get_user_by_username(username):
 
 
 def create_a_user(username, fname, password):
-    """TODO"""
+    """Check for user existence, create if new user."""
 
     if not does_user_exist_already(username):
+        utf8_password = password.encode('utf-8')
         new_user = create_user(
             username=username,
             fname=fname,
-            password=password)
+            password=utf8_password)
         db.session.commit()
         return new_user
     else:
