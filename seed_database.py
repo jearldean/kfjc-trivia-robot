@@ -1,7 +1,6 @@
 """Script to import station data and seed the question table."""
 
 import os
-import time
 from server import app
 from model import db, connect_to_db
 

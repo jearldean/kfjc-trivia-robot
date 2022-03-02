@@ -25,7 +25,7 @@
 </head>
 <body>
 <div id="profile">
-  <h2>You can ask about DJs</h2>
+  <h2>You can ask about DJs:</h2>
   <form id="dj-info" method="GET">
     <div>
       <label>Air Name: </label>
@@ -46,7 +46,7 @@
     <div>
 
   <form id="dj-most-plays" method="GET" action="dj-most-plays">
-      <label> DJ's Most Plays: </label>
+      <label> DJ's Most Played: </label>
         <input type="radio" name="dj-favorite" value="artist" class="dj" checked/>Artist
         <input type="radio" name="dj-favorite" value="album" class="dj"/>Album
         <input type="radio" name="dj-favorite" value="track" class="dj"/>Track
@@ -73,64 +73,58 @@
     <div>
   
   <div>
-  <h2>You can ask about Last Plays</h2>
-  <form id="artist-last-plays" method="GET" action="last-plays">
+  <h2>You can ask about Last Plays:</h2>
+  <form id="artist-last-plays" method="GET">
       <label>An Artist:</label>
-        <input class="orange_button" id="artist-last-plays" type="submit" value="Artist" style="float: right" />
+        <input class="orange_button" id="artist-last-plays-button" type="submit" value="artist" style="float: right" />
         <div style="overflow: hidden; padding-right: .5em;">
-           <input type="text" style="width: 100%;" placeholder="Pink Floyd" />
+           <input type="text" id="artist-last-plays-string" style="width: 100%;" placeholder="Pink Floyd" />
         </div>
     </form>
 
-  <form id="album-last-plays" method="GET" action="last-plays">
+  <form id="album-last-plays" method="GET">
       <label>An Album:</label>
-        <input class="orange_button" id="album-last-plays" type="submit" value="Album" style="float: right" />
+        <input class="orange_button" id="album-last-plays-button" type="submit" value="album" style="float: right" />
         <div style="overflow: hidden; padding-right: .5em;">
-           <input type="text" style="width: 100%;" placeholder="Dark Side of the Moon" />
+           <input type="text" id="album-last-plays-string" style="width: 100%;" placeholder="Dark Side of the Moon" />
         </div>
     </form>
 
-  <form id="track-last-plays" method="GET" action="last-plays">
+  <form id="track-last-plays" method="GET">
     <label>A Track:</label>
-      <input class="orange_button" id="track-last-plays" type="submit" value="Track" style="float: right" />
+      <input class="orange_button" id="track-last-plays-button" type="submit" value="track" style="float: right" />
       <div style="overflow: hidden; padding-right: .5em;">
-          <input type="text" style="width: 100%;" placeholder="Eclipse" />
+          <input type="text" id="track-last-plays-string" style="width: 100%;" placeholder="Eclipse" />
       </div>
-
+  </form>
   </div>
 
-
-  <h2>You can ask about Top Plays</h2>
+  <h2>You can ask about Top Plays:</h2>
   <form id="top-plays" method="GET">
     <div>
       <label>Top: </label>
-        <input type="radio" name="top-n" value=10 class="top-plays" checked/>Top 10
-        <input type="radio" name="top-n" value=40 class="top-plays"/>Top 40
+        <input type="radio" id="top-n-int" name="top-n" value=10  checked/>Top 10
+        <input type="radio" id="top-n-int" name="top-n" value=40 />Top 40
     </div>
-
     <div>
       <label>By: </label>
-        <input type="radio" name="top-plays" value="artist" class="top-plays" checked/>Artist
-        <input type="radio" name="top-plays" value="album" class="top-plays"/>Album
-        <input type="radio" name="top-plays" value="track" class="top-plays"/>Track
+        <input type="radio" id="top-n-media-str" name="top-plays-media" value="artist"  checked/>Artist
+        <input type="radio" id="top-n-media-str" name="top-plays-media" value="album" />Album
+        <input type="radio" id="top-n-media-str" name="top-plays-media" value="track" />Track
     </div>
-
     <div>
       <label>Start Date: 
-      <input class="form-control" type="date" name="start_date" id="start_date" 
-        placeholder="2022-01-01" onfocus="(this.type='date')"></label>
+      <input class="form-control" type="date" name="start-date" id="start-date"></label>
       <label>End Date: 
-      <input class="form-control" type="date" name="end_date" id="end_date"
-        placeholder="2022-01-08" onfocus="(this.type='date')">
+      <input class="form-control" type="date" name="end-date" id="end-date"></label>
     </div>
-      
     <div>
-      <button class="orange_button" type="submit" id="top-plays">Submit</button>
+      <button class="orange_button" type="submit" id="top-plays-button">Submit</button>
     </div>
-      
   </form>
-  <div id="requested_stat">
-  </div>
+
+  <div id="requested_stat"></div>
+
 </div>
 </div>
 </div>

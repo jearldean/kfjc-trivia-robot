@@ -5,8 +5,7 @@ from random import choice
 from flask import (Flask, render_template, request, flash, session, redirect, jsonify)
 from jinja2 import StrictUndefined
 from operator import itemgetter
-from flask_restful import Api, Resource
-from flask_restful import reqparse
+from flask_restful import Api, Resource  # reqparse
 from flask_marshmallow import Marshmallow
 
 from model import connect_to_db, db, Playlist
@@ -27,7 +26,8 @@ ma = Marshmallow(app)
 TOP_N_USERS = 10  # Displayed on Leaderboard
 ROBOT_MSG = [
     "Robot loves you!", "Pretty good, meatbag!", 
-    "Well done, bag of mostly water!"]
+    "Well done, bag of mostly water!", "Pretty good for a human!",
+    "Robot is proud of you!"]
 
 # -=-=-=-=-=-=-=-=-=-=-=- Routes -=-=-=-=-=-=-=-=-=-=-=-
 
@@ -262,50 +262,6 @@ def get_dj_most_plays():
         dj_most_plays_headings=dj_most_plays_headings,
         response=response,
         dj_stat=False)
-
-@app.route("/top-plays")
-def refresh_top_plays():
-    
-    if "dj_dict" not in session or "dj_airnames" not in session:
-        retrieve_dj_stats_only_once()
-
-    dj_id=request.args.get("dj_id")
-    if not dj_id:
-        dj_selected = choice(session["dj_airnames"])[0]
-    else:
-        dj_selected = int(dj_id)
-    session['dj_selected'] = dj_selected
-
-    return render_template(
-        'ask.html',
-        random_robot_img=random_robot_image(),
-        dj_airnames=session["dj_airnames"],
-        dj_dict=session["dj_dict"],
-        dj_selected=session['dj_selected'],
-        dj_most_plays_headings=False,
-        dj_stat=False)
-
-@app.route("/last-plays")
-def refresh_last_plays():
-    
-    if "dj_dict" not in session or "dj_airnames" not in session:
-        retrieve_dj_stats_only_once()
-        
-    dj_id=request.args.get("dj_id")
-    if not dj_id:
-        dj_selected = choice(session["dj_airnames"])[0]
-    else:
-        dj_selected = int(dj_id)
-    session['dj_selected'] = dj_selected
-
-    return render_template(
-        'ask.html',
-        random_robot_img=random_robot_image(),
-        dj_airnames=session["dj_airnames"],
-        dj_dict=session["dj_dict"],
-        dj_selected=session['dj_selected'],
-        dj_most_plays_headings=False,
-        dj_stat=False)
         
 @app.route("/leaderboard")
 def leaderboard():
@@ -457,17 +413,17 @@ last_played_schema = LastPlayedSchema(many=True)
 
 class LastPlayedByArtist(Resource):
     def get(self, artist):
-        last_time_played = playlist_tracks.get_last_play_of_artist(artist=artist)
+        last_time_played = playlist_tracks.get_last_play_of_artist(artist=artist, reverse=True)
         return last_played_schema.dump(last_time_played)
 
 class LastPlayedByAlbum(Resource):
     def get(self, album):
-        last_time_played = playlist_tracks.get_last_play_of_album(album=album)
+        last_time_played = playlist_tracks.get_last_play_of_album(album=album, reverse=True)
         return last_played_schema.dump(last_time_played)
 
 class LastPlayedByTrack(Resource):
     def get(self, track):
-        last_time_played = playlist_tracks.get_last_play_of_track(track=track)
+        last_time_played = playlist_tracks.get_last_play_of_track(track=track, reverse=True)
         return last_played_schema.dump(last_time_played)
 
 api.add_resource(LastPlayedByArtist, '/last_played/artist=<string:artist>')
