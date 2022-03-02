@@ -195,17 +195,17 @@ def user_asks():
 
     dj_id=request.args.get("dj_id")
     if not dj_id:
-        dj_selected = choice(session["dj_airnames"])[0]
+        dj_selected = choice(dj_airnames)[0]
     else:
         dj_selected = int(dj_id)
     session['dj_selected'] = dj_selected
-    dj_stat = session["dj_dict"][dj_selected]['dj_stats']
+    dj_stat = dj_dict[dj_selected]['dj_stats']
 
     return render_template(
         'ask.html',
         random_robot_img=random_robot_image(),
-        dj_airnames=session["dj_airnames"],
-        dj_dict=session["dj_dict"],
+        dj_airnames=dj_airnames,
+        dj_dict=dj_dict,
         dj_most_plays_headings=False,
         dj_selected=session['dj_selected'],
         dj_stat=dj_stat)
