@@ -2,13 +2,13 @@
 
 import os
 from random import choice
-from flask import (Flask, render_template, request, flash, session, redirect, jsonify)
+from flask import (Flask, render_template, request, flash, session, redirect)
 from jinja2 import StrictUndefined
 from operator import itemgetter
 from flask_restful import Api, Resource  # reqparse
 from flask_marshmallow import Marshmallow
 
-from model import PlaylistTrack, connect_to_db, db, Playlist
+from model import db, connect_to_db, Playlist
 import playlists
 import playlist_tracks
 import tracks
@@ -294,7 +294,6 @@ def retrieve_dj_stats_only_once():
     return dj_dict, dj_airnames
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Playlists -=-=-=-=-=-=-=-=-=-=-=-
-# http://0.0.0.0:5000/playlists   # TODO Maybe the response is too big? {}
 # http://0.0.0.0:5000/playlists/66582
 # http://0.0.0.0:5000/playlists/66581
 
@@ -304,13 +303,6 @@ class PlaylistSchema(ma.Schema):
 
 playlist_schema = PlaylistSchema()
 playlists_schema = PlaylistSchema(many=True)
-
-class PlaylistListResource(Resource):
-    def get(self):
-        playlists = Playlist.query.all()
-        return playlist_schema.dump(playlists)
-
-api.add_resource(PlaylistListResource, '/playlists')
 
 class PlaylistResource(Resource):
     def get(self, kfjc_playlist_id):
@@ -340,6 +332,11 @@ class PlaylistTracksResource(Resource):
 api.add_resource(PlaylistTracksResource, '/playlist_tracks/<int:kfjc_playlist_id>')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: DJ Favorites -=-=-=-=-=-=-=-=-=-=-=-
+
+# TODO: Nice to have: Sometimes when a DJ has a small body of work, 
+# they can't meet the minimum number of plays to return any items.
+# Do a status message and print it instead of any table.
+
 # http://0.0.0.0:5000/dj_favorites/album/dj_id=255
 # http://0.0.0.0:5000/dj_favorites/artist/dj_id=255
 # http://0.0.0.0:5000/dj_favorites/track/dj_id=255

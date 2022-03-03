@@ -11,27 +11,28 @@
       <!-- COLUMN ONE -->
       <div class="row justify-content-center">
         <!--You can have as many rows as you need.-->
-        <img src={{random_robot_img}} />
+        <img src={{ random_robot_img }} />
       </div>
     </div>
+    
     <div class="col">
       <div class="row justify-content-center">
         {{ ask_question }}
         {% for answer in display_shuffled_answers %}
-        <form action="/answer" id="{{ answer }}" method="POST">
-          <button id="answer" name="q" value="{{ answer }}" class="orange_button">{{ answer }}</button>
-        </form>
+          <form action="/answer" id="{{ answer }}" method="POST">
+            <button id="answer" name="q" value="{{ answer }}" class="orange_button">{{ answer }}</button>
+          </form>
         {% endfor %}
-        <br>
-      <div>
-        <br>
-        <br>
-        <form action="/answer" id="skip" method="POST">
-          <p><label>I don't like this question.</label></p>
-          <button id="s" name="q" value="SKIP" class="orange_button">Skip Question Without Penalty</button>
-        </form>
-     </div>
-     </div>
+        <div>
+          <br>
+          <br>
+          <br>
+          <form action="/answer" id="skip" method="POST">
+            <p><label>I don't like this question.</label></p>
+            <button id="s" name="q" value="SKIP" class="orange_button">Skip Question Without Penalty</button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </div>

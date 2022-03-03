@@ -4,7 +4,7 @@ import unittest
 import datetime
 
 from server import app
-from model import Playlist, db, connect_to_db
+from model import db, connect_to_db
 import import_station_data
 import playlists
 import playlist_tracks
@@ -158,9 +158,6 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertTrue(albums.get_album_by_id(kfjc_album_id=694447).is_collection)
         self.assertFalse(albums.get_album_by_id(kfjc_album_id=695055).is_collection)
         
-        oldest, newest = common.get_ages(Playlist.start_time)
-        self.assertEqual(oldest.isoformat(), "2000-08-13T16:00:00")
-        self.assertEqual(newest.isoformat(), "2022-02-16T02:00:30")
 
         self.assertNotIn("Fuck", albums.get_album_by_id(kfjc_album_id=140533).title)
         self.assertNotIn("Pussy", albums.get_album_by_id(kfjc_album_id=140533).title)
@@ -217,6 +214,10 @@ class RobotTestsDatabase(unittest.TestCase):
             (datetime.datetime(2000, 8, 13, 16, 0), 
             datetime.datetime(2022, 2, 16, 2, 0, 30)), 
             playlists.first_show_last_show())
+        # Another way to do it:
+        oldest, newest = playlists.first_show_last_show()
+        self.assertEqual(oldest.isoformat(), "2000-08-13T16:00:00")
+        self.assertEqual(newest.isoformat(), "2022-02-16T02:00:30")
         
         self.assertEqual(1, playlists.get_dj_ids_and_show_counts()[0].showcount)
         self.assertEqual(431, playlists.get_dj_ids_and_show_counts()[0].dj_id)

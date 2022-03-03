@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
+
 {% block title %}Welcome to the KFJC Trivia Robot™!{% endblock %}
 
 {% block body %}
-
 <h1>I'm the KFJC Trivia Robot™!</h1>
 
 <div class="container">
@@ -11,14 +11,16 @@
       <!-- COLUMN ONE -->
       <div class="row justify-content-center">
         <!--You can have as many rows as you need.-->
-        <img src={{random_robot_img}} />
+        <img src={{ random_robot_img }} />
       </div>
     </div>
+
     <div class="col">
       {{ greeting }}
       <br>
       <br>
       <br>
+
       <div class="row justify-content-center">
         <form action="/login" method="POST">
           <div>
@@ -38,31 +40,30 @@
       </div>
       <br>
       <br>
+
       <div class="row justify-content-center">
         <form action="/create_account" method="POST">
           <p><label>Or, create an account:</label>
-
-            <div>
-              <label>Username:
-                <input type="text" name="username" required>
-              </label>
-            </div>
-            <div>
-              <label>Your name:
-                <input type="text" name="fname" required>
-              </label>
-            </div>
-            <div>
-              <label>Password:
-                <input type="password" name="password" required>
-              </label>
-            </div>
-            <div>
-              <p><input type="submit" class="pink_button" value="Create Account"></p>
-            </div>
+          <div>
+            <label>Username:
+              <input type="text" name="username" required>
+            </label>
+          </div>
+          <div>
+            <label>Your name:
+              <input type="text" name="fname" required>
+            </label>
+          </div>
+          <div>
+            <label>Password:
+              <input type="password" name="password" required>
+            </label>
+          </div>
+          <div>
+            <p><input type="submit" class="pink_button" value="Create Account"></p>
+          </div>
         </form>
       </div>
-     </div>
     </div>
   </div>
 </div>

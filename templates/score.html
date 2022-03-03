@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Question{% endblock %}
+{% block title %}Score{% endblock %}
 
 {% block body %}
 <h1>Score for {{ fname }}</h1>
@@ -11,9 +11,10 @@
       <!-- COLUMN ONE -->
       <div class="row justify-content-center">
         <!--You can have as many rows as you need.-->
-        <img src={{random_robot_img}} style="max-height: 500px; max-width: 500px;" />
+        <img src={{ random_robot_img }} />
       </div>
     </div>
+    
     <div class="col">
       <div class="row justify-content-center">
         <h2>{{ robot_msg }}</h2>

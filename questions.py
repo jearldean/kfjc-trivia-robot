@@ -7,7 +7,7 @@ from random import randrange, choice, choices, shuffle
 from sqlalchemy import exc
 from psycopg2 import errors
 
-from model import Answer, PlaylistTrack, db, connect_to_db, Question
+from model import db, connect_to_db, Answer, PlaylistTrack, Question
 import albums
 import playlists
 import playlist_tracks

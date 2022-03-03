@@ -19,19 +19,8 @@
     <!-- From https://fellowship.hackbrightacademy.com/materials/serpt5/lectures/bootstrap/ -->
     <link rel="stylesheet" href="/static/css/site.css">
 
-    <style>
-      /* Modify the background color */
-       
-      .navbar {
-          background-color: #89a203;
-          /* From http://hexcolor16.com/89a203  Vomit Green  */
-      }
-      /* Modify brand and text color */
-      
-      .navbar .navbar-brand
-    </style>
-
   </head>
+  
   <body>
     {% for msg in get_flashed_messages() %}
     <p class="flash-msg">
@@ -43,15 +32,16 @@
 
     {% block after_body %}{% endblock %}
   </body>
+
   <div>
-  <h1>
-  <a href="/score">My Score</a> | 
-  <a href="/leaderboard">Leaderboard</a> | 
-  <a href="https://kfjc.org">KFJC</a> | 
-  <a href="/infopage">Infopage</a> | 
-  <a href="/question">Quiz</a> | 
-  <a href="/logout">Logout</a> | 
-  <a href="/ask">Ask</a> | 
-  </h1>
+    <h1>
+      <a href="/score">My Score</a> | 
+      <a href="/leaderboard">Leaderboard</a> | 
+      <a href="https://kfjc.org">KFJC</a> | 
+      <a href="/infopage">Infopage</a> | 
+      <a href="/question">Quiz</a> | 
+      <a href="/logout">Logout</a> | 
+      <a href="/ask">Ask</a> | 
+    </h1>
   </div>
 </html>

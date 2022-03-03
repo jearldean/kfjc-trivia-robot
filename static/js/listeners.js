@@ -28,7 +28,7 @@ function djMostPlays(evt) {
           inject_table += table_row;
         }
       inject_table += "</table>";
-      document.querySelector('#requested_stat').innerHTML = inject_table;
+      document.querySelector('#answer_window').innerHTML = inject_table;
     } else if (media_type == 'album') {
       let inject_table = '<table><tr><th>Album</th><th>Plays</th></tr>';
         for (const row of json) {
@@ -38,7 +38,7 @@ function djMostPlays(evt) {
           inject_table += table_row;
         }
       inject_table += "</table>";
-      document.querySelector('#requested_stat').innerHTML = inject_table;
+      document.querySelector('#answer_window').innerHTML = inject_table;
     } else {
       let inject_table = '<table><tr><th>Track</th><th>Plays</th></tr>';
         for (const row of json) {
@@ -48,7 +48,7 @@ function djMostPlays(evt) {
           inject_table += table_row;
         }
       inject_table += "</table>";
-      document.querySelector('#requested_stat').innerHTML = inject_table;
+      document.querySelector('#answer_window').innerHTML = inject_table;
     }
   
   });
@@ -96,7 +96,7 @@ function artistLastPlays(evt) {
         sentences += sentence;
       }
   
-    document.querySelector('#requested_stat').innerHTML = sentences;
+    document.querySelector('#answer_window').innerHTML = sentences;
 
   });
 }
@@ -126,7 +126,7 @@ function albumLastPlays(evt) {
         sentences += sentence;
       }
   
-    document.querySelector('#requested_stat').innerHTML = sentences;
+    document.querySelector('#answer_window').innerHTML = sentences;
 
   });
 }
@@ -156,20 +156,20 @@ function trackLastPlays(evt) {
         sentences += sentence;
       }
   
-    document.querySelector('#requested_stat').innerHTML = sentences;
+    document.querySelector('#answer_window').innerHTML = sentences;
 
   });
 }
 
 //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- Top Plays -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-document.querySelector("#top-plays").addEventListener("click", topPlays);
+document.querySelector("#top-plays").addEventListener("submit", topPlays);
 
 function topPlays(evt) {
   evt.preventDefault();
 
-  const topN = document.querySelector("#top-n-int").value;
-  const mediaType = document.querySelector("#top-n-media-str").value;
+  const topN = document.querySelector("#top-n-int:checked").value;
+  const mediaType = document.querySelector("#top-n-media-str:checked").value;
   const startDate = document.querySelector("#start-date").value;
   const endDate = document.querySelector("#end-date").value;
   const url = `/top_plays/top=${topN}&order_by=${mediaType}&start_date=${startDate}&end_date=${endDate}`;
@@ -178,9 +178,9 @@ function topPlays(evt) {
   fetch(url)
   .then(response => response.text())
   .then(status => {
-    console.log(status);
+
     const json = JSON.parse(status);
-    
+
     let inject_table = '<table><tr><th>Plays</th><th>Artist</th><th>Album</th><th>Track</th></tr>';
       for (const row of json) {
         const plays = row.plays;
@@ -192,7 +192,7 @@ function topPlays(evt) {
       }
       inject_table += "</table>";
   
-    document.querySelector('#requested_stat').innerHTML = inject_table;
+    document.querySelector('#answer_window').innerHTML = inject_table;
 
   });
 }

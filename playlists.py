@@ -8,6 +8,9 @@ import common
 MIN_SHOW_COUNT = 14
 # A DJ is born when they complete one training excercise and 13 grave shifts.
 
+ADMINISTRATIVE_DJ_IDS = -1, 104, 105, 431
+# These dj_ids do not represent people, just station business.
+
 def create_playlist(kfjc_playlist_id, dj_id, air_name, start_time, end_time):
     """Create and return a new playlist."""
 
@@ -70,7 +73,7 @@ def dj_stats(order_by_column, reverse=False):
             SELECT *, ROW_NUMBER() OVER (PARTITION BY dj_id ORDER BY dj_id) rn 
             FROM playlists) q 
         WHERE rn = 1 
-        AND dj_id NOT IN (431, -1) 
+        AND dj_id NOT IN {ADMINISTRATIVE_DJ_IDS} 
         AND air_name NOT LIKE '%KFJC%' 
         AND air_name NOT LIKE '%rebroadcast%' """)
     dj_stats = (
@@ -80,7 +83,7 @@ def dj_stats(order_by_column, reverse=False):
         FROM ({first_last_count}) first_last_count 
         LEFT JOIN ({dj_id_to_air_name}) dj_id_to_air_name 
         ON (first_last_count.dj_id = dj_id_to_air_name.dj_id) 
-        WHERE dj_id_to_air_name.dj_id NOT IN (431, -1) 
+        WHERE dj_id_to_air_name.dj_id NOT IN {ADMINISTRATIVE_DJ_IDS} 
         ORDER BY {order_by_column} {reverse_it} """)
 
     results = db.session.execute(dj_stats)

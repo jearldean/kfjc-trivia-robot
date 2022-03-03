@@ -11,23 +11,25 @@
       <!-- COLUMN ONE -->
       <div class="row justify-content-center">
         <!--You can have as many rows as you need.-->
-        <img src={{random_robot_img}} />
+        <img src={{ random_robot_img }} />
       </div>
     </div>
+
     <div class="col">
       <div class="row justify-content-center">
         <h2>{{ robot_msg }}</h2>
         <br>
         {% for n in range(table_range) %}
           {% if current_user == leaders[n][0] %}
-          <!-- Special Printing if it's the current player: -->
-          <p id="ima_leader"> {{ n+1 }}. {{ leaders[n][2] }} </p>
+            <!-- Special Printing if it's the current player: -->
+            <p id="ima_leader"> {{ n+1 }}. {{ leaders[n][2] }} </p>
           {% else %}
-          <p> {{ n+1 }}. {{ leaders[n][2] }} </p>
+            <p> {{ n+1 }}. {{ leaders[n][2] }} </p>
           {% endif %}
         {% endfor %}
-     </div>
+      </div>
     </div>
   </div>
 </div>
+
 {% endblock %}

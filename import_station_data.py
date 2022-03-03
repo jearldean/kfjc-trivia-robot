@@ -178,6 +178,15 @@ def create_playlists(row):
     if row[1] == '-1391':
         row[1] = 391  # Reassign it.
 
+    # TODO: Nice to have: I guess Dangerous Dan has 2 dj_ids?
+    # Because he's in the picklist twice: 117, 104, 44
+    # 117 is Mr. Lucky.
+    # dj_id 104 is totally polluted.
+    # There are 1300 playlist rows with a dozen different air_names.
+    # Might just have to dump them.
+
+
+
     # Fix air_name of DJ CLICK:     DJ Click, Click, ^
     if coerce_imported_data(row[2]) in ['Click', '^']:
         row[2] = 'DJ Click'  # Reassign it.

@@ -5,7 +5,7 @@ import collections
 from datetime import date
 from sqlalchemy.sql.expression import func, distinct
 
-from model import connect_to_db, db
+from model import db, connect_to_db
 
 
 def get_count(table_dot_column, unique=True):

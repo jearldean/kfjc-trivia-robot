@@ -11,9 +11,10 @@
       <!-- COLUMN ONE -->
       <div class="row justify-content-center">
         <!--You can have as many rows as you need.-->
-        <img src={{random_robot_img}} />
+        <img src={{ random_robot_img }} />
       </div>
     </div>
+
     <div class="col">
       <div class="row justify-content-center">
 
@@ -33,29 +34,27 @@
           {% for ii in present_answer_data %}
             {% if the_right_answer in ii %}
             <tr id="ima_leader">
-              <td>{{ ii[0] }} </td>
-              <td>{{ ii[1] }} </td> 
+              <td>{{ ii[0] }} </td><td>{{ ii[1] }} </td> 
             </tr>
             {% else %}
             <tr>
-              <td>{{ ii[0] }} </td>
-              <td>{{ ii[1] }} </td> 
+              <td>{{ ii[0] }} </td><td>{{ ii[1] }} </td> 
             </tr>
             {% endif %}
           {% endfor %}
         </table>
-     </div>
-     <br>
-     <br>
-     <br>
-     <br>
-     <form action="/play" id="game-on-form">
-      
-       <label>Play again?</label>
-        <p><input type="radio" name="game-on" value=true class="game-on" checked/> Yes, another quesion.</p>
-        <p><input type="radio" name="game-on" value=false class="game-on"/> Nah, I'd rather listen to KFJC.</p>
-        <p><button class="orange_button"  type="submit" id="submit-profile">Submit</button></p>
-       </form>
+      </div>
+      <br>
+      <br>
+      <br>
+      <br>
+
+      <form action="/play" id="game-on-form">
+        <label>Play again?</label>
+          <p><input type="radio" name="game-on" value=true class="game-on" checked/> Yes, another quesion.</p>
+          <p><input type="radio" name="game-on" value=false class="game-on"/> Nah, I'd rather listen to KFJC.</p>
+          <p><button class="orange_button"  type="submit" id="submit-profile">Submit</button></p>
+      </form>
  
     </div>
   </div>
