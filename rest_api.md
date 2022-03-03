@@ -46,6 +46,21 @@ Find out when a DJ played a show.
   * `curl -v http://0.0.0.0:5000/playlists/66582`
 
 <br><br><br>
+TODO: Added an API: Playlist Tracks
+# http://0.0.0.0:5000/playlist_tracks/66582
+# http://0.0.0.0:5000/playlist_tracks/66581
+Lists the songs played during a show.
+
+<br><br><br>
+
+
+TODO:
+New schema:
+# http://0.0.0.0:5000/dj_favorites/album/dj_id=255
+# http://0.0.0.0:5000/dj_favorites/artist/dj_id=255
+# http://0.0.0.0:5000/dj_favorites/track/dj_id=255 */
+
+Also, dropped support for air_name. Could be added back later as a nice-to-have.
 
 ***2. Get Most Plays by dj_id or air_name:***
 
@@ -338,3 +353,8 @@ Show tracks on an album in the KFJC Library.
 
   * `curl -v http://0.0.0.0:5000/album_tracks/497606`<br>
   
+
+  TODO: Added Albums by an Artist:
+# http://0.0.0.0:5000/artists_albums/artist=Pink%20Floyd
+# http://0.0.0.0:5000/artists_albums/artist=Lee%20Press%20On
+# http://0.0.0.0:5000/artists_albums/artist=Adam%20Ant

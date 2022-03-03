@@ -8,10 +8,11 @@ from operator import itemgetter
 from flask_restful import Api, Resource  # reqparse
 from flask_marshmallow import Marshmallow
 
-from model import connect_to_db, db, Playlist
+from model import PlaylistTrack, connect_to_db, db, Playlist
 import playlists
 import playlist_tracks
 import tracks
+import albums
 import users
 import questions
 import answers
@@ -318,32 +319,55 @@ class PlaylistResource(Resource):
 
 api.add_resource(PlaylistResource, '/playlists/<int:kfjc_playlist_id>')
 
+# -=-=-=-=-=-=-=-=-=-=-=- REST API: Playlist Tracks -=-=-=-=-=-=-=-=-=-=-=-
+# http://0.0.0.0:5000/playlist_tracks/66582
+# http://0.0.0.0:5000/playlist_tracks/66581
+
+class PlaylistTracksSchema(ma.Schema):
+    class Meta:
+        fields = (
+            "kfjc_playlist_id", "indx", "kfjc_album_id",
+            "album_title", "artist", "track_title", "time_played")
+
+playlist_tracks_schema = PlaylistTracksSchema(many=True)
+
+class PlaylistTracksResource(Resource):
+    def get(self, kfjc_playlist_id):
+        playlist_tracks_found = playlist_tracks.get_playlist_tracks_by_kfjc_playlist_id(
+            kfjc_playlist_id=kfjc_playlist_id)
+        return playlist_tracks_schema.dump(playlist_tracks_found)
+
+api.add_resource(PlaylistTracksResource, '/playlist_tracks/<int:kfjc_playlist_id>')
+
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: DJ Favorites -=-=-=-=-=-=-=-=-=-=-=-
-# http://0.0.0.0:5000/dj_favorites/255
-# http://0.0.0.0:5000/dj_favorites/177
-# http://0.0.0.0:5000/dj_favorites/Robert%20Emmett
-# http://0.0.0.0:5000/dj_favorites/Stingray
+# http://0.0.0.0:5000/dj_favorites/album/dj_id=255
+# http://0.0.0.0:5000/dj_favorites/artist/dj_id=255
+# http://0.0.0.0:5000/dj_favorites/track/dj_id=255
 
 class DJFavoritesSchema(ma.Schema):
     class Meta:
-        fields = ("dj_id", "artist", "plays")
+        fields = ("dj_id", "artist", "album_title", "track_title", "plays")
 
 one_dj_favorites_schema = DJFavoritesSchema(many=True)
 
-class DJFavoritesResource(Resource):
+class DJFavoriteArtistResource(Resource):
     def get(self, dj_id):
         favorites = playlist_tracks.get_favorite_artists(dj_id=dj_id, reverse=True, min_plays=5)
         return one_dj_favorites_schema.dump(favorites)
 
-api.add_resource(DJFavoritesResource, '/dj_favorites/<int:dj_id>')
-
-class DJFavoritesAirnameResource(Resource):
-    def get(self, air_name):
-        dj_id = playlists.get_dj_id(air_name=air_name)
-        favorites = playlist_tracks.get_favorite_artists(dj_id=dj_id, reverse=True, min_plays=5)
+class DJFavoriteAlbumResource(Resource):
+    def get(self, dj_id):
+        favorites = playlist_tracks.get_favorite_albums(dj_id=dj_id, reverse=True, min_plays=5)
         return one_dj_favorites_schema.dump(favorites)
 
-api.add_resource(DJFavoritesAirnameResource, '/dj_favorites/<string:air_name>')
+class DJFavoriteTrackResource(Resource):
+    def get(self, dj_id):
+        favorites = playlist_tracks.get_favorite_tracks(dj_id=dj_id, reverse=True, min_plays=5)
+        return one_dj_favorites_schema.dump(favorites)
+
+api.add_resource(DJFavoriteArtistResource, '/dj_favorites/artist/dj_id=<int:dj_id>')
+api.add_resource(DJFavoriteAlbumResource, '/dj_favorites/album/dj_id=<int:dj_id>')
+api.add_resource(DJFavoriteTrackResource, '/dj_favorites/track/dj_id=<int:dj_id>')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Last Played -=-=-=-=-=-=-=-=-=-=-=-
 # http://0.0.0.0:5000/last_played/artist=Pink%20Floyd
@@ -477,6 +501,38 @@ class AlbumTracks(Resource):
 
 api.add_resource(AlbumTracks, '/album_tracks/<int:kfjc_album_id>')
 
+# -=-=-=-=-=-=-=-=-=-=-=- Albums by an Artist -=-=-=-=-=-=-=-=-=-=-=-
+# http://0.0.0.0:5000/artists_albums/artist=Pink%20Floyd
+# http://0.0.0.0:5000/artists_albums/artist=Lee%20Press%20On
+# http://0.0.0.0:5000/artists_albums/artist=Adam%20Ant
+
+"""choice here: collections (multiple artists on an album) will be skipped if 
+we use the albums table lookup.
+But if we back it out from the tracks table, compilation albums would be included."""
+
+class ArtistsAlbumsSchema(ma.Schema):
+    class Meta:
+        fields = ("kfjc_album_id", "album_title", "artist")
+
+artists_albums_schema = ArtistsAlbumsSchema(many=True)
+
+class ArtistsAlbums(Resource):
+    def get(self, artist):
+        albums_by_artist = []
+        tracks_by_artist = tracks.get_tracks_by_an_artist(artist=artist)
+        for track_by_artist in tracks_by_artist:
+            kfjc_album_id=track_by_artist.kfjc_album_id
+            album = albums.get_album_by_id(kfjc_album_id=kfjc_album_id)
+            report_artist = track_by_artist.artist
+            to_be_appended = {
+                    "kfjc_album_id": kfjc_album_id, "album_title": album.title,
+                    "artist": report_artist}
+            if to_be_appended not in albums_by_artist:
+                albums_by_artist.append(to_be_appended)
+        return artists_albums_schema.dump(albums_by_artist)
+
+api.add_resource(ArtistsAlbums, '/artists_albums/artist=<string:artist>')
+
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 if __name__ == "__main__":
@@ -485,4 +541,4 @@ if __name__ == "__main__":
     app.jinja_env.auto_reload = True
     app.config['TEMPLATES_AUTO_RELOAD'] = False
 
-    app.run(host="0.0.0.0", debug=False)
+    app.run(host="0.0.0.0", debug=True)

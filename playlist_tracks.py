@@ -24,6 +24,13 @@ def create_playlist_track(
 
     return playlist_track
 
+
+def get_playlist_tracks_by_kfjc_playlist_id(kfjc_playlist_id):
+    """Return an album by primary key."""
+
+    return PlaylistTrack.query.filter(
+        PlaylistTrack.kfjc_playlist_id == kfjc_playlist_id).all()
+
 # -=-=-=-=-=-=-=-=-=-=-=- DJ Favorites -=-=-=-=-=-=-=-=-=-=-=-
 
 def get_favorite_artists(dj_id, reverse=True, min_plays=5):

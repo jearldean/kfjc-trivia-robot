@@ -24,12 +24,13 @@
   <link rel="stylesheet" href="/static/css/site.css">
 </head>
 <body>
-<div id="profile">
+<div>
   <h2>You can ask about DJs:</h2>
   <form id="dj-info" method="GET">
     <div>
       <label>Air Name: </label>
       <select onchange="this.form.submit()" name="dj_id" id="dj-picker">
+        <!-- return ii[1], the airname to the js handler, too. -->
         {% for ii in dj_airnames %}
           {% if ii[0] == dj_selected %}
             <option selected value="{{ dj_selected }}">{{ ii[1] }}</option>
@@ -38,21 +39,19 @@
           {% endif %}
         {% endfor %}
       </select>
-    </form>
     </div>
     {% if dj_stat %}
       {{ dj_stat }}
     {% endif %}
     <div>
-  <br>
-  <form id="dj-most-plays" method="GET" action="dj-most-plays">
+    <br>
       <label> DJ's Most Played: </label>
         <input type="radio" name="dj-favorite" value="artist" class="dj" checked/>Artist
         <input type="radio" name="dj-favorite" value="album" class="dj"/>Album
         <input type="radio" name="dj-favorite" value="track" class="dj"/>Track
     </div>
     <div>
-      <button class="disabled_button" type="submit" id="dj-most-plays" disabled>DJ's Top Plays Coming Soon</button>
+      <button class="orange_button" type="submit" id="dj-most-plays">DJ's Top Plays</button>
     </div>
   </form>
     </div>
@@ -72,6 +71,7 @@
     {% endif %}
     <div>
   
+      <br>
   <div>
   <h2>You can ask about Last Plays:</h2>
   <form id="artist-last-plays" method="GET">
@@ -99,6 +99,7 @@
   </form>
   </div>
 
+  <br>
   <h2>You can ask about Top Plays:</h2>
   <form id="top-plays" method="GET">
     <div>
@@ -122,7 +123,7 @@
       <button class="disabled_button" type="submit" id="top-plays-button" disabled >Your own Top40 Coming Soon</button>
     </div>
   </form>
-
+  <br>
   <div id="requested_stat"></div>
 
 </div>

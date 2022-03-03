@@ -1,7 +1,64 @@
 "use strict";
 
+//  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- DJ Most Plays -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+document.querySelector("#dj-most-plays").addEventListener("click", djMostPlays);
+
+function djMostPlays(evt) {
+  evt.preventDefault();
+
+  const dj_id = document.querySelector("#dj-picker").value;
+  const media_type = document.querySelector(".dj:checked").value;
+  const url = `/dj_favorites/${media_type}/dj_id=${dj_id}`;
+
+  console.log(url);
+
+  fetch(url)
+  .then(response => response.text())
+  .then(status => {
+
+    const json = JSON.parse(status);
+
+    if (media_type == 'artist') {
+      let inject_table = '<table><tr><th>Artist</th><th>Plays</th></tr>';
+        for (const row of json) {
+          const plays = row.plays;
+          const artist = row.artist;
+          const table_row = `<tr><td>${artist}</td><td>${plays}</td></tr>`;
+          inject_table += table_row;
+        }
+      inject_table += "</table>";
+      document.querySelector('#requested_stat').innerHTML = inject_table;
+    } else if (media_type == 'album') {
+      let inject_table = '<table><tr><th>Album</th><th>Plays</th></tr>';
+        for (const row of json) {
+          const plays = row.plays;
+          const album_title = row.album_title;
+          const table_row = `<tr><td>${album_title}</td><td>${plays}</td></tr>`;
+          inject_table += table_row;
+        }
+      inject_table += "</table>";
+      document.querySelector('#requested_stat').innerHTML = inject_table;
+    } else {
+      let inject_table = '<table><tr><th>Track</th><th>Plays</th></tr>';
+        for (const row of json) {
+          const plays = row.plays;
+          const track_title = row.track_title;
+          const table_row = `<tr><td>${track_title}</td><td>${plays}</td></tr>`;
+          inject_table += table_row;
+        }
+      inject_table += "</table>";
+      document.querySelector('#requested_stat').innerHTML = inject_table;
+    }
+  
+  });
+}
 
 //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- Last Plays -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+document.querySelector("#artist-last-plays").addEventListener("submit", artistLastPlays);
+document.querySelector("#album-last-plays").addEventListener("submit", albumLastPlays);
+document.querySelector("#track-last-plays").addEventListener("submit", trackLastPlays);
 
 function humanReadableDate(isoFormatDate) {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -13,10 +70,6 @@ function humanReadableDate(isoFormatDate) {
   const human_date = mlong + " " + d + ", " + y;
   return human_date;
 }
-
-document.querySelector("#artist-last-plays").addEventListener("submit", artistLastPlays);
-document.querySelector("#album-last-plays").addEventListener("submit", albumLastPlays);
-document.querySelector("#track-last-plays").addEventListener("submit", trackLastPlays);
 
 function artistLastPlays(evt) {
   evt.preventDefault();
@@ -48,7 +101,6 @@ function artistLastPlays(evt) {
   });
 }
 
-
 function albumLastPlays(evt) {
   evt.preventDefault();
 
@@ -78,8 +130,6 @@ function albumLastPlays(evt) {
 
   });
 }
-
-
 
 function trackLastPlays(evt) {
   evt.preventDefault();
@@ -111,7 +161,6 @@ function trackLastPlays(evt) {
   });
 }
 
-
 //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- Top Plays -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 document.querySelector("#top-plays").addEventListener("click", topPlays);
@@ -132,18 +181,18 @@ function topPlays(evt) {
     console.log(status);
     const json = JSON.parse(status);
     
-    let sentences = '<table><tr><th>Plays</th><th>Artist</th><th>Album</th><th>Track</th></tr>';
+    let inject_table = '<table><tr><th>Plays</th><th>Artist</th><th>Album</th><th>Track</th></tr>';
       for (const row of json) {
         const plays = row.plays;
         const artist = row.artist;
         const album_title = row.album_title;
         const track_title = row.track_title;
-        const sentence = `<tr><td>${plays}</td><td>${artist}</td><td>${album_title}</td><td>${track_title}</td></tr>`;
-        sentences += sentence;
+        const table_row = `<tr><td>${plays}</td><td>${artist}</td><td>${album_title}</td><td>${track_title}</td></tr>`;
+        inject_table += table_row;
       }
-    sentences += "</table>";
+      inject_table += "</table>";
   
-    document.querySelector('#requested_stat').innerHTML = sentences;
+    document.querySelector('#requested_stat').innerHTML = inject_table;
 
   });
 }
