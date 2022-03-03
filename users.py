@@ -6,15 +6,10 @@ from model import db, connect_to_db, User
 
 def create_user(username, fname, password):
     """Create and return a new user."""
-
-    salt = bcrypt.gensalt()
-    # Using bcrypt, the salt is saved into the hash itself
-    hashed = bcrypt.hashpw(password.encode('UTF_8'), salt)
-
     user = User(
         username=username,
         fname=fname,
-        hashed_password=hashed)
+        hashed_password=hash_it(password))
 
     db.session.add(user)
     # Don't forget to call model.db.session.commit() when done adding items.
@@ -66,8 +61,9 @@ def does_user_exist_already(username):
 def does_password_match(user_instance, password_from_form):
     """Check hashed password. Returns boolean."""
     
-    if user_instance.hashed_password == bcrypt.hashpw(password_from_form.encode('UTF_8'), 
-        user_instance.hashed_password.encode('UTF_8')):
+    if bcrypt.checkpw(
+            password_from_form.encode('utf8'),
+            user_instance.hashed_password.encode('utf8')):
         print("match")
         return True
     else:
@@ -75,6 +71,16 @@ def does_password_match(user_instance, password_from_form):
         return False
         
     
+def hash_it(password):
+    """Problems using bcrypt."""
+    # flask_bcrypt.generate_password_hash(password).decode('utf8')
+    salt = bcrypt.gensalt()
+    # Using bcrypt, the salt is saved into the hash itself
+    hashed = bcrypt.hashpw(password.encode('utf8'), salt)
+    hashed_password = hashed.decode('utf8') # decode the hash to prevent being encoded twice
+    return hashed_password
+
+
 if __name__ == '__main__':
     """Will connect you to the database when you run users.py interactively"""
     from server import app

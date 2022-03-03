@@ -39,7 +39,7 @@ function artistLastPlays(evt) {
         const album_title = row.album_title;
         const artist = row.artist;
         const human_date = humanReadableDate(row.time_played);
-        const sentence = `<li>${air_name} played the track '${track_title}' from the album '${album_title}' by the artist '${artist}' on ${human_date}.</li>`;
+        const sentence = `<li>${air_name} played the track '${track_title}' from the album '${album_title}' by the artist '<span class="word_highlight">${artist}</span>' on ${human_date}.</li>`;
         sentences += sentence;
       }
   
@@ -70,7 +70,7 @@ function albumLastPlays(evt) {
         const album_title = row.album_title;
         const artist = row.artist;
         const human_date = humanReadableDate(row.time_played);
-        const sentence = `<li>${air_name} played the track '${track_title}' from the album '${album_title}' by the artist '${artist}' on ${human_date}.</li>`;
+        const sentence = `<li>${air_name} played the track '${track_title}' from the album '<span class="word_highlight">${album_title}</span>' by the artist '${artist}' on ${human_date}.</li>`;
         sentences += sentence;
       }
   
@@ -102,7 +102,7 @@ function trackLastPlays(evt) {
         const album_title = row.album_title;
         const artist = row.artist;
         const human_date = humanReadableDate(row.time_played);
-        const sentence = `<li>${air_name} played the track '${track_title}' from the album '${album_title}' by the artist '${artist}' on ${human_date}.</li>`;
+        const sentence = `<li>${air_name} played the track '<span class="word_highlight">${track_title}</span>' from the album '${album_title}' by the artist '${artist}' on ${human_date}.</li>`;
         sentences += sentence;
       }
   

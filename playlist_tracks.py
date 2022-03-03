@@ -119,16 +119,19 @@ def random_library_pick(pick_type='track_title', min_appearances=3):
     """Get one random item from the library."""
     if pick_type in ['artist', 'Artist']:
         library_category = PlaylistTrack.artist
+        searcher = library_category
     elif pick_type in ['album', 'Album', 'album_title']:
         library_category = PlaylistTrack.album_title
+        searcher = library_category
     elif pick_type in ['kfjc_album_id']:
         library_category = PlaylistTrack.kfjc_album_id
+        searcher = PlaylistTrack.album_title
     else:  # Just give 'em a track, I guess.
         library_category = PlaylistTrack.track_title
+        searcher = library_category
 
-    try:
-        # .filter(library_category.isnot('None')
-        return db.session.query(library_category).group_by(
+    try: 
+        return db.session.query(library_category).filter(searcher != 'None').group_by(
             library_category).having(func.count(library_category) > min_appearances).order_by(
                 func.random()).first()[0]
     except exc.ProgrammingError:
@@ -136,6 +139,8 @@ def random_library_pick(pick_type='track_title', min_appearances=3):
         return
     except exc.InternalError:
         # Pick again if there's a problem.
+        return
+    except TypeError:  # 'NoneType' object is not subscriptable
         return
 
 """ ***
