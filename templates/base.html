@@ -20,7 +20,6 @@
     <link rel="stylesheet" href="/static/css/site.css">
 
   </head>
-  
   <body>
     {% for msg in get_flashed_messages() %}
     <p class="flash-msg">
@@ -33,15 +32,25 @@
     {% block after_body %}{% endblock %}
   </body>
 
+  {% if footer == 'public' %}
   <div>
     <h1>
-      <a href="/score">My Score</a> | 
-      <a href="/leaderboard">Leaderboard</a> | 
-      <a href="https://kfjc.org">KFJC</a> | 
-      <a href="/infopage">Infopage</a> | 
-      <a href="/question">Quiz</a> | 
-      <a href="/logout">Logout</a> | 
-      <a href="/ask">Ask</a> | 
+    <a href="/">Homepage</a> | 
+    <a href="https://kfjc.org">KFJC</a> | 
+    <a href="/infopage">Infopage</a> | 
     </h1>
   </div>
+  {% else %}
+  <div>
+    <h1>
+    <a href="/score">My Score</a> | 
+    <a href="/leaderboard">Leaderboard</a> | 
+    <a href="https://kfjc.org">KFJC</a> | 
+    <a href="/infopage">Infopage</a> | 
+    <a href="/question">Quiz</a> | 
+    <a href="/logout">Logout</a> | 
+    <a href="/ask">Ask</a> | 
+    </h1>
+  </div>
+  {% endif %}
 </html>

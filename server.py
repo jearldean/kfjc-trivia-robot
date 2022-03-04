@@ -42,8 +42,10 @@ def homepage():
         retrieve_dj_stats_only_once()
 
     return render_template(
-        'homepage.html', random_robot_img=random_robot_image(),
-        greeting = assemble_greeting())
+        'homepage.html',
+        random_robot_img=random_robot_image(),
+        greeting = assemble_greeting(),
+        footer = 'public')
 
 
 @app.route("/play")
@@ -118,9 +120,16 @@ def logout():
 
 @app.route("/infopage")
 def infopage():
+
+    if "user_id" not in session:
+        footer = 'public'
+    else:
+        footer = 'private'
+
     return render_template(
         'infopage.html',
-        random_robot_img=random_robot_image())
+        random_robot_img=random_robot_image(),
+        footer = footer)
 
 @app.route("/score")
 def myscore():
@@ -136,7 +145,8 @@ def myscore():
         robot_msg=choice(ROBOT_MSG),
         random_robot_img=random_robot_image(),
         fname=user.fname,
-        user_score=user_score_named_tuple)
+        user_score=user_score_named_tuple,
+        footer = 'private')
 
 @app.route("/question")
 def ask_question():
@@ -157,7 +167,8 @@ def ask_question():
             random_robot_img=random_robot_image(),
             question_type=next_question.question_type,
             ask_question=next_question.ask_question,
-            display_shuffled_answers=next_question.display_shuffled_answers)
+            display_shuffled_answers=next_question.display_shuffled_answers,
+            footer = 'private')
 
 @app.route("/answer", methods = ["POST"])
 def answer_question():
@@ -186,7 +197,8 @@ def answer_question():
         present_answer=question.present_answer,
         the_right_answer=question.acceptable_answers[0],
         present_answer_data_headings=question.present_answer_data_headings,
-        present_answer_data=question.present_answer_data)
+        present_answer_data=question.present_answer_data,
+        footer = 'private')
 
 @app.route("/ask")
 def user_asks():
@@ -209,7 +221,8 @@ def user_asks():
         dj_dict=dj_dict,
         dj_most_plays_headings=False,
         dj_selected=session['dj_selected'],
-        dj_stat=dj_stat)
+        dj_stat=dj_stat,
+        footer = 'private')
 
         
 @app.route("/leaderboard")
@@ -243,7 +256,8 @@ def leaderboard():
         table_range=table_range,
         current_user = session["user_id"],
         user_msg=user_msg,
-        leaders=score_board)
+        leaders=score_board,
+        footer = 'private')
 
 # -=-=-=-=-=-=-=-=-=-=-=- Python -=-=-=-=-=-=-=-=-=-=-=-
 
