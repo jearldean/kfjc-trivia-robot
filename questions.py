@@ -107,9 +107,9 @@ def who_is_the_oldest_dj():
         present_answer_data = []
         display_shuffled_answers = []
 
-        present_answer_data_headings=["Air Name", "Last Show"]
+        present_answer_data_headings=["Air Name", "First Show"]
         for zz in sorted(answer_pile, key=attrgetter(search_key), reverse=reverse_display_answers):
-            item_value = common.make_date_pretty(date_time_string=zz.lastshow)
+            item_value = common.make_date_pretty(date_time_string=zz.firstshow)
             present_answer_data.append([zz.air_name, item_value])
             display_shuffled_answers.append(zz.air_name)
             

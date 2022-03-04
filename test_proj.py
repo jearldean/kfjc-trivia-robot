@@ -62,9 +62,7 @@ class RobotTests(unittest.TestCase):
         TODO Test ALL Routes:  '/question'
         TODO Test ALL Routes:  '/ask'
         TODO Test ALL Routes:  '/answer'
-        TODO Test ALL Routes:  '/ajax'
         TODO Test ALL Routes:  '/leaderboard'
-        TODO Test ALL Routes:  REST API   '/playlists'
         TODO Test ALL Routes:  REST API   '/playlists/<int:id_>'
         TODO Test ALL Routes:  REST API   '/dj_favorites/<int:dj_id>'
         TODO Test ALL Routes:  REST API   '/last_played/artist=<string:artist>'
@@ -264,6 +262,9 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertEqual(50, percys_score['percent'])
         self.assertNotEqual(1, questions.get_unique_question(user_id=5))
         
+        # REST API Checks:
+        
+
     def tearDown(self):
         """Stuff that runs after every def test_ function."""
 
