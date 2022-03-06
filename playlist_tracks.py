@@ -3,6 +3,7 @@
 from sqlalchemy import text, func, exc
 
 from model import db, connect_to_db, PlaylistTrack
+import djs
 import common
 
 def create_playlist_track(
@@ -64,6 +65,20 @@ def djs_favorite(dj_id, sql_variable, reverse=True, min_plays=5):
     reply = db.session.execute(djs_favorite)
     reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(reply)
     return reply_named_tuple
+
+def dj_needs_more_shows(dj_id):
+    """Sometimes when a DJ has a small body of work, they can't 
+    meet the minimum number of plays to return any favorite items.
+
+    Will return a status message instead.
+    """
+    air_name = djs.get_airname_for_dj(dj_id=dj_id)
+    warning_will_robinson = (
+        f"""Beep! Beep! Not enough data!\nMy databanks show """
+        f"""that DJ {air_name} hasn't done enough shows to compute favorites data.""")
+    if djs.WHITE_HEART_EMOJI not in air_name:
+        warning_will_robinson += " Keep listening!"
+    return warning_will_robinson
 
 # -=-=-=-=-=-=-=-=-=-=-=- Top10, Top10, Most Plays -=-=-=-=-=-=-=-=-=-=-=-
 

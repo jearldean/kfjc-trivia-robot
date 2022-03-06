@@ -1,6 +1,5 @@
 """Tests for the KFJC Trivia Robot"""
 
-import os
 import unittest
 import datetime
 

@@ -341,11 +341,6 @@ class PlaylistTracksResource(Resource):
 api.add_resource(PlaylistTracksResource, '/playlist_tracks/<int:kfjc_playlist_id>')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: DJ Favorites -=-=-=-=-=-=-=-=-=-=-=-
-
-# TODO: Nice to have: Sometimes when a DJ has a small body of work, 
-# they can't meet the minimum number of plays to return any items.
-# Do a status message and print it instead of any table.
-
 # http://0.0.0.0:5000/dj_favorites/album/dj_id=255
 # http://0.0.0.0:5000/dj_favorites/artist/dj_id=255
 # http://0.0.0.0:5000/dj_favorites/track/dj_id=255
@@ -359,16 +354,28 @@ one_dj_favorites_schema = DJFavoritesSchema(many=True)
 class DJFavoriteArtistResource(Resource):
     def get(self, dj_id):
         favorites = playlist_tracks.get_favorite_artists(dj_id=dj_id, reverse=True, min_plays=5)
+        if not favorites:
+            warning_string = playlist_tracks.dj_needs_more_shows(dj_id)
+            masquerade_as_data = [{'artist': "", "plays": warning_string}]
+            favorites = common.convert_list_o_dicts_to_list_o_named_tuples(masquerade_as_data)
         return one_dj_favorites_schema.dump(favorites)
 
 class DJFavoriteAlbumResource(Resource):
     def get(self, dj_id):
         favorites = playlist_tracks.get_favorite_albums(dj_id=dj_id, reverse=True, min_plays=5)
+        if not favorites:
+            warning_string = playlist_tracks.dj_needs_more_shows(dj_id)
+            masquerade_as_data = [{'album_title': "", "plays": warning_string}]
+            favorites = common.convert_list_o_dicts_to_list_o_named_tuples(masquerade_as_data)
         return one_dj_favorites_schema.dump(favorites)
 
 class DJFavoriteTrackResource(Resource):
     def get(self, dj_id):
         favorites = playlist_tracks.get_favorite_tracks(dj_id=dj_id, reverse=True, min_plays=5)
+        if not favorites:
+            warning_string = playlist_tracks.dj_needs_more_shows(dj_id)
+            masquerade_as_data = [{'track_title': "", "plays": warning_string}]
+            favorites = common.convert_list_o_dicts_to_list_o_named_tuples(masquerade_as_data)
         return one_dj_favorites_schema.dump(favorites)
 
 api.add_resource(DJFavoriteArtistResource, '/dj_favorites/artist/dj_id=<int:dj_id>')
@@ -547,4 +554,4 @@ if __name__ == "__main__":
     app.jinja_env.auto_reload = True
     app.config['TEMPLATES_AUTO_RELOAD'] = False
 
-    app.run(host="0.0.0.0", debug=False)
+    app.run(host="0.0.0.0", debug=True)  # TODO
