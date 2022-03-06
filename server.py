@@ -545,7 +545,6 @@ class ArtistsAlbums(Resource):
         return artists_albums_schema.dump(albums_by_artist)
 
 api.add_resource(ArtistsAlbums, '/artists_albums/artist=<string:artist>')
-
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 if __name__ == "__main__":
@@ -554,4 +553,4 @@ if __name__ == "__main__":
     app.jinja_env.auto_reload = True
     app.config['TEMPLATES_AUTO_RELOAD'] = False
 
-    app.run(host="0.0.0.0", debug=True)  # TODO
+    app.run(host="0.0.0.0", debug=False)
