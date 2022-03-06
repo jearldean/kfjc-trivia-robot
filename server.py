@@ -101,10 +101,7 @@ def create_account():
 @app.route("/important")
 def important():
     """Important info for logged in users."""
-    #if "user_id" in session:
-    #    return render_template("important.html")
-    #
-    #else:
+    
     flash("Make an account to take a fun quiz.")
     return redirect("/")
 
@@ -232,20 +229,12 @@ def user_asks():
         
 @app.route("/leaderboard")
 def leaderboard():
-    """TODO: Can leaderboard be rest api?"""
+    """Show top scores."""
 
     if "user_id" not in session:
         return redirect('/important')
 
-    score_board = []
-
-    for user in users.get_users():
-        user_id=user.user_id
-        user_score_named_tuple = answers.get_user_score(user_id=user_id)
-        user_percent = user_score_named_tuple.percent
-        score_board.append([user_id, user_percent, f"{user_percent}% {user.fname}"])
-    
-    score_board.sort(key=itemgetter(1), reverse=True)
+    score_board = answers.compile_leaderboard()
 
     table_range=min(TOP_N_USERS, len(score_board))
     if session["user_id"] in [f[0] for f in score_board[:table_range]]:
@@ -310,6 +299,8 @@ def retrieve_dj_stats_only_once():
             'dj_stats': dj_stats}   
         dj_airnames.append([dj_id, air_name])
     return dj_dict, dj_airnames
+#TODO: Can leaderboard be rest api?
+
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Playlists -=-=-=-=-=-=-=-=-=-=-=-
 # http://0.0.0.0:5000/playlists/66582

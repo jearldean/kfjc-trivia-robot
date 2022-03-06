@@ -453,8 +453,8 @@ def import_all_tables():
         file_path, row_handler = each_tuple  # unpack
         seed_a_large_csv(file_path=file_path, row_handler=row_handler)
     toc = time.perf_counter()
-    mins = float((toc - tic)/60)
-    print(f"Importing Station Data took {mins:0.4f} minutes.")
+    hours = float((toc - tic)/3600)
+    print(f"Importing Station Data took {hours:0.4f} hours.")
 
 def seed_a_large_csv(file_path, row_handler):
     """Large files must be broken into chunks."""

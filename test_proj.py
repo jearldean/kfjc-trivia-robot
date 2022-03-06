@@ -1,5 +1,6 @@
 """Tests for the KFJC Trivia Robot"""
 
+import os
 import unittest
 import datetime
 
@@ -16,93 +17,55 @@ import questions
 import answers
 import common
 
-TEST_DATA_PATH = 'test_data/fake_users.json'
-DB_NAME = 'testdb'
+TEST_USERS_DATA_PATH = 'test_data/fake_users.json'
+TEST_DJ_DATA_PATH = 'test_data/station_data/user.csv'
+TEST_PLAYLIST_DATA_PATH = 'test_data/station_data/playlist.csv'
+TEST_PLAYLIST_TRACK_DATA_PATH = 'test_data/station_data/playlist_track.csv'
+TEST_ALBUM_DATA_PATH = 'test_data/station_data/album.csv'
+TEST_TRACK_DATA_PATH = 'test_data/station_data/track.csv'
+TEST_COLLECTION_TRACK_DATA_PATH = 'test_data/station_data/coll_track.csv'
+TEST_DB_NAME = 'test_trivia'
 
-class RobotTests(unittest.TestCase):
-    """Tests for the KFJC Trivia Robot."""
-
-    def setUp(self):
-        self.client = app.test_client()
-        app.config['TESTING'] = True
-        # Connect to test database
-        connect_to_db(app, f"postgresql:///{DB_NAME}")
-
-        """
-        db.drop_all()
-        db.create_all()
-
-        # Overwrite default paths:
-        import_station_data.PLAYLIST_DATA_PATH = 'test_data/station_data/playlist.csv'
-        import_station_data.PLAYLIST_TRACK_DATA_PATH = 'test_data/station_data/playlist_track.csv'
-        import_station_data.ALBUM_DATA_PATH = 'test_data/station_data/album.csv'
-        import_station_data.TRACK_DATA_PATH = 'test_data/station_data/track.csv'
-        import_station_data.COLLECTION_TRACK_DATA_PATH = 'test_data/station_data/coll_track.csv'
-
-        # Import Station Data:
-        import_station_data.import_all_tables()
-
-        rtd = RobotTestsDatabase()
-        rtd.make_users()
-        rtd.make_questions()
-        rtd.make_answers()
-
-        TODO Test ALL Routes:  '/'
-
-        def test_homepage(self):
-            result = self.client.get("/")
-            self.assertIn(b"trivia question", result.data)
-
-
-        TODO Test ALL Routes:  '/login'
-        TODO Test ALL Routes:  '/create_account'
-        TODO Test ALL Routes:  '/important'
-        TODO Test ALL Routes:  '/logout'
-        TODO Test ALL Routes:  '/infopage'
-        TODO Test ALL Routes:  '/score'
-        TODO Test ALL Routes:  '/question'
-        TODO Test ALL Routes:  '/ask'
-        TODO Test ALL Routes:  '/answer'
-        TODO Test ALL Routes:  '/leaderboard'
-        TODO Test ALL Routes:  REST API   '/playlists/<int:id_>'
-        TODO Test ALL Routes:  REST API   '/dj_favorites/<int:dj_id>'
-        TODO Test ALL Routes:  REST API   '/last_played/artist=<string:artist>'
-        TODO Test ALL Routes:  REST API   '/last_played/album=<string:album>'
-        TODO Test ALL Routes:  REST API   '/last_played/track=<string:track>'
-        TODO Test ALL Routes:  REST API   '/top_artists/top=<int:top>&start_date=<string:start_date>&end_date=<string:end_date>'
-        TODO Test ALL Routes:  REST API   '/dj_stats/order_by=<string:order_by>&reverse=<int:reverse>'
-        TODO Test ALL Routes:  REST API   '/dj_stats'
-        TODO Test ALL Routes:  REST API   '/album_tracks/<int:kfjc_album_id>'
-        
-        def test_homepage(self):
-            result = self.client.get("/")
-            self.assertIn(b"trivia question", result.data)
-
-        def test_question_page(self):
-            result = self.client.get("/question")
-            self.assertIn(b"?", result.data)
-
-        def test_ask_page(self):
-            result = self.client.get("/ask")
-            self.assertIn(b"You can ask about DJs", result.data)
-            
-        #def test_rest_dj_stats(self):
-        #    result = self.client.get("dj_stats/order_by=dj_id&reverse=1")
-        #    self.assertIn(b"Spliff Skankin", result.data[0]['air_name'])
-        """
-        
 
 class RobotTestsDatabase(unittest.TestCase):
     """Flask tests that use the database."""
-    test_data = common.open_json_files(TEST_DATA_PATH)
+    test_data = common.open_json_files(TEST_USERS_DATA_PATH)
+
+    rest_api_parameterized_tests = [
+        ["/playlists/60340", b"Sir Cumference"], 
+        ["/playlist_tracks/60706", b"James Brown"],
+        ["/dj_favorites/album/dj_id=255", b"Monty Python\'s Previous Record"],
+        #["/dj_favorites/artist/dj_id=255", b"The Meditations"],
+        #["/dj_favorites/track/dj_id=255", b"Uprising in Dub"],
+        ["/last_played/artist=JAMES%20BROWN", b"2019-11-26T02:06:29"],
+        ["/last_played/album=Matching%20tie", b"2019-10-06T13:24:49"],
+        ["/last_played/track=Spanish%20Inquisition", b"2019-10-06T14:36:01"],  # Didn't expect
+        #["/top_plays/top=5&order_by=artist&start_date=2000-01-02&end_date=2020-01-10", b"The Meditations"],
+        #["/top_plays/top=5&order_by=artists&start_date=2001-01-02&end_date=2021-01-10", b"The Meditations"],
+        #["/top_plays/top=5&order_by=album&start_date=2002-01-02&end_date=2022-01-10", b"The Meditations"],
+        #["/top_plays/top=5&order_by=albums&start_date=2000-01-02&end_date=2020-01-10", b"The Meditations"],
+        #["/top_plays/top=5&order_by=track&start_date=2000-01-02&end_date=2020-01-10", b"The Meditations"],
+        ["/dj_stats", b"Cy Thoth"],
+        ["/dj_stats/order_by=air_name&reverse=1", b"DJ Click"],
+        ["/dj_stats/order_by=air_name&reverse=0", b"Sir Cumference"],
+        ["/dj_stats/order_by=dj_id&reverse=1", b"Spliff Skankin\'"],
+        ["/dj_stats/order_by=showcount&reverse=1", b"Spliff Skankin\'"],
+        ["/dj_stats/order_by=firstshow&reverse=0", b"Sir Cumference"],
+        ["/dj_stats/order_by=lastshow&reverse=1", b"Cy Thoth"],
+        ["/album_tracks/184227", b"Reality Dub"],
+        ["/album_tracks/556860", b"Calendar"],
+        ["/album_tracks/331805", b"Hoochie Coochie Man"],
+        ["/artists_albums/artist=meditations", b"Greatest Hits"],
+        ["/artists_albums/artist=Jonestown%20Massacre", b"Zero"],
+        ["/artists_albums/artist=Harry", b"Love"]]
 
     def setUp(self):
         """Stuff that runs before every def test_ function."""
 
         self.client = app.test_client()
         app.config['TESTING'] = True
-
-        connect_to_db(flask_app=app, db_uri=f"postgresql:///{DB_NAME}")
+        
+        connect_to_db(flask_app=app, db_uri=f"postgresql:///{TEST_DB_NAME}")
         db.drop_all()
         db.create_all()
 
@@ -142,11 +105,12 @@ class RobotTestsDatabase(unittest.TestCase):
         """
 
         # Overwrite default paths:
-        import_station_data.PLAYLIST_DATA_PATH = 'test_data/station_data/playlist.csv'
-        import_station_data.PLAYLIST_TRACK_DATA_PATH = 'test_data/station_data/playlist_track.csv'
-        import_station_data.ALBUM_DATA_PATH = 'test_data/station_data/album.csv'
-        import_station_data.TRACK_DATA_PATH = 'test_data/station_data/track.csv'
-        import_station_data.COLLECTION_TRACK_DATA_PATH = 'test_data/station_data/coll_track.csv'
+        import_station_data.DJ_DATA_PATH = TEST_DJ_DATA_PATH
+        import_station_data.PLAYLIST_DATA_PATH = TEST_PLAYLIST_DATA_PATH
+        import_station_data.PLAYLIST_TRACK_DATA_PATH = TEST_PLAYLIST_TRACK_DATA_PATH
+        import_station_data.ALBUM_DATA_PATH = TEST_ALBUM_DATA_PATH
+        import_station_data.TRACK_DATA_PATH = TEST_TRACK_DATA_PATH
+        import_station_data.COLLECTION_TRACK_DATA_PATH = TEST_COLLECTION_TRACK_DATA_PATH
 
         # Import Station Data:
         import_station_data.import_all_tables()
@@ -154,8 +118,7 @@ class RobotTestsDatabase(unittest.TestCase):
         #695055,"Hiatt, John","Open Road, The","C","C","F",NULL,"0","L",NULL,"2010-04-07","2010-06-04",20088,1,0,"0000-00-00","0000-00-00"
         #694447,"[coll]: Sister Funk 2","Sister Funk 2","G","V","F",NULL,"1","L",NULL,"2010-03-24","2010-06-04",8871,NULL,0,"0000-00-00","0000-00-00"
         self.assertTrue(albums.get_album_by_id(kfjc_album_id=694447).is_collection)
-        self.assertFalse(albums.get_album_by_id(kfjc_album_id=695055).is_collection)
-        
+        self.assertFalse(albums.get_album_by_id(kfjc_album_id=695055).is_collection)        
 
         self.assertNotIn("Fuck", albums.get_album_by_id(kfjc_album_id=140533).title)
         self.assertNotIn("Pussy", albums.get_album_by_id(kfjc_album_id=140533).title)
@@ -173,10 +136,10 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertEqual('The Meditations', playlist_tracks.get_favorite_artists(dj_id=177, min_plays=5)[0].artist)
         self.assertEqual(9, playlist_tracks.get_favorite_artists(dj_id=177, min_plays=5)[0].plays)
         # self.assertEqual('The Meditations', playlist_tracks.get_a_random_artist(min_appearances=4))
-        self.assertIn(playlist_tracks.get_a_random_album(min_appearances=3), [
-            "Greatest Hits", "Message From the Meditations", 
-            'Another Monty Python Record', "Monty Python's Previous Record", 
-            'Matching Tie & Handkerchief', "Monty Python's Contractual Obligation Album"])
+        self.assertIn(playlist_tracks.get_a_random_album(min_appearances=3),  [
+            'Greatest Hits', 'Message From the Meditations', 'Another Monty Python Record', 
+            "Monty Python's Previous Record", 'Matching Tie & Handkerchief', 
+            "Monty Python's Contractual Obligation Album"])
         # TODO self.assertIn(playlist_tracks.get_a_random_track(min_appearances=2), [])
         # TODO playlist_tracks.get_a_random_track(min_appearances=0)
         # self.assertEqual('Zion Train Dub', playlist_tracks.get_a_random_track(min_appearances=2))
@@ -186,7 +149,7 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertEqual('Dr Doug', playlist_tracks.get_last_play_of_track(track="Star Quality")[0].air_name)
 
         # Also tests: common.get_count(table_dot_column, unique=True)
-        self.assertEqual(124, playlist_tracks.how_many_tracks())
+        self.assertEqual(128, playlist_tracks.how_many_tracks())
 
         playlists.MIN_SHOW_COUNT = 0
         self.assertEqual('Cy Thoth', playlists.get_djs_by_dj_id()[0].air_name)
@@ -221,13 +184,12 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertEqual(431, playlists.get_dj_ids_and_show_counts()[0].dj_id)
         self.assertEqual(8, playlists.how_many_djs())
 
-
         self.assertEqual("Sir Cumference", djs.get_airname_for_dj(dj_id=255, posessive=False))
         self.assertEqual("Sir Cumference's", djs.get_airname_for_dj(dj_id=255, posessive=True))
         self.assertEqual("♡ Cy Thoth ♡", djs.get_airname_for_dj(dj_id=41, posessive=False))
         self.assertEqual("♡ Cy Thoth's ♡", djs.get_airname_for_dj(dj_id=41, posessive=True))
         
-        self.assertEqual(14, playlists.how_many_shows())
+        self.assertEqual(18, playlists.how_many_shows())
 
         for track in tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=397830):
             self.assertEqual('Dolly Parton', track.artist)
@@ -264,8 +226,20 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertEqual(50, percys_score.percent)
         self.assertNotEqual(1, questions.get_unique_question(user_id=5))
         
-        # REST API Checks:
-        
+        result = self.client.post(
+            "/login",
+            data={
+                "username": "fred@weasleyswizardingwheezes.com",
+                "password": "georgeDidIt"},
+            follow_redirects=True)
+        self.assertIn(b"A Question about", result.data)
+        self.assertNotIn(b"%", result.data)
+
+        for each_test in self.rest_api_parameterized_tests:
+            result = self.client.get(each_test[0])
+            print("jem", each_test, result.data)
+            self.assertIn(each_test[1], result.data)
+
 
     def tearDown(self):
         """Stuff that runs after every def test_ function."""
@@ -273,6 +247,7 @@ class RobotTestsDatabase(unittest.TestCase):
         db.session.close()
         # Test Data is purged at the end of each test:
         db.drop_all()
+
 
 if __name__ == "__main__":
     unittest.main()  # pytest --tb=long

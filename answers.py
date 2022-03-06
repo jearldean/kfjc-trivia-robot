@@ -2,8 +2,10 @@
 
 from datetime import datetime
 from random import choice
+from operator import itemgetter
 
 from model import db, connect_to_db, Answer
+import users
 import common
 
 
@@ -84,6 +86,23 @@ def get_user_score(user_id):
         'passed': passed, 'failed': failed, 'skipped': skipped,
         'questions': questions, 'percent': percent}
     return common.convert_dict_to_named_tuple(scores)
+
+def compile_leaderboard():
+    """Return stats for all users."""
+
+    score_board = []
+
+    for user in users.get_users():
+        user_id=user.user_id
+        user_score_named_tuple = get_user_score(user_id=user_id)
+        user_percent = user_score_named_tuple.percent
+        score_board.append(
+            [user_id, user_percent, f"{user_percent}% {user.fname}"])
+    
+    score_board.sort(key=itemgetter(1), reverse=True)
+    
+    return score_board
+
 
 
 if __name__ == '__main__':
