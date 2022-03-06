@@ -8,8 +8,9 @@ import common
 MIN_SHOW_COUNT = 14
 # A DJ is born when they complete one training excercise and 13 grave shifts.
 
-ADMINISTRATIVE_DJ_IDS = -1, 104, 105, 431
-# These dj_ids do not represent people, just station business.
+ADMINISTRATIVE_DJ_IDS = 1, 58, 57, -1, 434, 445, 191, 164, 105, 433, 104, 139, 120, 432, 431, 123, 122, 114, 424, 423, 140
+# TODO use the 'administrative' boolean column you made.
+
 
 def create_playlist(kfjc_playlist_id, dj_id, air_name, start_time, end_time):
     """Create and return a new playlist."""
@@ -74,8 +75,8 @@ def dj_stats(order_by_column, reverse=False):
             FROM playlists) q 
         WHERE rn = 1 
         AND dj_id NOT IN {ADMINISTRATIVE_DJ_IDS} 
-        AND air_name NOT LIKE '%KFJC%' 
-        AND air_name NOT LIKE '%rebroadcast%' """)
+        AND air_name NOT LIKE '%KFJC%' """)
+    # TODO PUT BACK  AND administrative is False 
     dj_stats = (
         f"""SELECT dj_id_to_air_name.air_name, first_last_count.dj_id, 
         first_last_count.SHOWCOUNT as showcount, first_last_count.FIRSTSHOW as firstshow,
@@ -85,6 +86,7 @@ def dj_stats(order_by_column, reverse=False):
         ON (first_last_count.dj_id = dj_id_to_air_name.dj_id) 
         WHERE dj_id_to_air_name.dj_id NOT IN {ADMINISTRATIVE_DJ_IDS} 
         ORDER BY {order_by_column} {reverse_it} """)
+    # TODO PUT BACK  AND administrative is False 
 
     results = db.session.execute(dj_stats)
     reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(results)
@@ -111,10 +113,6 @@ def get_all_dj_ids():
 def how_many_djs():
     """Count all DJs for the homepage statement."""
     return len(get_dj_ids_and_show_counts())
-
-def get_airname(dj_id):
-    """Get air_name from dj_id."""
-    return Playlist.query.filter(Playlist.dj_id == dj_id).first().air_name
 
 def get_dj_id(air_name):
     """Get dj_id from air_name."""

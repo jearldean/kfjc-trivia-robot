@@ -35,7 +35,7 @@ class Question(db.Model):
     ask_question = db.Column(db.String, nullable=False)
     present_answer = db.Column(db.String, nullable=False)
     # Tips at https://amercader.net/blog/beware-of-json-fields-in-sqlalchemy/
-    acceptable_answers = db.Column(mutable_json_type(dbtype=JSON, nested=True))
+    acceptable_answer = db.Column(db.String, nullable=False)
     display_shuffled_answers = db.Column(mutable_json_type(dbtype=JSON, nested=True))
     present_answer_data_headings = db.Column(mutable_json_type(dbtype=JSON, nested=True))
     present_answer_data = db.Column(mutable_json_type(dbtype=JSON, nested=True))
@@ -43,7 +43,7 @@ class Question(db.Model):
 
     def __repr__(self):
         spaces = (25 - len(self.question)) * " "
-        return (f"\nQ:{self.question_id}\t{self.question}{spaces}{self.acceptable_answers}")
+        return (f"\nQ:{self.question_id}\t{self.ask_question}{spaces}{self.acceptable_answer}")
 
 
 class Answer(db.Model):
@@ -65,16 +65,34 @@ class Answer(db.Model):
         return f"\nA:{self.answer_id}\tU:{self.user_id}\tQ:{self.question_id}\t{self.answer_given}\t{self.answer_correct}\t{self.timestamp}"
 
 
+class Dj(db.Model):
+    """A DJ from the station."""
+
+    __tablename__ = 'djs'
+
+    dj_id = db.Column(db.Integer, primary_key=True)
+    air_name = db.Column(db.String(60), nullable=True)
+    administrative = db.Column(db.Boolean)
+    silent_mic = db.Column(db.Boolean)
+    # playlists = a list of Playlist objects
+
+    def __repr__(self):
+        return f"\ndj_id {self.dj_id} belongs to {self.air_name}."
+
+
 class Playlist(db.Model):
     """A playlist from the station."""
 
     __tablename__ = 'playlists'
 
     kfjc_playlist_id = db.Column(db.Integer, primary_key=True)
-    dj_id = db.Column(db.Integer)  
+    dj_id = db.Column(db.Integer, ForeignKey("djs.dj_id"))
     air_name = db.Column(db.String(60), nullable=True)
     start_time = db.Column(db.DateTime, nullable=True)  # '2022-01-19 22:04:31'
     end_time = db.Column(db.DateTime, nullable=True)  # '2022-01-19 22:08:42'
+    dj_table_dj_id = db.relationship(
+        "Dj", backref="playlists", cascade="all, delete-orphan", single_parent=True,
+        primaryjoin="Playlist.dj_id == Dj.dj_id")
 
     def __repr__(self):
         return f"\n{self.kfjc_playlist_id}. {self.air_name} on {self.start_time}"

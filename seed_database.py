@@ -24,5 +24,5 @@ def nuclear_option():
     kfjc.import_all_tables()
     questions.make_all_questions()
 
-if __name__ == "__main__":    
+if __name__ == "__main__":
     connect_to_db(app)

@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from server import app
 from model import db, connect_to_db
+import djs
 import playlists
 import playlist_tracks
 import albums
@@ -137,11 +138,43 @@ def profanity_filter(title_string):
 
 # -=-=-=-=-=-=-=-=-=-=-=- Import the 5 CSV Files -=-=-=-=-=-=-=-=-=-=-=-
 
+DJ_DATA_PATH = 'station_data/user.csv'
 ALBUM_DATA_PATH = 'station_data/album.csv'
 PLAYLIST_DATA_PATH = 'station_data/playlist.csv'
 PLAYLIST_TRACK_DATA_PATH = 'station_data/playlist_track.csv'
 COLLECTION_TRACK_DATA_PATH = 'station_data/coll_track.csv'
 TRACK_DATA_PATH = 'station_data/track.csv'
+
+def create_djs(row):
+    """Add all djs rows."""
+    
+    dj_id=coerce_imported_data(row[0])
+    air_name=str(coerce_imported_data(row[2]))
+    # administrative dj_ids represent station business and not
+    # real people we should make questions out of:
+    administrative = False
+    if air_name == 'None':
+        administrative = True
+    if 'kfjc' in air_name.lower():
+        administrative = True
+    if dj_id in [104, 105, -1, 191, 164, 434, 445]:
+        administrative = True
+    silent_mic = False
+    if row[9] == 'Y' or dj_id == 210:
+        silent_mic = True  # For Djs that have escaped this mortal realm.
+
+    djs.create_dj(
+        dj_id=dj_id,
+        air_name=air_name,
+        administrative=administrative,
+        silent_mic=silent_mic)
+
+def add_a_missing_dj(dj_id, air_name):
+    """Add a dummy dj row to avoid import conflicts."""
+    if not air_name:
+        air_name = "None"
+    create_djs(row=[dj_id, None, air_name, None, None, None, None, None, None, "N"])
+    db.session.commit()
 
 def create_albums(row):
     """Add all albums rows."""
@@ -178,15 +211,6 @@ def create_playlists(row):
     if row[1] == '-1391':
         row[1] = 391  # Reassign it.
 
-    # TODO: Nice to have: I guess Dangerous Dan has 2 dj_ids?
-    # Because he's in the picklist twice: 117, 104, 44
-    # 117 is Mr. Lucky.
-    # dj_id 104 is totally polluted.
-    # There are 1300 playlist rows with a dozen different air_names.
-    # Might just have to dump them.
-
-
-
     # Fix air_name of DJ CLICK:     DJ Click, Click, ^
     if coerce_imported_data(row[2]) in ['Click', '^']:
         row[2] = 'DJ Click'  # Reassign it.
@@ -210,7 +234,8 @@ def create_playlists(row):
         db.session.rollback()
         
         # Fix rows that cause import trouble:
-        add_a_missing_playlist(kfjc_playlist_id=kfjc_playlist_id)
+        if not djs.get_dj_id_by_id(dj_id=dj_id):
+            add_a_missing_dj(dj_id=dj_id, air_name=air_name)
         
         # And try again; it should go through now:
         playlists.create_playlist(
@@ -225,9 +250,10 @@ def create_playlists(row):
 
 def add_a_missing_playlist(kfjc_playlist_id):
     """Add a dummy playlist row to avoid import conflicts."""
-    row = [kfjc_playlist_id, -1, "Swiss Cheese Data", None, None]
+    row = [kfjc_playlist_id, 1, "Swiss Cheese", None, None]
     create_playlists(row=row)
     db.session.commit()
+
 
 def fix_self_titled_items(album_title, artist, track_title):
     """S/T is shorthand for Self-Titled. Copy the artist or as much as we know.
@@ -414,6 +440,7 @@ def import_all_tables():
 
     # Albums and PLaylists must be imported first since the other tables depend on them:
     data_path_and_function = [
+        (DJ_DATA_PATH, create_djs),
         (ALBUM_DATA_PATH, create_albums),
         (PLAYLIST_DATA_PATH, create_playlists),
         (PLAYLIST_TRACK_DATA_PATH, create_playlist_tracks),

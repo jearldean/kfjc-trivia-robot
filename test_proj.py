@@ -6,6 +6,7 @@ import datetime
 from server import app
 from model import db, connect_to_db
 import import_station_data
+import djs
 import playlists
 import playlist_tracks
 import albums
@@ -116,7 +117,7 @@ class RobotTestsDatabase(unittest.TestCase):
     def make_answers(self):
         """Make 3 answers for each user: One PASS, FAIL, SKIP."""
         question = questions.get_question_by_id(question_id=1)
-        cheat_peek_at_answer = question.acceptable_answers[0]
+        cheat_peek_at_answer = question.acceptable_answer
         for each_user in users.get_users():
             answers.create_answer(
                 user_instance=each_user,
@@ -125,7 +126,7 @@ class RobotTestsDatabase(unittest.TestCase):
             answers.create_answer(
                 user_instance=each_user,
                 question_instance=question,
-                answer_given='Sir Cumference')
+                answer_given='wrong answer')
             answers.create_answer(
                 user_instance=each_user,
                 question_instance=question,
@@ -221,10 +222,12 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertEqual(431, playlists.get_dj_ids_and_show_counts()[0].dj_id)
         self.assertEqual(8, playlists.how_many_djs())
 
-        self.assertEqual("Sir Cumference", playlists.get_airname(dj_id=255))
-        self.assertEqual("DJ Click", playlists.get_airname(dj_id=324))
-        self.assertEqual("Dr Doug", playlists.get_airname(dj_id=391))
 
+        self.assertEqual("Sir Cumference", djs.get_airname_for_dj(dj_id=255, posessive=False))
+        self.assertEqual("Sir Cumference's", djs.get_airname_for_dj(dj_id=255, posessive=True))
+        self.assertEqual("♡ Cy Thoth ♡", djs.get_airname_for_dj(dj_id=41, posessive=False))
+        self.assertEqual("♡ Cy Thoth's ♡", djs.get_airname_for_dj(dj_id=41, posessive=True))
+        
         self.assertEqual(14, playlists.how_many_shows())
 
         for track in tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=397830):

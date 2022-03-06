@@ -9,6 +9,7 @@ from flask_restful import Api, Resource  # reqparse
 from flask_marshmallow import Marshmallow
 
 from model import db, connect_to_db, Playlist
+import djs
 import playlists
 import playlist_tracks
 import tracks
@@ -195,7 +196,7 @@ def answer_question():
         user_msg=user_msg,
         answer_correct=answer.answer_correct,
         present_answer=question.present_answer,
-        the_right_answer=question.acceptable_answers[0],
+        the_right_answer=question.acceptable_answer,
         present_answer_data_headings=question.present_answer_data_headings,
         present_answer_data=question.present_answer_data,
         footer = 'private')
@@ -203,14 +204,18 @@ def answer_question():
 @app.route("/ask")
 def user_asks():
     """user can ask the robot a question!"""
+    if not dj_dict or not dj_airnames:
+        retrieve_dj_stats_only_once()
+
     if "user_id" not in session:
         return redirect('/important')
 
     dj_id=request.args.get("dj_id")
     if not dj_id:
+        print(dj_airnames[0])
         dj_selected = choice(dj_airnames)[0]
     else:
-        dj_selected = int(dj_id)
+        dj_selected = int(dj_id)  # Only strings come back from forms.
     session['dj_selected'] = dj_selected
     dj_stat = dj_dict[dj_selected]['dj_stats']
 
@@ -289,8 +294,8 @@ def assemble_greeting():
 def retrieve_dj_stats_only_once():
     djs_alphabetically = playlists.get_djs_alphabetically()
     for zz in djs_alphabetically:
-        air_name = zz.air_name
         dj_id = zz.dj_id
+        air_name = djs.get_airname_for_dj(dj_id=dj_id)
         showcount = common.format_an_int_with_commas(zz.showcount)
         firstshow = common.make_date_pretty(zz.firstshow)
         lastshow = common.make_date_pretty(zz.lastshow)

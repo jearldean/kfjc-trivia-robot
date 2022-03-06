@@ -10,7 +10,9 @@ PRAISE_MSG = ["Aw, yeah!", "Oh, yeah!", "Sch-weet!", "Cool!", "Yay!", "Right!", 
     "You're right!", "You are Correct!", "Awesome!", "You're a wiz!"]
 CONSOLATION_MSG = ["Shucks", "Bad luck.", "Too bad.", "Better luck next time!", 
     "Awwww...", "Oh no!", "Sorry, wrong...", "So close!"]
-INFO_MSG = ["Here's what I found:", "I found these:", "Here's your answer:"]
+INFO_MSG = [
+    "Here's what I found:", "I found these:", "Here's your answer:",
+    "My databanks say:", "I computed these results:"]
 
 
 def create_answer(user_instance, question_instance, answer_given):
@@ -42,7 +44,7 @@ def is_answer_correct(question_instance, answer_given):
     if answer_given == "SKIP":
         return  # None, for the skipped question case.
     else:
-        if answer_given in question_instance.acceptable_answers:
+        if answer_given == question_instance.acceptable_answer:
             return True
         return False  # If we didn't hit by now, it's wrong.
 
