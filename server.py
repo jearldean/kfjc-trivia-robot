@@ -232,8 +232,7 @@ def user_asks():
         
 @app.route("/leaderboard")
 def leaderboard():
-    """TODO: Can leaderboard be rest api?
-    TODO:  Can we use sql alchemy processing to get the leaders?"""
+    """TODO: Can leaderboard be rest api?"""
 
     if "user_id" not in session:
         return redirect('/important')
@@ -242,8 +241,8 @@ def leaderboard():
 
     for user in users.get_users():
         user_id=user.user_id
-        user_score = answers.get_user_score(user_id=user_id)
-        user_percent = user_score['percent']
+        user_score_named_tuple = answers.get_user_score(user_id=user_id)
+        user_percent = user_score_named_tuple.percent
         score_board.append([user_id, user_percent, f"{user_percent}% {user.fname}"])
     
     score_board.sort(key=itemgetter(1), reverse=True)

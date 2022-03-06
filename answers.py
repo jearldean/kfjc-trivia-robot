@@ -4,6 +4,7 @@ from datetime import datetime
 from random import choice
 
 from model import db, connect_to_db, Answer
+import common
 
 
 PRAISE_MSG = ["Aw, yeah!", "Oh, yeah!", "Sch-weet!", "Cool!", "Yay!", "Right!", "Correct!",
@@ -31,7 +32,7 @@ def create_answer(user_instance, question_instance, answer_given):
     return user_answer
 
 def get_user_msg(answer):
-    """TODO"""
+    """Craft a message for the user about their answer."""
     if answer.answer_correct:
         user_msg = choice(PRAISE_MSG) + "\n\n" + choice(INFO_MSG)
     else:
@@ -39,7 +40,7 @@ def get_user_msg(answer):
     return user_msg
 
 def is_answer_correct(question_instance, answer_given):
-    """Return a boolean"""
+    """Return a boolean."""
 
     if answer_given == "SKIP":
         return  # None, for the skipped question case.
@@ -64,37 +65,25 @@ def percent_correct(passed_count, failed_count):
     return percent
 
 def get_one_users_answers(user_id):
-    """Return all user_answers for one user.
-    
-    for i in answers:
-        print(i.answer_given)
-        print(i.answer_correct)
-    """
+    """Return all user_answers for one user."""
 
     return Answer.query.filter(Answer.user_id == user_id).all()
 
 def get_user_score(user_id):
-    """Return user play stats.
-    
-    NICE-TO-HAVE: get counts using SQL.
-    NICE-TO-HAVE: return a named tuple. """
-    passed=0
-    failed=0
-    skipped=0
-    for jj in get_one_users_answers(user_id=user_id):
-        if jj.answer_correct is True:
-            passed += 1
-        elif jj.answer_correct is False:
-            failed += 1
-        elif jj.answer_correct is None:
-            skipped += 1
+    """Return user play stats."""
+
+    passed = Answer.query.filter(
+        Answer.user_id == user_id, Answer.answer_correct == True).count()
+    failed = Answer.query.filter(
+        Answer.user_id == user_id, Answer.answer_correct == False).count()
+    skipped = Answer.query.filter(
+        Answer.user_id == user_id, Answer.answer_correct == None).count()
     questions = passed + failed + skipped
     percent = percent_correct(passed_count=passed, failed_count=failed)
     scores = {
         'passed': passed, 'failed': failed, 'skipped': skipped,
         'questions': questions, 'percent': percent}
-
-    return scores
+    return common.convert_dict_to_named_tuple(scores)
 
 
 if __name__ == '__main__':

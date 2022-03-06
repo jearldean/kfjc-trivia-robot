@@ -18,10 +18,11 @@
     <div class="col">
       <div class="row justify-content-center">
         <h2>{{ robot_msg }}</h2>
-        
-        {% for info in user_score %}
-          <p>{{ info }}: {{ user_score[info] }}</p>
-        {% endfor %}
+        <p>Passed: {{ user_score.passed }}</p>
+        <p>Failed: {{ user_score.failed }}</p>
+        <p>Skipped: {{ user_score.skipped }}</p>
+        <p>Questions: {{ user_score.questions }}</p>
+        <p>Percent: {{ user_score.percent }}%</p>
      </div>
     </div>
   </div>

@@ -95,7 +95,6 @@ class RobotTests(unittest.TestCase):
 class RobotTestsDatabase(unittest.TestCase):
     """Flask tests that use the database."""
     test_data = common.open_json_files(TEST_DATA_PATH)
-    possible_answers = []
 
     def setUp(self):
         """Stuff that runs before every def test_ function."""
@@ -258,11 +257,11 @@ class RobotTestsDatabase(unittest.TestCase):
         self.make_answers()
         # Also tests: answers.is_answer_correct(question_instance, answer_given)
         percys_score = answers.get_user_score(user_id=5)
-        self.assertEqual(1, percys_score['passed'])
-        self.assertEqual(1, percys_score['failed'])
-        self.assertEqual(1, percys_score['skipped'])
-        self.assertEqual(3, percys_score['questions'])
-        self.assertEqual(50, percys_score['percent'])
+        self.assertEqual(1, percys_score.passed)
+        self.assertEqual(1, percys_score.failed)
+        self.assertEqual(1, percys_score.skipped)
+        self.assertEqual(3, percys_score.questions)
+        self.assertEqual(50, percys_score.percent)
         self.assertNotEqual(1, questions.get_unique_question(user_id=5))
         
         # REST API Checks:
