@@ -4,8 +4,6 @@ from datetime import datetime, timedelta, date
 import time
 from operator import attrgetter
 from random import randrange, choice, choices, shuffle
-from sqlalchemy import exc
-from psycopg2 import errors
 
 from model import db, connect_to_db, Answer, PlaylistTrack, Question
 import djs
@@ -74,19 +72,12 @@ def make_all_questions():
     who_is_the_newest_dj()
     who_has_the_most_shows()
     when_was_dj_last_on_the_air()
-    which_is_djs_favorite_artist()
-    which_is_djs_favorite_album()
-    which_is_djs_favorite_track()
-    top_ten_artist()
-    top_ten_album()
-    top_ten_track()
+    create_dj_favorites_questions()
+    create_top_ten_questions()
     albums_by_an_artist()
     artist_of_an_album()
     tracks_on_an_album()
-    last_play_of_artist()
-    last_play_of_album()
-    last_play_of_track()
-    db.session.commit()  # Just incase
+    create_last_play_questions()
     toc = time.perf_counter()
     mins = float((toc - tic)/60)
     print(
@@ -226,201 +217,105 @@ def when_was_dj_last_on_the_air():
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def which_is_djs_favorite_artist():
-    """Create questions where a DJ's most played artist is the answer."""
-    dj_id_pool = playlists.get_all_dj_ids()
-    random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
-    for dj_id in random_dj_ids:
-        answer_key = playlist_tracks.get_favorite_artists(dj_id=dj_id, reverse=True, min_plays=5)
-        try:
-            air_name = djs.get_airname_for_dj(dj_id=dj_id)
-            air_name_posessive = djs.get_airname_for_dj(dj_id=dj_id, posessive=True)
-        except AttributeError:
-            continue  # Dudd DJ.
-        if len(answer_key) < 20:
-            continue  # Dudd DJ.
-        winners = answer_key[:10]
-        losers = answer_key[10:]
-        for the_right_answer in winners:
-            ask_questions = [
-                f"From these choices, which artist does {air_name} like most?",
-                f"Which artist is {air_name_posessive} favorite out of these four?",
-                f"From these four choices, which artist has {air_name} played the most?"]
-            present_answers = [
-                f"{air_name} likes this artist the most:", f"{air_name} has played this artist the most:",
-                f"This artist is played by {air_name} a lot:"]
-            three_wrong_answers = choices(losers, k=3)
-            answer_pile = [the_right_answer] + three_wrong_answers
-            present_answer_data = []
-            display_shuffled_answers = []
-            for zz in sorted(answer_pile, key=attrgetter('plays'), reverse=True):
-                present_answer_data.append([zz.artist, zz.plays])
-                display_shuffled_answers.append(zz.artist)
-            shuffle(display_shuffled_answers)
-            create_question(
-                question_type=QUESTION_TYPES['artists'],
-                ask_question=choice(ask_questions),
-                present_answer=choice(present_answers),
-                acceptable_answer=the_right_answer.artist,
-                display_shuffled_answers=display_shuffled_answers,
-                present_answer_data_headings=["Artist", "Plays"],
-                present_answer_data=present_answer_data)
-                
-        db.session.commit()
+def create_dj_favorites_questions():
+    """Create questions about top plays of an Artist/Album/Track by a DJ."""
+    dj_favorites_engine(media='track')
+    dj_favorites_engine(media='artist')
+    dj_favorites_engine(media='album')
 
-def which_is_djs_favorite_album():
-    """Create questions where a DJ's most played album is the answer."""
+def dj_favorites_engine(media):
+    """Create questions where a DJ's most played media is the answer."""
     dj_id_pool = playlists.get_all_dj_ids()
-    random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
-    for dj_id in random_dj_ids:
-        answer_key = playlist_tracks.get_favorite_albums(dj_id=dj_id, reverse=True, min_plays=5)
-        try:
-            air_name = djs.get_airname_for_dj(dj_id=dj_id)
-            air_name_posessive = djs.get_airname_for_dj(dj_id=dj_id, posessive=True)
-        except AttributeError:
-            continue  # Dudd DJ.
-        if len(answer_key) < 20:
-            continue  # Dudd DJ.
-        winners = answer_key[:10]
-        losers = answer_key[10:]
-        for the_right_answer in winners:
+    x_random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
+    for dj_id in x_random_dj_ids:
+        if media == 'artist':
+            answer_key = playlist_tracks.get_favorite_artists(dj_id=dj_id, reverse=True, min_plays=5)
+        elif media == 'album':
+            answer_key = playlist_tracks.get_favorite_albums(dj_id=dj_id, reverse=True, min_plays=5)
+        else:  # 'track'
+            answer_key = playlist_tracks.get_favorite_tracks(dj_id=dj_id, reverse=True, min_plays=5)
+        if len(answer_key) < 10:
+            # Some Djs are so new they don't have a body of work large enough to produce favorites scores.
+            continue
+        air_name = djs.get_airname_for_dj(dj_id=dj_id)
+        air_name_posessive = djs.get_airname_for_dj(dj_id=dj_id, posessive=True)
+        dj_favorites = answer_key[:5]
+        less_favorite = answer_key[5:]
+        for the_right_answer in dj_favorites:
             ask_questions = [
-                f"From these choices, which album does {air_name} play the most?",
-                f"Which album is {air_name_posessive} favorite out of these four?",
-                f"From these four choices, which album gets the most plays from {air_name}?"]
+                f"From these choices, which {media} does {air_name} like most?",
+                f"Which {media} is {air_name_posessive} favorite out of these four?",
+                f"From these four choices, which {media} has DJ {air_name} played the most?"]
             present_answers = [
-                f"{air_name} likes this album the most:", f"{air_name} has played this album the most:",
-                f"This album is played by {air_name} a lot:"]
-            three_wrong_answers = choices(losers, k=3)
+                f"{air_name} likes this {media} the most:",
+                f"{air_name} has played this {media} the most:",
+                f"This {media} is played by DJ {air_name} a lot:"]
+            three_wrong_answers = choices(less_favorite, k=3)
             answer_pile = [the_right_answer] + three_wrong_answers
             present_answer_data = []
             display_shuffled_answers = []
             for zz in sorted(answer_pile, key=attrgetter('plays'), reverse=True):
-                present_answer_data.append([zz.album_title, zz.plays])
-                display_shuffled_answers.append(zz.album_title)
+                if media == 'artist':
+                    present_answer_data.append([zz.artist, zz.plays])
+                    display_shuffled_answers.append(zz.artist)
+                    acceptable_answer=the_right_answer.artist
+                elif media == 'album':
+                    present_answer_data.append([zz.album_title, zz.plays])
+                    display_shuffled_answers.append(zz.album_title)
+                    acceptable_answer=the_right_answer.album_title
+                else:  # 'track'
+                    present_answer_data.append([zz.track_title, zz.plays])
+                    display_shuffled_answers.append(zz.track_title)
+                    acceptable_answer=the_right_answer.track_title
             shuffle(display_shuffled_answers)
             create_question(
-                question_type=QUESTION_TYPES['albums'],
+                question_type=QUESTION_TYPES[media+'s'],
                 ask_question=choice(ask_questions),
                 present_answer=choice(present_answers),
-                acceptable_answer=the_right_answer.album_title,
+                acceptable_answer=acceptable_answer,
                 display_shuffled_answers=display_shuffled_answers,
-                present_answer_data_headings=["Album", "Plays"],
+                present_answer_data_headings=[media.title(), "Plays"],
                 present_answer_data=present_answer_data)
                 
-        db.session.commit()
-
-def which_is_djs_favorite_track():
-    """Create questions where a DJ's most played track is the answer."""
-    dj_id_pool = playlists.get_all_dj_ids()
-    random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
-    for dj_id in random_dj_ids:
-        answer_key = playlist_tracks.get_favorite_tracks(dj_id=dj_id, reverse=True, min_plays=5)
-        try:
-            air_name = djs.get_airname_for_dj(dj_id=dj_id)
-            air_name_posessive = djs.get_airname_for_dj(dj_id=dj_id, posessive=True)
-        except AttributeError:
-            continue  # Dudd DJ.
-        if len(answer_key) < 20:
-            continue  # Dudd DJ.
-        winners = answer_key[:10]
-        losers = answer_key[10:]
-        for the_right_answer in winners:
-            ask_questions = [
-                f"From these choices, which track has {air_name} played the most?",
-                f"Which track is {air_name_posessive} favorite out of these four?",
-                f"From these four choices, which track is {air_name} always playing?"]
-            present_answers = [
-                f"{air_name} likes this one the most:", f"{air_name} has played this track the most:",
-                f"This song is played by {air_name} a lot:"]
-            three_wrong_answers = choices(losers, k=3)
-            answer_pile = [the_right_answer] + three_wrong_answers
-            present_answer_data = []
-            display_shuffled_answers = []
-            for zz in sorted(answer_pile, key=attrgetter('plays'), reverse=True):
-                present_answer_data.append([zz.track_title, zz.plays])
-                display_shuffled_answers.append(zz.track_title)
-            shuffle(display_shuffled_answers)
-            create_question(
-                question_type=QUESTION_TYPES['tracks'],
-                ask_question=choice(ask_questions),
-                present_answer=choice(present_answers),
-                acceptable_answer=the_right_answer.track_title,
-                display_shuffled_answers=display_shuffled_answers,
-                present_answer_data_headings=["Track", "Plays"],
-                present_answer_data=present_answer_data)
-                
-        db.session.commit()
+    db.session.commit()
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def top_ten_artist():
-    """TODO: All these methods are woefully bloated and in need of consolidation."""
+def create_top_ten_questions():
+    """Create questions about an Artist/Album/Track in the KFJC Top10."""
+    top_ten_engine(media='track')
+    top_ten_engine(media='artist')
+    top_ten_engine(media='album')
+
+def top_ten_engine(media):
+    """Create questions where top-played media is the answer."""
     old, _ = common.get_ages(PlaylistTrack.time_played)
     # I improved this to go back to 1995-09-19.
     days_to_choose_from = (datetime.now() - old).days
     random_days_before_today = choices(range(days_to_choose_from), k=SEED_QUESTION_COUNT)
     for random_days in random_days_before_today:
-        start_date = date.today() - timedelta(days=random_days) 
+        start_date = date.today() - timedelta(days=random_days)
         end_date = date.today() - timedelta(days=(random_days - 7)) # During a Week.
-        answer_key = playlist_tracks.get_top10_artists(start_date, end_date, n=40)
-        if len(answer_key) == 0:
-            continue  # Dud list. Playlist Track data is only good after 2011.
-        # But I have an idea on how to estimate more cells.
         pretty_date = common.make_date_pretty(start_date)
-        ask_questions = [
-            f"All of these artists were in the KFJC Top40 during the week of {pretty_date} but which one made the Top10?",
-            f"All four artists were in the KFJC Top40 during the week of {pretty_date} but who was in the Top10?",
-            f"All these artists were in the KFJC Top40 during the week of {pretty_date}. Which artist was in the Top10?"]
-        present_answers = [
-            f"Here are the KFJC Top40 by Artists during the week of {pretty_date}:",
-            f"These were the KFJC Top40 Artists on {pretty_date}:",
-            f"During the week of {pretty_date}, this is the KFJC Top40 by Artist:"]
-        winners = answer_key[:10]  # Top Ten
-        one_winner = choice(winners)
-        losers = answer_key[10:]  # Bottom 30
-        three_wrong_answers = choices(losers, k=3)
-        answer_pile = [one_winner] + three_wrong_answers
-        present_answer_data = []
-        display_shuffled_answers = []
-        for zz in sorted(answer_key, key=attrgetter('plays'), reverse=True):
-            present_answer_data.append([zz.artist, zz.plays])
-        for zz in sorted(answer_pile, key=attrgetter('plays'), reverse=True):
-            display_shuffled_answers.append(zz.artist)
-        shuffle(display_shuffled_answers)
-        create_question(
-            question_type=QUESTION_TYPES['artists'],
-            ask_question=choice(ask_questions),
-            present_answer=choice(present_answers),
-            acceptable_answer=one_winner.artist,
-            display_shuffled_answers=display_shuffled_answers,
-            present_answer_data_headings=["Who played what", "Plays"],
-            present_answer_data=present_answer_data)
-            
-    db.session.commit()
         
-def top_ten_album():
-    """TODO: All these methods are woefully bloated and in need of consolidation."""
-    old, _ = common.get_ages(PlaylistTrack.time_played)
-    # I improved this to go back to 1995-09-19.
-    days_to_choose_from = (datetime.now() - old).days
-    random_days_before_today = choices(range(days_to_choose_from), k=SEED_QUESTION_COUNT)
-    for random_days in random_days_before_today:
-        start_date = date.today() - timedelta(days=random_days) 
-        end_date = date.today() - timedelta(days=(random_days - 7)) # During a Week.
-        answer_key = playlist_tracks.get_top10_albums(start_date, end_date, n=40)
-        if len(answer_key) == 0:
-            continue  # Dud list. Playlist Track data is only good after 2011.
-        # But I have an idea on how to estimate more cells.
-        pretty_date = common.make_date_pretty(start_date)
         ask_questions = [
-            f"All of these albums were in the KFJC Top40 during the week of {pretty_date} but which one made the Top10?",
-            f"All four albums were in the KFJC Top40 during the week of {pretty_date} but which was in the Top10?",
-            f"All these albums were in the KFJC Top40 during the week of {pretty_date}. Which album was in the Top10?"]
+            f"All of these {media}s were in the KFJC Top40 during the week of {pretty_date} but which one made the Top10?",
+            f"All four {media}s were in the KFJC Top40 during the week of {pretty_date} but which was in the Top10?",
+            f"All these {media}s were in the KFJC Top40 during the week of {pretty_date}. Which {media} was in the Top10?"]
         present_answers = [
-            f"Here are the KFJC Top40 by albums during the week of {pretty_date}:",
-            f"These were the KFJC Top40 albums on {pretty_date}:",
-            f"During the week of {pretty_date}, this is the KFJC Top40 by albums:"]
+            f"Here are the KFJC Top40 {media}s during the week of {pretty_date}:",
+            f"These were the KFJC Top40 {media}s on {pretty_date}:",
+            f"During the week of {pretty_date}, this is the KFJC Top40 by {media}:"]
+
+        if media == 'artist':
+            answer_key = playlist_tracks.get_top10_artists(start_date, end_date, n=40)
+        elif media == 'album':
+            answer_key = playlist_tracks.get_top10_albums(start_date, end_date, n=40)
+        else:  # 'track'
+            answer_key = playlist_tracks.get_top10_tracks(start_date, end_date, n=40)
+        if len(answer_key) == 0:
+            continue  # Dud list.
+
         winners = answer_key[:10]  # Top Ten
         one_winner = choice(winners)
         losers = answer_key[10:]  # Bottom 30
@@ -428,71 +323,41 @@ def top_ten_album():
         answer_pile = [one_winner] + three_wrong_answers
         present_answer_data = []
         display_shuffled_answers = []
-        for zz in sorted(answer_key, key=attrgetter('plays'), reverse=True):
-            present_answer_data.append([zz.album_title, zz.plays])
+
         for zz in sorted(answer_pile, key=attrgetter('plays'), reverse=True):
-            display_shuffled_answers.append(zz.album_title)
+            if media == 'artist':
+                display_shuffled_answers.append(zz.artist)
+            elif media == 'album':
+                display_shuffled_answers.append(zz.album_title)
+            else:  # 'track'
+                display_shuffled_answers.append(zz.track_title)
+        acceptable_answer = display_shuffled_answers[0]
         shuffle(display_shuffled_answers)
+
+        # The answer displayed will be the entire KFJC Top40:
+        for zz in sorted(answer_key, key=attrgetter('plays'), reverse=True):
+            if media == 'artist':
+                present_answer_data.append([zz.artist, zz.plays])
+            elif media == 'album':
+                present_answer_data.append([zz.album_title, zz.plays])
+            else:  # 'track'
+                present_answer_data.append([zz.track_title, zz.plays])
+
         create_question(
-            question_type=QUESTION_TYPES['albums'],
+            question_type=QUESTION_TYPES[media+'s'],
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
-            acceptable_answer=one_winner.album_title,
+            acceptable_answer=acceptable_answer,
             display_shuffled_answers=display_shuffled_answers,
-            present_answer_data_headings=["Who played what", "Plays"],
+            present_answer_data_headings=[media.title(), "Plays"],
             present_answer_data=present_answer_data)
-            
+
     db.session.commit()
-
-def top_ten_track():
-    """TODO: All these methods are woefully bloated and in need of consolidation."""
-    old, _ = common.get_ages(PlaylistTrack.time_played)
-    # I improved this to go back to 1995-09-19.
-    days_to_choose_from = (datetime.now() - old).days
-    random_days_before_today = choices(range(days_to_choose_from), k=SEED_QUESTION_COUNT)
-    for random_days in random_days_before_today:
-        start_date = date.today() - timedelta(days=random_days) 
-        end_date = date.today() - timedelta(days=(random_days - 7)) # During a Week.
-        answer_key = playlist_tracks.get_top10_tracks(start_date, end_date, n=40)
-        if len(answer_key) == 0:
-            continue  # Dud list. Playlist Track data is only good after 2011.
-        # But I have an idea on how to estimate more cells.
-        pretty_date = common.make_date_pretty(start_date)
-        ask_questions = [
-            f"All of these tracks were in the KFJC Top40 during the week of {pretty_date} but which one made the Top10?",
-            f"All four tracks were in the KFJC Top40 during the week of {pretty_date} but which was in the Top10?",
-            f"All these tracks were in the KFJC Top40 during the week of {pretty_date}. Which track was in the Top10?"]
-        present_answers = [
-            f"Here are the KFJC Top40 by tracks during the week of {pretty_date}:",
-            f"These were the KFJC Top40 tracks on {pretty_date}:",
-            f"During the week of {pretty_date}, this is the KFJC Top40 by track:"]
-        winners = answer_key[:10]  # Top Ten
-        one_winner = choice(winners)
-        losers = answer_key[10:]  # Bottom 30
-        three_wrong_answers = choices(losers, k=3)
-        answer_pile = [one_winner] + three_wrong_answers
-        present_answer_data = []
-        display_shuffled_answers = []
-        for zz in sorted(answer_key, key=attrgetter('plays'), reverse=True):
-            present_answer_data.append([zz.track_title, zz.plays])
-        for zz in sorted(answer_pile, key=attrgetter('plays'), reverse=True):
-            display_shuffled_answers.append(zz.track_title)
-        shuffle(display_shuffled_answers)
-        create_question(
-            question_type=QUESTION_TYPES['tracks'],
-            ask_question=choice(ask_questions),
-            present_answer=choice(present_answers),
-            acceptable_answer=one_winner.track_title,
-            display_shuffled_answers=display_shuffled_answers,
-            present_answer_data_headings=["Who played what", "Plays"],
-            present_answer_data=present_answer_data)
-
-        db.session.commit()
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def get_four_random_albums():
-    """TODO: All these methods are woefully bloated and in need of consolidation."""
+    """Four random album objects for question creation."""
     four_random_albums = []
     for _ in range(4):
         # Get 4 random albums:
@@ -502,9 +367,7 @@ def get_four_random_albums():
     return four_random_albums
 
 def albums_by_an_artist():
-    """Formulate a question about albums by an artist.
-    
-    TODO: All these methods are woefully bloated and in need of consolidation."""
+    """Formulate a question about albums by an artist."""
     question_type = "A Question about an Album:"
     for _ in range(SEED_QUESTION_COUNT):
         four_random_albums = get_four_random_albums()
@@ -536,9 +399,7 @@ def albums_by_an_artist():
     db.session.commit()
         
 def artist_of_an_album():
-    """Formulate a question about artist of an album.
-    
-    TODO: All these methods are woefully bloated and in need of consolidation."""
+    """Formulate a question about artist of an album."""
     for _ in range(SEED_QUESTION_COUNT):
         four_random_albums = get_four_random_albums()
         # The first album shall be the winner:
@@ -568,23 +429,18 @@ def artist_of_an_album():
     db.session.commit()
 
 def get_any_track_title_from_this_album(kfjc_album_id):
-    """TODO"""
+    """Get one track title from an album."""
     track_objects = tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=kfjc_album_id)
     one_random_track = choice(track_objects)
     return one_random_track.title
 
 def get_all_track_titles_from_this_album(kfjc_album_id):
-    """TODO"""
-    all_track_titles = []
+    """Get titles for all tracks on an album by kfjc_album_id."""
     track_objects = tracks.get_tracks_by_kfjc_album_id(kfjc_album_id=kfjc_album_id)
-    for jj in track_objects:
-        all_track_titles.append(jj.title)
-    return all_track_titles
+    return [jj.title for jj in track_objects]
 
 def tracks_on_an_album():
-    """Formulate a question about tracks on an album.
-    
-    TODO: All these methods are woefully bloated and in need of consolidation."""
+    """Formulate a question about tracks on an album."""
     question_type = "A Question about a Track:"
     for _ in range(SEED_QUESTION_COUNT):
         four_random_albums = get_four_random_albums()
@@ -627,147 +483,46 @@ def tracks_on_an_album():
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def last_play_of_artist():
-    """Create a question about the last time an Artist was played.
-    
-    TODO: All these methods are woefully bloated and in need of consolidation."""
+def create_last_play_questions():
+    """Create questions about the last time an Artist/Album/Track was played."""
+    last_play_engine(media='track')
+    last_play_engine(media='artist')
+    last_play_engine(media='album')
+
+def last_play_engine(media):
+    """Create a question about the last time a media was played."""
     for _ in range(SEED_QUESTION_COUNT):
-        random_artist = playlist_tracks.get_a_random_artist() 
+        if media == 'artist':
+            random_media = playlist_tracks.get_a_random_artist()
+        elif media == 'album':
+            random_media = playlist_tracks.get_a_random_album()
+        else:  # 'track'
+            random_media = playlist_tracks.get_a_random_track()
+        if not random_media:
+            continue  # Dud list.
         ask_questions = [
-            f"When was the last time we played the artist '{random_artist}'?",
-            f"When was the last time the artist '{random_artist}' got airplay on KFJC?",
-            f"When was the last play of the artist '{random_artist}'?"]
+            f"When was the last time we played the {media} '{random_media}'?",
+            f"When was the last time the {media} '{random_media}' got any airplay?",
+            f"When was the last time the {media} '{random_media}' was played on KFJC?"]
         present_answers = [
-            f"This is the last time we played '{random_artist}':",
-            f"The last play of '{random_artist}' on KFJC was:",
-            f"The last time '{random_artist}' was played was:"]
-        try:
+            f"This is the last time we played the {media} '{random_media}':",
+            f"The last recorded play of the {media} '{random_media}' on KFJC was:",
+            f"The last time the {media} '{random_media}' was played was:"]
+        random_media = random_media.replace("'", "''")  # Search for apostrophe, must use double.
+        if media == 'artist':
             answer_key = playlist_tracks.get_last_play_of_artist(
-                artist=random_artist, reverse=True)
-        except exc.ProgrammingError:
-            continue  # TODO Spare apostrophes are getting in the way of lookup.
-        except errors.InFailedSqlTransaction:
-            continue
-        except exc.InternalError:  # Forget it, move on.
-            continue
-
-        try:
-            winner = answer_key[0]  # First Hit
-        except IndexError:
-            continue  # Might get a dud, an artist before 2011 with no valid time_played.
-        except AttributeError:
-            continue  # NoneType
-        # p.air_name, pt.artist, pt.album_title, pt.track_title, pt.time_played
-        the_right_answer = winner.time_played
-        three_wrong_answers = random_date_surrounding_another_date(the_right_answer, k=3)
-        the_pretty_right_answer = common.make_date_pretty(date_time_string=the_right_answer)
-        answer_pile = [the_pretty_right_answer] + three_wrong_answers
-        shuffle(answer_pile)
-        present_answer_data = []
-        for zz in answer_key:
-            air_name = djs.get_airname_for_dj(dj_id=zz.dj_id)
-            track_title = zz.track_title
-            pretty_date = common.make_date_pretty(date_time_string=zz.time_played)
-            present_answer_data.append([f"{air_name} played {track_title}", pretty_date])
-        create_question(
-            question_type=QUESTION_TYPES['artists'],
-            ask_question=choice(ask_questions),
-            present_answer=choice(present_answers),
-            acceptable_answer=the_pretty_right_answer,
-            display_shuffled_answers=answer_pile,
-            present_answer_data_headings=["Who played what", "Date"],
-            present_answer_data=present_answer_data)
-        
-    db.session.commit()
-
-def last_play_of_album():
-    """Create a question about the last time at Album was played.
-    
-    TODO: All these methods are woefully bloated and in need of consolidation."""
-    for _ in range(SEED_QUESTION_COUNT):
-        random_album = playlist_tracks.get_a_random_album()
-        if not random_album:
-            continue
-        ask_questions = [
-            f"When was the last time we played the album '{random_album}'?",
-            f"When was the last play of the album '{random_album}' got any airplay?",
-            f"When was the last time the album '{random_album}' was played on KFJC?"]
-        present_answers = [
-            f"This is the last time we played the album '{random_album}':",
-            f"The last play of the album '{random_album}' on KFJC was:",
-            f"The last time the album '{random_album}' was played was:"]
-        try:
+                random_media, reverse=True)
+        elif media == 'album':
             answer_key = playlist_tracks.get_last_play_of_album(
-                album=random_album, reverse=True)
-        except exc.ProgrammingError:
-            continue  # TODO Spare apostrophes are getting in the way of lookup.
-        except errors.InFailedSqlTransaction:
-            continue
-        except exc.InternalError:  # Forget it, move on.
-            continue
-
-        try:
-            winner = answer_key[0]  # First Hit
-        except IndexError:
-            continue  # Might get a dud, an artist before 2011 with no valid time_played.
-        except AttributeError:
-            continue  # NoneType
-        # p.air_name, pt.artist, pt.album_title, pt.track_title, pt.time_played
-        the_right_answer = winner.time_played
-        three_wrong_answers = random_date_surrounding_another_date(the_right_answer, k=3)
-        the_pretty_right_answer = common.make_date_pretty(date_time_string=the_right_answer)
-        answer_pile = [the_pretty_right_answer] + three_wrong_answers
-        shuffle(answer_pile)
-        present_answer_data = []
-        for zz in answer_key:
-            air_name = djs.get_airname_for_dj(dj_id=zz.dj_id)
-            track_title = zz.track_title
-            pretty_date = common.make_date_pretty(date_time_string=zz.time_played)
-            present_answer_data.append([f"{air_name} played {track_title}", pretty_date])
-        create_question(
-            question_type=QUESTION_TYPES['albums'],
-            ask_question=choice(ask_questions),
-            present_answer=choice(present_answers),
-            acceptable_answer=the_pretty_right_answer,
-            display_shuffled_answers=answer_pile,
-            present_answer_data_headings=["Who played what", "Date"],
-            present_answer_data=present_answer_data)
-        
-    db.session.commit()
-
-def last_play_of_track():
-    """Create a question about the last time at Track was played.
-    
-    TODO: All these methods are woefully bloated and in need of consolidation."""
-    for _ in range(SEED_QUESTION_COUNT):
-        random_track = playlist_tracks.get_a_random_track()
-        if not random_track:
-            continue
-        ask_questions = [
-            f"When was the last time we played the track '{random_track}'?",
-            f"When was the last time the track '{random_track}' got any airplay?",
-            f"When was the last time the track '{random_track}' was played on KFJC?"]
-        present_answers = [
-            f"This is the last time we played the track '{random_track}':",
-            f"The last recorded play of the track '{random_track}' on KFJC was:",
-            f"The last time the track '{random_track}' was played was:"]
-        try:
+                random_media, reverse=True)
+        else:  # 'track'
             answer_key = playlist_tracks.get_last_play_of_track(
-                track=random_track, reverse=True)
-        except exc.ProgrammingError:
-            continue  # TODO Spare apostrophes are getting in the way of lookup.
-        except errors.InFailedSqlTransaction:
-            continue
-        except exc.InternalError:  # Forget it, move on.
-            continue
-
-        try:
-            winner = answer_key[0]  # First Hit
-        except IndexError:
-            continue  # Might get a dud, an artist before 2011 with no valid time_played.
-        except AttributeError:
-            continue  # NoneType
-        # p.air_name, pt.artist, pt.album_title, pt.track_title, pt.time_played
+                random_media, reverse=True)
+        
+        if not answer_key:
+            continue  # Dud list.
+        winner = answer_key[0]  # First Hit
+            
         the_right_answer = winner.time_played
         three_wrong_answers = random_date_surrounding_another_date(the_right_answer, k=3)
         the_pretty_right_answer = common.make_date_pretty(date_time_string=the_right_answer)
@@ -776,11 +531,17 @@ def last_play_of_track():
         present_answer_data = []
         for zz in answer_key:
             air_name = djs.get_airname_for_dj(dj_id=zz.dj_id)
-            track_title = zz.track_title
             pretty_date = common.make_date_pretty(date_time_string=zz.time_played)
-            present_answer_data.append([f"{air_name} played {track_title}", pretty_date])
+            if media == 'artist':
+                media_title = zz.artist
+            elif media == 'album':
+                media_title = zz.album_title
+            else:  # 'track'
+                media_title = zz.track_title
+            present_answer_data.append([f"{air_name} played the {media} '{media_title}' on ", pretty_date])
+
         create_question(
-            question_type=QUESTION_TYPES['tracks'],
+            question_type=QUESTION_TYPES[media+'s'],
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answer=the_pretty_right_answer,

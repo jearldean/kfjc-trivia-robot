@@ -3,8 +3,7 @@
 from model import db, connect_to_db, Dj
 import common
 
-WHITE_HEART_EMOJI = '♡'
-# TODO Couldn't get real emojis to work.
+WHITE_HEART_EMOJI = '♡'  # TODO Couldn't get real emojis to work so, we have this for now.
 
 def create_dj(dj_id, air_name, administrative, silent_mic):
     """Create and return a new dj."""

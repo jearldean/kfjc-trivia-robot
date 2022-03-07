@@ -83,7 +83,9 @@ def dj_needs_more_shows(dj_id):
 # -=-=-=-=-=-=-=-=-=-=-=- Top10, Top10, Most Plays -=-=-=-=-=-=-=-=-=-=-=-
 
 def get_top10_artists(start_date, end_date, n=10):
-    """Going to make it a discoverable feature in REST API that they can ask for the
+    """Top10 artist plays between any 2 dates.
+    
+    Going to make it a discoverable feature in REST API that they can ask for the
     top 40, 29 or 123 artists if they so desire. *** """
 
     return get_top_plays(
@@ -91,13 +93,13 @@ def get_top10_artists(start_date, end_date, n=10):
         sql_variable="artist", group_by="artist, album_title, track_title", n=n)
 
 def get_top10_albums(start_date, end_date, n=10):
-    """TODO"""
+    """Top10 album plays between any 2 dates."""
     return get_top_plays(
         start_date=start_date, end_date=end_date, 
         sql_variable="album_title", group_by="album_title, artist, track_title", n=n)
 
 def get_top10_tracks(start_date, end_date, n=10):
-    """TODO"""
+    """Top10 track plays between any 2 dates."""
     return get_top_plays(
         start_date=start_date, end_date=end_date, 
         sql_variable="track_title", group_by="track_title, artist, album_title", n=n)
@@ -191,7 +193,7 @@ def last_time_played(search_column_name, search_for_item, reverse=False):
 
     reverse_it = "DESC" if reverse else ""
     who_played_it_when = (
-        f""" SELECT p.air_name, pt.artist, pt.album_title, pt.track_title, pt.time_played 
+        f""" SELECT p.dj_id, p.air_name, pt.artist, pt.album_title, pt.track_title, pt.time_played 
         FROM playlists as p 
         INNER JOIN playlist_tracks as pt 
         ON (p.kfjc_playlist_id = pt.kfjc_playlist_id) 

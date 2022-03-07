@@ -170,7 +170,7 @@ def ask_question():
 
 @app.route("/answer", methods = ["POST"])
 def answer_question():
-    """TODO"""
+    """Grade user response and display correct answer."""
 
     answer_given=request.form.get("q")
     user = users.get_user_by_id(user_id=session["user_id"])
