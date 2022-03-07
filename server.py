@@ -195,9 +195,14 @@ def answer_question():
 
     user_msg = answers.get_user_msg(answer=answer)
 
+    if answer.answer_correct:
+        happy_or_sad_robot = random_robot_image(happy=True)
+    else:
+        happy_or_sad_robot = random_robot_image(happy=False)
+
     return render_template(
         'answer.html',
-        random_robot_img=random_robot_image(),
+        random_robot_img=happy_or_sad_robot,
         user_msg=user_msg,
         answer_correct=answer.answer_correct,
         present_answer=question.present_answer,
@@ -264,10 +269,15 @@ def leaderboard():
 # -=-=-=-=-=-=-=-=-=-=-=- Python -=-=-=-=-=-=-=-=-=-=-=-
 
 
-def random_robot_image():
+def random_robot_image(happy=None):
     """Give a path to a robot image."""
 
-    robot_picture_idx = choice(range(1, 13))
+    if happy is None:
+        robot_picture_idx = choice(range(1, 13))
+    elif happy is False:
+        robot_picture_idx = choice([7, 8, 11, 12])
+    else:  # happy is True
+        robot_picture_idx = choice([4, 6, 9])
 
     return f"static/img/robot{robot_picture_idx}.png"
 
