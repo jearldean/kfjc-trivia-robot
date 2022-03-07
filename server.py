@@ -27,13 +27,14 @@ ma = Marshmallow(app)
 
 TOP_N_USERS = 10  # Displayed on Leaderboard
 ROBOT_MSG = [
-    "Robot loves you!", "Pretty good, meatbag!", 
+    "Robot loves you!", "Pretty good, meatbag!",
     "Well done, bag of mostly water!", "Pretty good for a human!",
     "Robot is proud of you!"]
 dj_dict = {}
 dj_airnames = []
 
 # -=-=-=-=-=-=-=-=-=-=-=- Routes -=-=-=-=-=-=-=-=-=-=-=-
+
 
 @app.route("/")
 def homepage():
@@ -45,8 +46,8 @@ def homepage():
     return render_template(
         'homepage.html',
         random_robot_img=random_robot_image(),
-        greeting = assemble_greeting(),
-        footer = 'public')
+        greeting=assemble_greeting(),
+        footer='public')
 
 
 @app.route("/play")
@@ -82,13 +83,14 @@ def login_process():
         flash("Oops, password didn't match.")
         return redirect("/")
 
+
 @app.route('/create_account', methods=['POST'])
 def create_account():
     """Create A new user."""
     username = request.form["username"]
     fname = request.form["fname"]
     password = request.form["password"]
-    
+
     new_user = users.create_a_user(username, fname, password)
 
     if not new_user:
@@ -98,12 +100,14 @@ def create_account():
         session["user_id"] = new_user.user_id
         return redirect("/question")
 
+
 @app.route("/important")
 def important():
     """Important info for logged in users."""
-    
+
     flash("Make an account to take a fun quiz.")
     return redirect("/")
+
 
 @app.route("/logout")
 def logout():
@@ -116,6 +120,7 @@ def logout():
     flash("Logged Out.")
     return redirect("/")
 
+
 @app.route("/infopage")
 def infopage():
 
@@ -127,15 +132,16 @@ def infopage():
     return render_template(
         'infopage.html',
         random_robot_img=random_robot_image(),
-        footer = footer)
+        footer=footer)
+
 
 @app.route("/score")
 def myscore():
     if "user_id" not in session:
         return redirect('/important')
 
-    user_id=session["user_id"]
-    user=users.get_user_by_id(user_id=user_id)
+    user_id = session["user_id"]
+    user = users.get_user_by_id(user_id=user_id)
     user_score_named_tuple = answers.get_user_score(user_id=user_id)
 
     return render_template(
@@ -144,7 +150,8 @@ def myscore():
         random_robot_img=random_robot_image(),
         fname=user.fname,
         user_score=user_score_named_tuple,
-        footer = 'private')
+        footer='private')
+
 
 @app.route("/question")
 def ask_question():
@@ -166,19 +173,20 @@ def ask_question():
             question_type=next_question.question_type,
             ask_question=next_question.ask_question,
             display_shuffled_answers=next_question.display_shuffled_answers,
-            footer = 'private')
+            footer='private')
 
-@app.route("/answer", methods = ["POST"])
+
+@app.route("/answer", methods=["POST"])
 def answer_question():
     """Grade user response and display correct answer."""
 
-    answer_given=request.form.get("q")
+    answer_given = request.form.get("q")
     user = users.get_user_by_id(user_id=session["user_id"])
     question = questions.get_question_by_id(question_id=session["question_id"])
 
     answer = answers.create_answer(
-        user_instance=user, 
-        question_instance=question, 
+        user_instance=user,
+        question_instance=question,
         answer_given=answer_given)
     db.session.commit()
 
@@ -186,7 +194,7 @@ def answer_question():
         return redirect('/question')
 
     user_msg = answers.get_user_msg(answer=answer)
-        
+
     return render_template(
         'answer.html',
         random_robot_img=random_robot_image(),
@@ -196,7 +204,8 @@ def answer_question():
         the_right_answer=question.acceptable_answer,
         present_answer_data_headings=question.present_answer_data_headings,
         present_answer_data=question.present_answer_data,
-        footer = 'private')
+        footer='private')
+
 
 @app.route("/ask")
 def user_asks():
@@ -207,7 +216,7 @@ def user_asks():
     if "user_id" not in session:
         return redirect('/important')
 
-    dj_id=request.args.get("dj_id")
+    dj_id = request.args.get("dj_id")
     if not dj_id:
         print(dj_airnames[0])
         dj_selected = choice(dj_airnames)[0]
@@ -224,9 +233,9 @@ def user_asks():
         dj_most_plays_headings=False,
         dj_selected=session['dj_selected'],
         dj_stat=dj_stat,
-        footer = 'private')
+        footer='private')
 
-        
+
 @app.route("/leaderboard")
 def leaderboard():
     """Show top scores."""
@@ -236,7 +245,7 @@ def leaderboard():
 
     score_board = answers.compile_leaderboard()
 
-    table_range=min(TOP_N_USERS, len(score_board))
+    table_range = min(TOP_N_USERS, len(score_board))
     if session["user_id"] in [f[0] for f in score_board[:table_range]]:
         user_msg = "You're in the KFJC Top10!"
     else:
@@ -247,19 +256,21 @@ def leaderboard():
         random_robot_img=random_robot_image(),
         robot_msg=choice(ROBOT_MSG),
         table_range=table_range,
-        current_user = session["user_id"],
+        current_user=session["user_id"],
         user_msg=user_msg,
         leaders=score_board,
-        footer = 'private')
+        footer='private')
 
 # -=-=-=-=-=-=-=-=-=-=-=- Python -=-=-=-=-=-=-=-=-=-=-=-
 
+
 def random_robot_image():
     """Give a path to a robot image."""
-    
+
     robot_picture_idx = choice(range(1, 13))
 
     return f"static/img/robot{robot_picture_idx}.png"
+
 
 def assemble_greeting():
     """Gather stats for to make a compelling reason to take a database quiz."""
@@ -268,9 +279,12 @@ def assemble_greeting():
     first_show_in_db = common.make_date_pretty(first_and_last_show[0])
     duration = common.minutes_to_years(
         ((first_and_last_show[1] - first_and_last_show[0]).total_seconds())/60)
-    count_all_shows = common.format_an_int_with_commas(playlists.how_many_shows())
-    count_prolific_djs = common.format_an_int_with_commas(playlists.how_many_djs())
-    count_playlist_tracks = common.format_an_int_with_commas(playlist_tracks.how_many_tracks())
+    count_all_shows = common.format_an_int_with_commas(
+        playlists.how_many_shows())
+    count_prolific_djs = common.format_an_int_with_commas(
+        playlists.how_many_djs())
+    count_playlist_tracks = common.format_an_int_with_commas(
+        playlist_tracks.how_many_tracks())
 
     greeting = (
         f"KFJC has a database going back to {first_show_in_db} "
@@ -278,6 +292,7 @@ def assemble_greeting():
         f"They've played {count_playlist_tracks} songs in {duration}! "
         f"Wanna play a trivia game with me?")
     return greeting
+
 
 def retrieve_dj_stats_only_once():
     djs_alphabetically = playlists.get_djs_alphabetically()
@@ -290,33 +305,76 @@ def retrieve_dj_stats_only_once():
         the_right_apostrophe = common.the_right_apostrophe(air_name=air_name)
         dj_stats = (
             f"{air_name}{the_right_apostrophe} first show was on {firstshow}, "
-            f"their last show was on {lastshow} and they have done {showcount} shows!")
+            f"their last show was on {lastshow} and they have done "
+            f"{showcount} shows!")
         dj_dict[dj_id] = {
             'air_name': air_name,
             'showcount': showcount,
             'firstshow': firstshow,
-            'lastshow': lastshow,   
-            'dj_stats': dj_stats}   
+            'lastshow': lastshow,
+            'dj_stats': dj_stats}
         dj_airnames.append([dj_id, air_name])
     return dj_dict, dj_airnames
-#TODO: Can leaderboard be rest api?
 
+# -=-=-=-=-=-=-=-=-=-=-=- REST API: Leaderboard -=-=-=-=-=-=-=-=-=-=-=-
+# http://0.0.0.0:5000/rest_leaderboard
+
+
+class LeaderboardSchema(ma.Schema):
+    class Meta:
+        fields = (
+            "username", "fname", "passed",
+            "failed", "skipped", "questions", "percent")
+
+
+leaderboard_schema = LeaderboardSchema(many=True)
+
+
+class LeaderboardResource(Resource):
+    def get(self):
+        score_board = []
+        for user in users.get_users():
+            user_score = {}
+            user_score_named_tuple = answers.get_user_score(
+                user_id=user.user_id)
+            user_score["username"] = user.username
+            user_score["fname"] = user.fname
+            user_score["passed"] = user_score_named_tuple.passed
+            user_score["failed"] = user_score_named_tuple.failed
+            user_score["skipped"] = user_score_named_tuple.skipped
+            user_score["questions"] = user_score_named_tuple.questions
+            user_score["percent"] = user_score_named_tuple.percent
+            score_board.append(user_score)
+
+        score_board.sort(key=itemgetter("percent"), reverse=True)
+        return leaderboard_schema.dump(score_board)
+
+# Don't make a confilct with @app.route("/leaderboard")
+
+
+api.add_resource(LeaderboardResource, '/rest_leaderboard')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Playlists -=-=-=-=-=-=-=-=-=-=-=-
 # http://0.0.0.0:5000/playlists/66582
 # http://0.0.0.0:5000/playlists/66581
 
+
 class PlaylistSchema(ma.Schema):
     class Meta:
-        fields = ("id_", "kfjc_playlist_id", "dj_id", "air_name", "start_time", "end_time")
+        fields = (
+            "id_", "kfjc_playlist_id", "dj_id",
+            "air_name", "start_time", "end_time")
+
 
 playlist_schema = PlaylistSchema()
 playlists_schema = PlaylistSchema(many=True)
+
 
 class PlaylistResource(Resource):
     def get(self, kfjc_playlist_id):
         playlist = Playlist.query.get_or_404(kfjc_playlist_id)
         return playlist_schema.dump(playlist)
+
 
 api.add_resource(PlaylistResource, '/playlists/<int:kfjc_playlist_id>')
 
@@ -324,89 +382,121 @@ api.add_resource(PlaylistResource, '/playlists/<int:kfjc_playlist_id>')
 # http://0.0.0.0:5000/playlist_tracks/66582
 # http://0.0.0.0:5000/playlist_tracks/66581
 
+
 class PlaylistTracksSchema(ma.Schema):
     class Meta:
         fields = (
             "kfjc_playlist_id", "indx", "kfjc_album_id",
             "album_title", "artist", "track_title", "time_played")
 
+
 playlist_tracks_schema = PlaylistTracksSchema(many=True)
+
 
 class PlaylistTracksResource(Resource):
     def get(self, kfjc_playlist_id):
-        playlist_tracks_found = playlist_tracks.get_playlist_tracks_by_kfjc_playlist_id(
-            kfjc_playlist_id=kfjc_playlist_id)
+        playlist_tracks_found = (
+            playlist_tracks.get_playlist_tracks_by_kfjc_playlist_id(
+                kfjc_playlist_id=kfjc_playlist_id))
         return playlist_tracks_schema.dump(playlist_tracks_found)
 
-api.add_resource(PlaylistTracksResource, '/playlist_tracks/<int:kfjc_playlist_id>')
+
+api.add_resource(
+    PlaylistTracksResource, '/playlist_tracks/<int:kfjc_playlist_id>')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: DJ Favorites -=-=-=-=-=-=-=-=-=-=-=-
 # http://0.0.0.0:5000/dj_favorites/album/dj_id=255
 # http://0.0.0.0:5000/dj_favorites/artist/dj_id=255
 # http://0.0.0.0:5000/dj_favorites/track/dj_id=255
 
+
 class DJFavoritesSchema(ma.Schema):
     class Meta:
         fields = ("dj_id", "artist", "album_title", "track_title", "plays")
 
+
 one_dj_favorites_schema = DJFavoritesSchema(many=True)
+
 
 class DJFavoriteArtistResource(Resource):
     def get(self, dj_id):
-        favorites = playlist_tracks.get_favorite_artists(dj_id=dj_id, reverse=True, min_plays=5)
+        favorites = playlist_tracks.get_favorite_artists(
+            dj_id=dj_id, reverse=True, min_plays=5)
         if not favorites:
             warning_string = playlist_tracks.dj_needs_more_shows(dj_id)
             masquerade_as_data = [{'artist': "", "plays": warning_string}]
-            favorites = common.convert_list_o_dicts_to_list_o_named_tuples(masquerade_as_data)
+            favorites = common.convert_list_o_dicts_to_list_o_named_tuples(
+                masquerade_as_data)
         return one_dj_favorites_schema.dump(favorites)
+
 
 class DJFavoriteAlbumResource(Resource):
     def get(self, dj_id):
-        favorites = playlist_tracks.get_favorite_albums(dj_id=dj_id, reverse=True, min_plays=5)
+        favorites = playlist_tracks.get_favorite_albums(
+            dj_id=dj_id, reverse=True, min_plays=5)
         if not favorites:
             warning_string = playlist_tracks.dj_needs_more_shows(dj_id)
             masquerade_as_data = [{'album_title': "", "plays": warning_string}]
-            favorites = common.convert_list_o_dicts_to_list_o_named_tuples(masquerade_as_data)
+            favorites = common.convert_list_o_dicts_to_list_o_named_tuples(
+                masquerade_as_data)
         return one_dj_favorites_schema.dump(favorites)
+
 
 class DJFavoriteTrackResource(Resource):
     def get(self, dj_id):
-        favorites = playlist_tracks.get_favorite_tracks(dj_id=dj_id, reverse=True, min_plays=5)
+        favorites = playlist_tracks.get_favorite_tracks(
+            dj_id=dj_id, reverse=True, min_plays=5)
         if not favorites:
             warning_string = playlist_tracks.dj_needs_more_shows(dj_id)
             masquerade_as_data = [{'track_title': "", "plays": warning_string}]
-            favorites = common.convert_list_o_dicts_to_list_o_named_tuples(masquerade_as_data)
+            favorites = common.convert_list_o_dicts_to_list_o_named_tuples(
+                masquerade_as_data)
         return one_dj_favorites_schema.dump(favorites)
 
-api.add_resource(DJFavoriteArtistResource, '/dj_favorites/artist/dj_id=<int:dj_id>')
-api.add_resource(DJFavoriteAlbumResource, '/dj_favorites/album/dj_id=<int:dj_id>')
-api.add_resource(DJFavoriteTrackResource, '/dj_favorites/track/dj_id=<int:dj_id>')
+
+api.add_resource(
+    DJFavoriteArtistResource, '/dj_favorites/artist/dj_id=<int:dj_id>')
+api.add_resource(
+    DJFavoriteAlbumResource, '/dj_favorites/album/dj_id=<int:dj_id>')
+api.add_resource(
+    DJFavoriteTrackResource, '/dj_favorites/track/dj_id=<int:dj_id>')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Last Played -=-=-=-=-=-=-=-=-=-=-=-
 # http://0.0.0.0:5000/last_played/artist=Pink%20Floyd
 # http://0.0.0.0:5000/last_played/album=Dark%20Side%20of%20the%20Moon
 # http://0.0.0.0:5000/last_played/track=eclipse
 
+
 class LastPlayedSchema(ma.Schema):
     class Meta:
-        fields = ("air_name", "artist", "album_title", "track_title", "time_played")
+        fields = (
+            "air_name", "artist", "album_title",
+            "track_title", "time_played")
+
 
 last_played_schema = LastPlayedSchema(many=True)
 
+
 class LastPlayedByArtist(Resource):
     def get(self, artist):
-        last_time_played = playlist_tracks.get_last_play_of_artist(artist=artist, reverse=True)
+        last_time_played = playlist_tracks.get_last_play_of_artist(
+            artist=artist, reverse=True)
         return last_played_schema.dump(last_time_played)
+
 
 class LastPlayedByAlbum(Resource):
     def get(self, album):
-        last_time_played = playlist_tracks.get_last_play_of_album(album=album, reverse=True)
+        last_time_played = playlist_tracks.get_last_play_of_album(
+            album=album, reverse=True)
         return last_played_schema.dump(last_time_played)
+
 
 class LastPlayedByTrack(Resource):
     def get(self, track):
-        last_time_played = playlist_tracks.get_last_play_of_track(track=track, reverse=True)
+        last_time_played = playlist_tracks.get_last_play_of_track(
+            track=track, reverse=True)
         return last_played_schema.dump(last_time_played)
+
 
 api.add_resource(LastPlayedByArtist, '/last_played/artist=<string:artist>')
 api.add_resource(LastPlayedByAlbum, '/last_played/album=<string:album>')
@@ -419,34 +509,37 @@ api.add_resource(LastPlayedByTrack, '/last_played/track=<string:track>')
 # http://0.0.0.0:5000/top_plays/top=5&order_by=albums&start_date=2020-01-02&end_date=2020-01-10
 # http://0.0.0.0:5000/top_plays/top=5&order_by=track&start_date=2020-01-02&end_date=2020-01-10
 
+
 class TopTenSchema(ma.Schema):
     class Meta:
         fields = ("plays", "artist", "album_title", "track_title")
 
+
 top_n_artist_schema = TopTenSchema(many=True)
+
 
 class TopTen(Resource):
     def get(self, order_by, start_date, end_date, top=10):
         if order_by in ['artist', 'artists']:
-            top_10 = playlist_tracks.get_top10_artists(start_date, end_date, n=top)
+            top_10 = playlist_tracks.get_top10_artists(
+                start_date, end_date, n=top)
         if order_by in ['album', 'albums']:
-            top_10 = playlist_tracks.get_top10_albums(start_date, end_date, n=top)
+            top_10 = playlist_tracks.get_top10_albums(
+                start_date, end_date, n=top)
         else:    # order_by in ['track', 'tracks']:
-            top_10 = playlist_tracks.get_top10_tracks(start_date, end_date, n=top)
+            top_10 = playlist_tracks.get_top10_tracks(
+                start_date, end_date, n=top)
 
         return top_n_artist_schema.dump(top_10)
 
-api.add_resource(TopTen, '/top_plays/top=<int:top>&order_by=<string:order_by>&start_date=<string:start_date>&end_date=<string:end_date>')
+
+api.add_resource(
+    TopTen,
+    '/top_plays/top=<int:top>&order_by=<string:order_by>'
+    '&start_date=<string:start_date>&end_date=<string:end_date>')
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: DJ Stats -=-=-=-=-=-=-=-=-=-=-=-
 # http://0.0.0.0:5000/dj_stats
-
-# TODO these don't work. How to make reverse optional with defined default? 
-# http://0.0.0.0:5000/dj_stats/order_by=air_name
-# http://0.0.0.0:5000/dj_stats/order_by=dj_id
-# http://0.0.0.0:5000/dj_stats/order_by=showcount
-# http://0.0.0.0:5000/dj_stats/order_by=firstshow
-# http://0.0.0.0:5000/dj_stats/order_by=lastshow
 
 # http://0.0.0.0:5000/dj_stats/order_by=air_name&reverse=1
 # http://0.0.0.0:5000/dj_stats/order_by=air_name&reverse=0
@@ -455,29 +548,23 @@ api.add_resource(TopTen, '/top_plays/top=<int:top>&order_by=<string:order_by>&st
 # http://0.0.0.0:5000/dj_stats/order_by=firstshow&reverse=0
 # http://0.0.0.0:5000/dj_stats/order_by=lastshow&reverse=1
 
+
 class DJStatsSchema(ma.Schema):
     class Meta:
         fields = ("air_name", "dj_id", "showcount", "firstshow", "lastshow")
 
+
 dj_stats_schema = DJStatsSchema(many=True)
+
 
 class DJStatsNoArgs(Resource):
     def get(self):
         dj_stats = playlists.get_djs_alphabetically()
-        #return dj_stats_schema.dump(dj_stats)
+        # return dj_stats_schema.dump(dj_stats)
         return dj_stats_schema.jsonify(dj_stats)
 
+
 class DJStats(Resource):
-    """ # Was trying to make reverse an optional value. not working...
-    def __init__(self):
-        self.reqparse = reqparse.RequestParser()
-        self.reqparse.add_argument('order_by', type = str, default='air_name')
-        self.reqparse.add_argument('reverse', type = int, default=0)
-        super(DJStats, self).__init__()
-
-    def get(self):
-        args = self.reqparse.parse_args()"""
-
     def get(self, order_by='air_name', reverse=1):
         # Use 0, 1 for reverse
         if order_by in ['dj_id', 'id']:
@@ -492,25 +579,31 @@ class DJStats(Resource):
             dj_stats = playlists.get_djs_alphabetically(reverse=reverse)
         return dj_stats_schema.jsonify(dj_stats)
 
-api.add_resource(DJStats, '/dj_stats/order_by=<string:order_by>&reverse=<int:reverse>')
+
+api.add_resource(
+    DJStats,
+    '/dj_stats/order_by=<string:order_by>&reverse=<int:reverse>')
 api.add_resource(DJStatsNoArgs, '/dj_stats')
-# air_name, first_show, last_show and show_count
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Album Tracks -=-=-=-=-=-=-=-=-=-=-=-
 # http://0.0.0.0:5000/album_tracks/303
 # http://0.0.0.0:5000/album_tracks/15141
 # http://0.0.0.0:5000/album_tracks/497606
 
+
 class AlbumTracksSchema(ma.Schema):
     class Meta:
         fields = ("indx", "title", "artist")
 
+
 album_tracks_schema = AlbumTracksSchema(many=True)
+
 
 class AlbumTracks(Resource):
     def get(self, kfjc_album_id):
         album_tracks = tracks.get_tracks_by_kfjc_album_id(kfjc_album_id)
         return album_tracks_schema.dump(album_tracks)
+
 
 api.add_resource(AlbumTracks, '/album_tracks/<int:kfjc_album_id>')
 
@@ -519,22 +612,25 @@ api.add_resource(AlbumTracks, '/album_tracks/<int:kfjc_album_id>')
 # http://0.0.0.0:5000/artists_albums/artist=Lee%20Press%20On
 # http://0.0.0.0:5000/artists_albums/artist=Adam%20Ant
 
-"""choice here: collections (multiple artists on an album) will be skipped if 
-we use the albums table lookup.
-But if we back it out from the tracks table, compilation albums would be included."""
+"""choice here: collections (multiple artists on an album) will be skipped if
+we use the albums table lookup. But if we back it out from the tracks table,
+compilation albums would be included."""
+
 
 class ArtistsAlbumsSchema(ma.Schema):
     class Meta:
         fields = ("kfjc_album_id", "album_title", "artist")
 
+
 artists_albums_schema = ArtistsAlbumsSchema(many=True)
+
 
 class ArtistsAlbums(Resource):
     def get(self, artist):
         albums_by_artist = []
         tracks_by_artist = tracks.get_tracks_by_an_artist(artist=artist)
         for track_by_artist in tracks_by_artist:
-            kfjc_album_id=track_by_artist.kfjc_album_id
+            kfjc_album_id = track_by_artist.kfjc_album_id
             album = albums.get_album_by_id(kfjc_album_id=kfjc_album_id)
             report_artist = track_by_artist.artist
             to_be_appended = {
@@ -544,7 +640,9 @@ class ArtistsAlbums(Resource):
                 albums_by_artist.append(to_be_appended)
         return artists_albums_schema.dump(albums_by_artist)
 
+
 api.add_resource(ArtistsAlbums, '/artists_albums/artist=<string:artist>')
+
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 if __name__ == "__main__":

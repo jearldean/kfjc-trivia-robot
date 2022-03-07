@@ -18,15 +18,17 @@ import tracks
 
 # -=-=-=-=-=-=-=-=-=-=-=- Clean up Data for Import -=-=-=-=-=-=-=-=-=-=-=-
 
-BAD_TIMES = ["0000-00-00 00:00:00", "1970-01-01 01:00:00", "1969-12-31 16:00:00"]
+BAD_TIMES = [
+    "0000-00-00 00:00:00", "1970-01-01 01:00:00", "1969-12-31 16:00:00"]
+
 
 def fix_playlist_times(start_time, end_time):
     """A few dates are borked but if the other time cell is populated,
     we can make a decent guess. Fixes 166 rows.
-    
-    >>> fix_playlist_times("1969-12-31 16:00:00", "1969-12-31 16:00:00")  # No change
+
+    >>> fix_playlist_times("1969-12-31 16:00:00", "1969-12-31 16:00:00")
     ('1969-12-31 16:00:00', '1969-12-31 16:00:00')
-    >>> fix_playlist_times('2000-07-27 10:30:00', "1969-12-31 16:00:00")    # No change
+    >>> fix_playlist_times('2000-07-27 10:30:00', "1969-12-31 16:00:00")
     ('2000-07-27 10:30:00', '2000-07-27 13:30:00')
     >>> fix_playlist_times("1969-12-31 16:00:00", '2000-07-27 10:30:00')
     ('2000-07-27 07:30:00', '2000-07-27 10:30:00')
@@ -36,8 +38,9 @@ def fix_playlist_times(start_time, end_time):
         start_time = time_shift(end_time, shift=-3)
     elif end_time in BAD_TIMES and start_time not in BAD_TIMES:
         end_time = time_shift(start_time, shift=3)
-    
+
     return start_time, end_time
+
 
 def time_shift(one_datetime_cell, shift=3):
     """
@@ -47,8 +50,10 @@ def time_shift(one_datetime_cell, shift=3):
     '2000-07-27 07:30:00'
     """
 
-    return (datetime.fromisoformat(one_datetime_cell) + 
+    return (
+        datetime.fromisoformat(one_datetime_cell) +
         timedelta(hours=shift)).strftime('%Y-%m-%d %H:%M:%S')
+
 
 def coerce_imported_data(one_cell):
     """Coerce incoming data to the correct type.
@@ -73,8 +78,8 @@ def coerce_imported_data(one_cell):
         pass
 
     if one_cell in [
-        'NULL', "Null", '', " ", "?", ".", "..", "...", "*", "-", ",",
-        "\""] + BAD_TIMES:
+            'NULL', "Null", '', " ", "?", ".", "..", "...", "*", "-", ",",
+            "\""] + BAD_TIMES:
         return None  # No Data *IS* No Data.
     elif isinstance(one_cell, datetime):
         return datetime.fromisoformat(one_cell)
@@ -82,9 +87,10 @@ def coerce_imported_data(one_cell):
         # Strings go through the "String Fixer":
         return fix_titles(some_title=one_cell)
 
+
 def fix_titles(some_title):
     """Fixes radio-station-naming-convention titles to English Readable titles.
-    
+
     >>> fix_titles("Connick, Harry Jr.")
     'Harry Connick Jr.'
     >>> fix_titles("Brown, James")
@@ -111,9 +117,11 @@ def fix_titles(some_title):
         some_title = " ".join(parts)
     return some_title.strip()
 
+
 def profanity_filter(title_string):
     """
-    Data comes from an edgey Radio station. Found out I needed a Profanity Filter.
+    Data comes from an edgey Radio station:
+    Found out I needed a Profanity Filter.
 
     >>> profanity_filter(title_string="Pussy")
     'P&#x128576;ssy'
@@ -138,6 +146,7 @@ def profanity_filter(title_string):
 
 # -=-=-=-=-=-=-=-=-=-=-=- Import the 5 CSV Files -=-=-=-=-=-=-=-=-=-=-=-
 
+
 DJ_DATA_PATH = 'station_data/user.csv'
 ALBUM_DATA_PATH = 'station_data/album.csv'
 PLAYLIST_DATA_PATH = 'station_data/playlist.csv'
@@ -145,11 +154,12 @@ PLAYLIST_TRACK_DATA_PATH = 'station_data/playlist_track.csv'
 COLLECTION_TRACK_DATA_PATH = 'station_data/coll_track.csv'
 TRACK_DATA_PATH = 'station_data/track.csv'
 
+
 def create_djs(row):
     """Add all djs rows."""
-    
-    dj_id=coerce_imported_data(row[0])
-    air_name=str(coerce_imported_data(row[2]))
+
+    dj_id = coerce_imported_data(row[0])
+    air_name = str(coerce_imported_data(row[2]))
     # administrative dj_ids represent station business and not
     # real people we should make questions out of:
     administrative = False
@@ -169,20 +179,26 @@ def create_djs(row):
         administrative=administrative,
         silent_mic=silent_mic)
 
+
 def add_a_missing_dj(dj_id, air_name):
     """Add a dummy dj row to avoid import conflicts."""
     if not air_name:
         air_name = "None"
-    create_djs(row=[dj_id, None, air_name, None, None, None, None, None, None, "N"])
+    create_djs(
+        row=[
+            dj_id, None, air_name, None,
+            None, None, None, None, None, "N"])
     db.session.commit()
+
 
 def create_albums(row):
     """Add all albums rows."""
 
-    kfjc_album_id=coerce_imported_data(row[0])
-    artist=str(coerce_imported_data(row[1]))
-    title=str(coerce_imported_data(row[2]))  # Charlie Forsyth has an int for album name.
-    is_collection=bool(coerce_imported_data(row[7]))
+    kfjc_album_id = coerce_imported_data(row[0])
+    artist = str(coerce_imported_data(row[1]))
+    # Charlie Forsyth has an int for album name.
+    title = str(coerce_imported_data(row[2]))
+    is_collection = bool(coerce_imported_data(row[7]))
     title, artist, _ = fix_self_titled_items(
         album_title=title, artist=artist, track_title=None)
 
@@ -192,6 +208,7 @@ def create_albums(row):
         title=title,
         is_collection=is_collection)
 
+
 def add_a_missing_album(kfjc_album_id, artist, album_title):
     """Add a dummy album row to avoid import conflicts."""
 
@@ -199,10 +216,11 @@ def add_a_missing_album(kfjc_album_id, artist, album_title):
     create_albums(row=row)
     db.session.commit()
 
+
 def create_playlists(row):
     """Add all playlists rows."""
 
-    # If if time is blank but the other isn't, 
+    # If if time is blank but the other isn't,
     # we can improve the data by estimating the other time:
     fixed_start_time, fixed_end_time = fix_playlist_times(
         start_time=row[3], end_time=row[4])
@@ -215,11 +233,11 @@ def create_playlists(row):
     if coerce_imported_data(row[2]) in ['Click', '^']:
         row[2] = 'DJ Click'  # Reassign it.
 
-    kfjc_playlist_id=coerce_imported_data(row[0])
-    dj_id=coerce_imported_data(row[1])
-    air_name=str(coerce_imported_data(row[2]))
-    start_time=coerce_imported_data(fixed_start_time)
-    end_time=coerce_imported_data(fixed_end_time)
+    kfjc_playlist_id = coerce_imported_data(row[0])
+    dj_id = coerce_imported_data(row[1])
+    air_name = str(coerce_imported_data(row[2]))
+    start_time = coerce_imported_data(fixed_start_time)
+    end_time = coerce_imported_data(fixed_end_time)
 
     playlists.create_playlist(
         kfjc_playlist_id=kfjc_playlist_id,
@@ -232,11 +250,11 @@ def create_playlists(row):
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        
+
         # Fix rows that cause import trouble:
         if not djs.get_dj_id_by_id(dj_id=dj_id):
             add_a_missing_dj(dj_id=dj_id, air_name=air_name)
-        
+
         # And try again; it should go through now:
         playlists.create_playlist(
             kfjc_playlist_id=kfjc_playlist_id,
@@ -257,7 +275,7 @@ def add_a_missing_playlist(kfjc_playlist_id):
 
 def fix_self_titled_items(album_title, artist, track_title):
     """S/T is shorthand for Self-Titled. Copy the artist or as much as we know.
-    
+
     >>> fix_self_titled_items("S/T", 'Prince', None)
     ('Prince', 'Prince', 'Prince')
     >>> fix_self_titled_items("S/t ", None, None)
@@ -311,6 +329,7 @@ def fix_self_titled_items(album_title, artist, track_title):
 
     return album_title, artist, track_title
 
+
 def create_playlist_tracks(row):
     """Add all playlist_tracks rows."""
 
@@ -340,7 +359,7 @@ def create_playlist_tracks(row):
 
     playlist_tracks.create_playlist_track(
         kfjc_playlist_id=kfjc_playlist_id,
-        indx=indx, 
+        indx=indx,
         kfjc_album_id=kfjc_album_id,
         album_title=album_title,
         artist=artist,
@@ -351,7 +370,7 @@ def create_playlist_tracks(row):
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        
+
         # Fix rows that cause import trouble:
         if not albums.get_album_by_id(kfjc_album_id=kfjc_album_id):
             add_a_missing_album(
@@ -359,11 +378,11 @@ def create_playlist_tracks(row):
                 album_title=album_title)
         if not playlists.get_playlist_by_id(kfjc_playlist_id=kfjc_playlist_id):
             add_a_missing_playlist(kfjc_playlist_id=kfjc_playlist_id)
-        
+
         # And try again; it should go through now:
         playlist_tracks.create_playlist_track(
             kfjc_playlist_id=kfjc_playlist_id,
-            indx=indx, 
+            indx=indx,
             kfjc_album_id=kfjc_album_id,
             album_title=album_title,
             artist=artist,
@@ -371,13 +390,14 @@ def create_playlist_tracks(row):
             time_played=time_played)
         db.session.commit()
 
+
 def create_collection_tracks(row):
     """Add all collection tracks rows."""
 
-    kfjc_album_id=coerce_imported_data(row[0])
-    artist=str(coerce_imported_data(row[2]))
-    title=str(coerce_imported_data(row[1]))
-    indx=coerce_imported_data(row[3])
+    kfjc_album_id = coerce_imported_data(row[0])
+    artist = str(coerce_imported_data(row[2]))
+    title = str(coerce_imported_data(row[1]))
+    indx = coerce_imported_data(row[3])
     _, artist, title = fix_self_titled_items(None, artist, title)
 
     tracks.create_track(
@@ -390,12 +410,12 @@ def create_collection_tracks(row):
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        
+
         # Fix rows that cause import trouble:
         add_a_missing_album(
             kfjc_album_id=kfjc_album_id, artist=artist,
             album_title=title)
-        
+
         # And try again; it should go through now:
         tracks.create_track(
             kfjc_album_id=kfjc_album_id,
@@ -404,19 +424,21 @@ def create_collection_tracks(row):
             indx=indx)
         db.session.commit()
 
+
 def create_tracks(row):
     """Add all tracks rows without Artist."""
 
-    kfjc_album_id=coerce_imported_data(row[0])
-    title=str(coerce_imported_data(row[1]))
-    indx=coerce_imported_data(row[3])
+    kfjc_album_id = coerce_imported_data(row[0])
+    title = str(coerce_imported_data(row[1]))
+    indx = coerce_imported_data(row[3])
 
     album = albums.get_album_by_id(kfjc_album_id=kfjc_album_id)
     if album:
         artist = album.artist
     else:
         # Fix rows that cause import trouble:
-        # If we can't get it from the album, this table can't tell you the artist.
+        # If we can't get it from the album,
+        # this table can't tell you the artist.
         artist = None
         add_a_missing_album(
             kfjc_album_id=kfjc_album_id, artist=artist,
@@ -433,12 +455,15 @@ def create_tracks(row):
 
 # -=-=-=-=-=-=-=-=-=-=-=- Chunk Large Files for Import -=-=-=-=-=-=-=-=-=-=-=-
 
+
 CHUNK_SIZE = 100000  # lines
+
 
 def import_all_tables():
     """Import Station Data from csv files in chunks."""
 
-    # Albums and PLaylists must be imported first since the other tables depend on them:
+    # Albums and PLaylists must be imported first since
+    # the other tables depend on them:
     data_path_and_function = [
         (DJ_DATA_PATH, create_djs),
         (ALBUM_DATA_PATH, create_albums),
@@ -456,6 +481,7 @@ def import_all_tables():
     hours = float((toc - tic)/3600)
     print(f"Importing Station Data took {hours:0.4f} hours.")
 
+
 def seed_a_large_csv(file_path, row_handler):
     """Large files must be broken into chunks."""
 
@@ -470,17 +496,21 @@ def seed_a_large_csv(file_path, row_handler):
             reader = csv.reader(file)
 
             for row in itertools.islice(reader, start_mark, end_mark):
-                row_handler(row)  # This points to each table's import function.
-        
+                # This points to each table's import function:
+                row_handler(row)
+
         db.session.commit()  # Commit after each large chunk.
 
+
 def get_num_loops(file_path):
-    """Get the number of loops it will take to import a CSV file for a given CHUNK_SIZE."""
+    """Get the number of loops it will take to import a CSV
+    file for a given CHUNK_SIZE."""
 
     num_lines = sum(1 for _ in open(file_path))
     num_loops = int(num_lines / CHUNK_SIZE) + 1
     print(f"It will take {num_loops} loops in {CHUNK_SIZE:,} line chunks.")
     return num_loops
+
 
 def get_start_chunk_and_end_chunk_row_indexes(loop_number):
     """Identify the start and end rows for a data chunk to be imported."""
@@ -490,7 +520,8 @@ def get_start_chunk_and_end_chunk_row_indexes(loop_number):
     else:
         return loop_number * CHUNK_SIZE, (loop_number + 1) * CHUNK_SIZE
 
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     connect_to_db(app)
 
     import doctest

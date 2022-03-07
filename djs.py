@@ -3,7 +3,9 @@
 from model import db, connect_to_db, Dj
 import common
 
-WHITE_HEART_EMOJI = '♡'  # TODO Couldn't get real emojis to work so, we have this for now.
+# TODO Couldn't get real emojis to work so, we have this for now:
+WHITE_HEART_EMOJI = '♡'
+
 
 def create_dj(dj_id, air_name, administrative, silent_mic):
     """Create and return a new dj."""
@@ -36,7 +38,10 @@ def get_airname_for_dj(dj_id, posessive=False):
         # Add white heart emojis for our DJs that have passed on:
         if posessive:
             suffix = common.the_right_apostrophe(air_name=air_name)
-            return f"{WHITE_HEART_EMOJI} {dj.air_name}{suffix} {WHITE_HEART_EMOJI}"
+            return (
+                f"""{WHITE_HEART_EMOJI} {dj.air_name}{suffix} """
+                f"""{WHITE_HEART_EMOJI}""")
+
         else:
             return f"{WHITE_HEART_EMOJI} {dj.air_name} {WHITE_HEART_EMOJI}"
     else:

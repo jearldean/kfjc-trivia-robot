@@ -4,6 +4,7 @@ import bcrypt
 
 from model import db, connect_to_db, User
 
+
 def create_user(username, fname, password):
     """Create and return a new user."""
     user = User(
@@ -60,7 +61,7 @@ def does_user_exist_already(username):
 
 def does_password_match(user_instance, password_from_form):
     """Check hashed password. Returns boolean."""
-    
+
     if bcrypt.checkpw(
             password_from_form.encode('utf8'),
             user_instance.hashed_password.encode('utf8')):
@@ -69,15 +70,16 @@ def does_password_match(user_instance, password_from_form):
     else:
         print("does not match")
         return False
-        
-    
+
+
 def hash_it(password):
     """Problems using bcrypt."""
     # flask_bcrypt.generate_password_hash(password).decode('utf8')
     salt = bcrypt.gensalt()
     # Using bcrypt, the salt is saved into the hash itself
     hashed = bcrypt.hashpw(password.encode('utf8'), salt)
-    hashed_password = hashed.decode('utf8') # decode the hash to prevent being encoded twice
+    # decode the hash to prevent being encoded twice:
+    hashed_password = hashed.decode('utf8')
     return hashed_password
 
 
