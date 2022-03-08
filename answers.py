@@ -4,8 +4,9 @@ from datetime import datetime
 from random import choice
 from operator import itemgetter
 from sqlalchemy.sql.expression import false, true
+from typing import Union, NamedTuple, List, Any
 
-from model import db, connect_to_db, Answer
+from model import db, connect_to_db, Answer, Question, User
 import users
 import common
 
@@ -22,7 +23,9 @@ INFO_MSG = [
     "My databanks say:", "I computed these results:"]
 
 
-def create_answer(user_instance, question_instance, answer_given):
+def create_answer(
+        user_instance: User, question_instance:
+        Question, answer_given: str) -> Answer:
     """Create and return a new answer."""
 
     user_answer = Answer(
@@ -38,7 +41,7 @@ def create_answer(user_instance, question_instance, answer_given):
     return user_answer
 
 
-def get_user_msg(answer):
+def get_user_msg(answer: Answer) -> str:
     """Craft a message for the user about their answer."""
     if answer.answer_correct:
         user_msg = choice(PRAISE_MSG) + "\n\n" + choice(INFO_MSG)
@@ -47,7 +50,9 @@ def get_user_msg(answer):
     return user_msg
 
 
-def is_answer_correct(question_instance, answer_given):
+def is_answer_correct(
+        question_instance: Question,
+        answer_given: str) -> Union[bool, None]:
     """Return a boolean."""
 
     if answer_given == "SKIP":
@@ -58,7 +63,7 @@ def is_answer_correct(question_instance, answer_given):
         return False  # If we didn't hit by now, it's wrong.
 
 
-def percent_correct(passed_count, failed_count):
+def percent_correct(passed_count: int, failed_count: int) -> float:
     """For scorekeeping, leaderboards.
 
     >>> percent_correct(0, 0)
@@ -75,13 +80,13 @@ def percent_correct(passed_count, failed_count):
     return percent
 
 
-def get_one_users_answers(user_id):
+def get_one_users_answers(user_id: int) -> Answer:
     """Return all user_answers for one user."""
 
     return Answer.query.filter(Answer.user_id == user_id).all()
 
 
-def get_user_score(user_id):
+def get_user_score(user_id: int) -> NamedTuple:
     """Return user play stats."""
 
     passed = Answer.query.filter(
@@ -98,7 +103,7 @@ def get_user_score(user_id):
     return common.convert_dict_to_named_tuple(scores)
 
 
-def compile_leaderboard():
+def compile_leaderboard() -> List[Any]:
     """Return stats for all users."""
 
     score_board = []

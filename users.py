@@ -1,11 +1,12 @@
 """User operations for KFJC Trivia Robot."""
 
 import bcrypt
+from typing import List, Union
 
 from model import db, connect_to_db, User
 
 
-def create_user(username, fname, password):
+def create_user(username: str, fname: str, password: str) -> User:
     """Create and return a new user."""
     user = User(
         username=username,
@@ -18,25 +19,26 @@ def create_user(username, fname, password):
     return user
 
 
-def get_users():
+def get_users() -> List[User]:
     """Return all users."""
 
     return User.query.all()
 
 
-def get_user_by_id(user_id):
+def get_user_by_id(user_id: int) -> User:
     """Return a user by primary key."""
 
     return User.query.get(user_id)
 
 
-def get_user_by_username(username):
+def get_user_by_username(username: str) -> User:
     """Return a user by username."""
 
     return User.query.filter(User.username == username).first()
 
 
-def create_a_user(username, fname, password):
+def create_a_user(
+        username: str, fname: str, password: str) -> Union[bool, User]:
     """Check for user existence, create if new user."""
 
     if not does_user_exist_already(username):
@@ -50,7 +52,7 @@ def create_a_user(username, fname, password):
         return False
 
 
-def does_user_exist_already(username):
+def does_user_exist_already(username: str) -> bool:
     """Return a boolean we can use for the if-statement in server.py."""
 
     if get_user_by_username(username):
@@ -59,7 +61,7 @@ def does_user_exist_already(username):
         return False
 
 
-def does_password_match(user_instance, password_from_form):
+def does_password_match(user_instance: User, password_from_form: str) -> bool:
     """Check hashed password. Returns boolean."""
 
     if bcrypt.checkpw(
@@ -72,7 +74,7 @@ def does_password_match(user_instance, password_from_form):
         return False
 
 
-def hash_it(password):
+def hash_it(password: str) -> str:
     """Problems using bcrypt."""
     # flask_bcrypt.generate_password_hash(password).decode('utf8')
     salt = bcrypt.gensalt()

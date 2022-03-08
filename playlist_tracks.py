@@ -1,6 +1,7 @@
 """Playlist Track operations for KFJC Trivia Robot."""
 
 from sqlalchemy import text, func, exc
+from typing import NamedTuple, Union
 
 from model import db, connect_to_db, PlaylistTrack
 import djs
@@ -8,8 +9,8 @@ import common
 
 
 def create_playlist_track(
-        kfjc_playlist_id, indx, kfjc_album_id, album_title,
-        artist, track_title, time_played):
+        kfjc_playlist_id: int, indx: int, kfjc_album_id: int, album_title: str,
+        artist: str, track_title: str, time_played: str) -> PlaylistTrack:
     """Create and return a new playlist_track."""
 
     playlist_track = PlaylistTrack(
@@ -27,7 +28,8 @@ def create_playlist_track(
     return playlist_track
 
 
-def get_playlist_tracks_by_kfjc_playlist_id(kfjc_playlist_id):
+def get_playlist_tracks_by_kfjc_playlist_id(
+        kfjc_playlist_id: int) -> PlaylistTrack:
     """Return an album by primary key."""
 
     return PlaylistTrack.query.filter(
@@ -36,28 +38,33 @@ def get_playlist_tracks_by_kfjc_playlist_id(kfjc_playlist_id):
 # -=-=-=-=-=-=-=-=-=-=-=- DJ Favorites -=-=-=-=-=-=-=-=-=-=-=-
 
 
-def get_favorite_artists(dj_id, reverse=True, min_plays=5):
+def get_favorite_artists(
+        dj_id: int, reverse: bool = True, min_plays: int = 5) -> NamedTuple:
     """Search and return a list of DJ's favorite artists."""
     return djs_favorite(
         dj_id=dj_id, sql_variable="artist",
         reverse=reverse, min_plays=min_plays)
 
 
-def get_favorite_albums(dj_id, reverse=True, min_plays=5):
+def get_favorite_albums(
+        dj_id: int, reverse: bool = True, min_plays: int = 5) -> NamedTuple:
     """Search and return a list of DJ's favorite albums."""
     return djs_favorite(
         dj_id=dj_id, sql_variable="album_title",
         reverse=reverse, min_plays=min_plays)
 
 
-def get_favorite_tracks(dj_id, reverse=True, min_plays=5):
+def get_favorite_tracks(
+        dj_id: int, reverse: bool = True, min_plays: int = 5) -> NamedTuple:
     """Search and return a list of DJ's favorite tracks."""
     return djs_favorite(
         dj_id=dj_id, sql_variable="track_title",
         reverse=reverse, min_plays=min_plays)
 
 
-def djs_favorite(dj_id, sql_variable, reverse=True, min_plays=5):
+def djs_favorite(
+        dj_id: int, sql_variable: str, reverse: bool = True,
+        min_plays: int = 5) -> NamedTuple:
     """Search and return a DJ's favorite artists, albums or tracks."""
     reverse_it = "DESC" if reverse else ""
     djs_playlists = (
@@ -79,7 +86,7 @@ def djs_favorite(dj_id, sql_variable, reverse=True, min_plays=5):
     return reply_named_tuple
 
 
-def dj_needs_more_shows(dj_id):
+def dj_needs_more_shows(dj_id: int) -> str:
     """Sometimes when a DJ has a small body of work, they can't
     meet the minimum number of plays to return any favorite items.
 
@@ -91,13 +98,15 @@ def dj_needs_more_shows(dj_id):
         f"""that DJ {air_name} hasn't done enough shows to """
         f"""compute favorites data.""")
     if djs.WHITE_HEART_EMOJI not in air_name:
+        # Insensitive to put this on a DJ memorial.
         warning_will_robinson += " Keep listening!"
     return warning_will_robinson
 
 # -=-=-=-=-=-=-=-=-=-=-=- Top10, Top10, Most Plays -=-=-=-=-=-=-=-=-=-=-=-
 
 
-def get_top10_artists(start_date, end_date, n=10):
+def get_top10_artists(
+        start_date: str, end_date: str, n: int = 10) -> NamedTuple:
     """Top10 artist plays between any 2 dates.
 
     Going to make it a discoverable feature in REST API that they can ask for
@@ -109,7 +118,8 @@ def get_top10_artists(start_date, end_date, n=10):
         group_by="artist, album_title, track_title", n=n)
 
 
-def get_top10_albums(start_date, end_date, n=10):
+def get_top10_albums(
+        start_date: str, end_date: str, n: int = 10) -> NamedTuple:
     """Top10 album plays between any 2 dates."""
     return get_top_plays(
         start_date=start_date, end_date=end_date,
@@ -117,7 +127,8 @@ def get_top10_albums(start_date, end_date, n=10):
         group_by="album_title, artist, track_title", n=n)
 
 
-def get_top10_tracks(start_date, end_date, n=10):
+def get_top10_tracks(
+        start_date: str, end_date: str, n: int = 10) -> NamedTuple:
     """Top10 track plays between any 2 dates."""
     return get_top_plays(
         start_date=start_date, end_date=end_date,
@@ -125,7 +136,9 @@ def get_top10_tracks(start_date, end_date, n=10):
         group_by="track_title, artist, album_title", n=n)
 
 
-def get_top_plays(start_date, end_date, sql_variable, group_by, n=10):
+def get_top_plays(
+        start_date: str, end_date: str, sql_variable: str,
+        group_by: str, n: int = 10) -> NamedTuple:
     """Get the top plays between any two dates.***"""
 
     top_n = text(
@@ -146,31 +159,32 @@ def get_top_plays(start_date, end_date, sql_variable, group_by, n=10):
 # -=-=-=-=-=-=-=- When is the last time someone played _ ? -=-=-=-=-=-=-=-
 
 
-def get_a_random_artist(min_appearances=3):
-    """"""
+def get_a_random_artist(min_appearances: int = 3) -> str:
+    """Return one random artist."""
     return random_library_pick(
         pick_type='artist', min_appearances=min_appearances)
 
 
-def get_a_random_album(min_appearances=3):
-    """"""
+def get_a_random_album(min_appearances: int = 3) -> str:
+    """Return one random album_title."""
     return random_library_pick(
         pick_type='album_title', min_appearances=min_appearances)
 
 
-def get_a_random_kfjc_album_id(min_appearances=3):
-    """"""
+def get_a_random_kfjc_album_id(min_appearances: int = 3) -> int:
+    """Return one random kfjc_album_id."""
     return random_library_pick(
         pick_type='kfjc_album_id', min_appearances=min_appearances)
 
 
-def get_a_random_track(min_appearances=3):
-    """"""
+def get_a_random_track(min_appearances: int = 3) -> str:
+    """Return one random track_title."""
     return random_library_pick(
         pick_type='track_title', min_appearances=min_appearances)
 
 
-def random_library_pick(pick_type='track_title', min_appearances=3):
+def random_library_pick(
+        pick_type='track_title', min_appearances: int = 3) -> Union[str, int]:
     """Get one random item from the library."""
     if pick_type in ['artist', 'Artist']:
         library_category = PlaylistTrack.artist
@@ -210,14 +224,14 @@ as the playlist_tracks.time_played so we can make more questions.
 """
 
 
-def get_last_play_of_artist(artist, reverse=False):
+def get_last_play_of_artist(artist: str, reverse: bool = False) -> NamedTuple:
     """Search and return the last plays of an artist.***"""
 
     return last_time_played(
         search_column_name="artist", search_for_item=artist, reverse=reverse)
 
 
-def get_last_play_of_album(album, reverse=False):
+def get_last_play_of_album(album: str, reverse: bool = False) -> NamedTuple:
     """Search and return the last plays of an album.***"""
 
     return last_time_played(
@@ -225,7 +239,7 @@ def get_last_play_of_album(album, reverse=False):
         search_for_item=album, reverse=reverse)
 
 
-def get_last_play_of_track(track, reverse=False):
+def get_last_play_of_track(track: str, reverse: bool = False) -> NamedTuple:
     """Search and return the last plays of a track.***"""
 
     return last_time_played(
@@ -234,7 +248,8 @@ def get_last_play_of_track(track, reverse=False):
 
 
 def last_time_played(
-        search_column_name, search_for_item, reverse=False):
+        search_column_name: str, search_for_item: str,
+        reverse: bool = False) -> NamedTuple:
     """Search and return the last time any DJ played
     an artist, album or track."""
 
@@ -258,7 +273,7 @@ def last_time_played(
 # -=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-
 
 
-def how_many_tracks():
+def how_many_tracks() -> int:
     """Count all playlist_tracks for the homepage statement."""
     return common.get_count(PlaylistTrack.id_)
 

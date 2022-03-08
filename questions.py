@@ -4,8 +4,9 @@ from datetime import datetime, timedelta, date
 import time
 from operator import attrgetter
 from random import randrange, choice, choices, shuffle
+from typing import List, Any, NamedTuple
 
-from model import db, connect_to_db, Answer, PlaylistTrack, Question
+from model import Album, db, connect_to_db, Answer, PlaylistTrack, Question
 import djs
 import tracks
 import albums
@@ -23,9 +24,10 @@ QUESTION_TYPES = {
 
 
 def create_question(
-        question_type, ask_question, present_answer, acceptable_answer,
-        display_shuffled_answers, present_answer_data_headings,
-        present_answer_data):
+        question_type: str, ask_question: str, present_answer: str,
+        acceptable_answer: str, display_shuffled_answers: List[str],
+        present_answer_data_headings: List[str],
+        present_answer_data: List[Any]) -> Question:
     """Create and return a new question."""
 
     question = Question(
@@ -43,7 +45,7 @@ def create_question(
     return question
 
 
-def get_question_by_id(question_id):
+def get_question_by_id(question_id: int) -> Question:
     """Return a question by question_id."""
 
     return Question.query.get(question_id)
@@ -51,7 +53,7 @@ def get_question_by_id(question_id):
 # -=-=-=-=-=-=-=-=-=-=-=- Choose Random Question -=-=-=-=-=-=-=-=-=-=-=-
 
 
-def get_unique_question(user_id):
+def get_unique_question(user_id: int) -> Question:
     """Pose a question to the user that they have not answered before."""
 
     users_answers = Answer.query.filter(Answer.user_id == user_id).all()
@@ -163,8 +165,9 @@ def who_has_the_most_shows():
 
 
 def dj_competition_engine(
-        results_named_tuple, ask_questions, present_answers,
-        reverse_display_answers, present_answer_data_headings, search_key):
+        results_named_tuple: NamedTuple, ask_questions: List[str],
+        present_answers: List[str], reverse_display_answers: bool,
+        present_answer_data_headings: List[str], search_key: str):
     """Create DJ Comparison Questions."""
     winner_slice = results_named_tuple[:SEED_QUESTION_COUNT]  # Top 30
     loser_slice = results_named_tuple[SEED_QUESTION_COUNT:]  # Everyone Else
@@ -253,7 +256,7 @@ def create_dj_favorites_questions():
     dj_favorites_engine(media='album')
 
 
-def dj_favorites_engine(media):
+def dj_favorites_engine(media: str):
     """Create questions where a DJ's most played media is the answer."""
     dj_id_pool = playlists.get_all_dj_ids()
     x_random_dj_ids = choices(dj_id_pool, k=SEED_QUESTION_COUNT)
@@ -328,7 +331,7 @@ def create_top_ten_questions():
     top_ten_engine(media='album')
 
 
-def top_ten_engine(media):
+def top_ten_engine(media: str):
     """Create questions where top-played media is the answer."""
     old, _ = common.get_ages(PlaylistTrack.time_played)
     # I improved this to go back to 1995-09-19.
@@ -408,7 +411,7 @@ def top_ten_engine(media):
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def get_four_random_albums():
+def get_four_random_albums() -> List[Album]:
     """Four random album objects for question creation."""
     four_random_albums = []
     for _ in range(4):
@@ -488,7 +491,7 @@ def artist_of_an_album():
     db.session.commit()
 
 
-def get_any_track_title_from_this_album(kfjc_album_id):
+def get_any_track_title_from_this_album(kfjc_album_id: int) -> str:
     """Get one track title from an album."""
     track_objects = tracks.get_tracks_by_kfjc_album_id(
         kfjc_album_id=kfjc_album_id)
@@ -496,7 +499,7 @@ def get_any_track_title_from_this_album(kfjc_album_id):
     return one_random_track.title
 
 
-def get_all_track_titles_from_this_album(kfjc_album_id):
+def get_all_track_titles_from_this_album(kfjc_album_id: int) -> List[str]:
     """Get titles for all tracks on an album by kfjc_album_id."""
     track_objects = tracks.get_tracks_by_kfjc_album_id(
         kfjc_album_id=kfjc_album_id)
@@ -563,7 +566,7 @@ def create_last_play_questions():
     last_play_engine(media='album')
 
 
-def last_play_engine(media):
+def last_play_engine(media: str):
     """Create a question about the last time a media was played."""
     for _ in range(SEED_QUESTION_COUNT):
         if media == 'artist':
@@ -639,7 +642,8 @@ def last_play_engine(media):
 # -=-=-=-=-=-=-=-=-=-=-=- Make Fake Answers -=-=-=-=-=-=-=-=-=-=-=-
 
 
-def random_number_within_percent(target_number, percent=40, k=1):
+def random_number_within_percent(
+        target_number: int, percent: int = 40, k: int = 1) -> List[int]:
     """Make convincing fake answers for number questions."""
     high_value = int(target_number * (1 + (percent / 100)))
     low_value = int(target_number * (1 - (percent / 100)))
@@ -652,7 +656,8 @@ def random_number_within_percent(target_number, percent=40, k=1):
         return randrange(low_value, high_value)
 
 
-def random_date_surrounding_another_date(target_date_time, k=1):
+def random_date_surrounding_another_date(
+        target_date_time: str, k: int = 1) -> List[str]:
     """Forget the time... just return a date."""
 
     if isinstance(target_date_time, str):

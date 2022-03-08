@@ -3,7 +3,9 @@
 from model import db, connect_to_db, Album
 
 
-def create_album(kfjc_album_id, artist, title, is_collection):
+def create_album(
+        kfjc_album_id: int, artist: str, title: str,
+        is_collection: bool) -> Album:
     """Create and return a new album."""
 
     album = Album(
@@ -18,7 +20,7 @@ def create_album(kfjc_album_id, artist, title, is_collection):
     return album
 
 
-def get_album_by_id(kfjc_album_id):
+def get_album_by_id(kfjc_album_id: int) -> Album:
     """Return an album by primary key."""
 
     return Album.query.get(kfjc_album_id)

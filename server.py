@@ -7,6 +7,8 @@ from jinja2 import StrictUndefined
 from operator import itemgetter
 from flask_restful import Api, Resource  # reqparse
 from flask_marshmallow import Marshmallow
+from typing import List, Dict, Any, NamedTuple, Union
+from werkzeug.wrappers import Response
 
 from model import db, connect_to_db, Playlist
 import djs
@@ -37,7 +39,7 @@ dj_airnames = []
 
 
 @app.route("/")
-def homepage():
+def homepage() -> Response:
     """Display homepage."""
 
     if not dj_dict or not dj_airnames:
@@ -51,7 +53,7 @@ def homepage():
 
 
 @app.route("/play")
-def shall_we_play():
+def shall_we_play() -> Response:
     """Proceed with game or not."""
 
     game_on = request.args.get("game-on")  # Bool
@@ -64,7 +66,7 @@ def shall_we_play():
 
 
 @app.route('/login', methods=['POST'])
-def login_process():
+def login_process() -> Response:
     """Process login."""
     username = request.form["username"]
     password_from_form = request.form["password"]
@@ -85,7 +87,7 @@ def login_process():
 
 
 @app.route('/create_account', methods=['POST'])
-def create_account():
+def create_account() -> Response:
     """Create A new user."""
     username = request.form["username"]
     fname = request.form["fname"]
@@ -102,7 +104,7 @@ def create_account():
 
 
 @app.route("/important")
-def important():
+def important() -> Response:
     """Important info for logged in users."""
 
     flash("Make an account to take a fun quiz.")
@@ -110,7 +112,7 @@ def important():
 
 
 @app.route("/logout")
-def logout():
+def logout() -> Response:
     """User must be logged in."""
     if "user_id" not in session:
         return redirect('/important')
@@ -122,7 +124,7 @@ def logout():
 
 
 @app.route("/infopage")
-def infopage():
+def infopage() -> Response:
 
     if "user_id" not in session:
         footer = 'public'
@@ -136,7 +138,7 @@ def infopage():
 
 
 @app.route("/score")
-def myscore():
+def myscore() -> Response:
     if "user_id" not in session:
         return redirect('/important')
 
@@ -154,7 +156,7 @@ def myscore():
 
 
 @app.route("/question")
-def ask_question():
+def ask_question() -> Response:
     """Offer a question to user."""
     if "user_id" not in session:
         return redirect('/important')
@@ -177,7 +179,7 @@ def ask_question():
 
 
 @app.route("/answer", methods=["POST"])
-def answer_question():
+def answer_question() -> Response:
     """Grade user response and display correct answer."""
 
     answer_given = request.form.get("q")
@@ -213,7 +215,7 @@ def answer_question():
 
 
 @app.route("/ask")
-def user_asks():
+def user_asks() -> Response:
     """user can ask the robot a question!"""
     if not dj_dict or not dj_airnames:
         retrieve_dj_stats_only_once()
@@ -242,7 +244,7 @@ def user_asks():
 
 
 @app.route("/leaderboard")
-def leaderboard():
+def leaderboard() -> Response:
     """Show top scores."""
 
     if "user_id" not in session:
@@ -269,7 +271,7 @@ def leaderboard():
 # -=-=-=-=-=-=-=-=-=-=-=- Python -=-=-=-=-=-=-=-=-=-=-=-
 
 
-def random_robot_image(happy=None):
+def random_robot_image(happy: Union[bool, None] = None) -> str:
     """Give a path to a robot image."""
 
     if happy is None:
@@ -282,7 +284,7 @@ def random_robot_image(happy=None):
     return f"static/img/robot{robot_picture_idx}.png"
 
 
-def assemble_greeting():
+def assemble_greeting() -> str:
     """Gather stats for to make a compelling reason to take a database quiz."""
 
     first_and_last_show = playlists.first_show_last_show()
@@ -304,7 +306,7 @@ def assemble_greeting():
     return greeting
 
 
-def retrieve_dj_stats_only_once():
+def retrieve_dj_stats_only_once() -> tuple[Dict, List]:
     djs_alphabetically = playlists.get_djs_alphabetically()
     for zz in djs_alphabetically:
         dj_id = zz.dj_id
@@ -341,7 +343,7 @@ leaderboard_schema = LeaderboardSchema(many=True)
 
 
 class LeaderboardResource(Resource):
-    def get(self):
+    def get(self) -> List[Dict[str, Any]]:
         score_board = []
         for user in users.get_users():
             user_score = {}
@@ -381,7 +383,7 @@ playlists_schema = PlaylistSchema(many=True)
 
 
 class PlaylistResource(Resource):
-    def get(self, kfjc_playlist_id):
+    def get(self, kfjc_playlist_id: int) -> List[Dict[str, Any]]:
         playlist = Playlist.query.get_or_404(kfjc_playlist_id)
         return playlist_schema.dump(playlist)
 
@@ -404,7 +406,7 @@ playlist_tracks_schema = PlaylistTracksSchema(many=True)
 
 
 class PlaylistTracksResource(Resource):
-    def get(self, kfjc_playlist_id):
+    def get(self, kfjc_playlist_id: int) -> List[Dict[str, Any]]:
         playlist_tracks_found = (
             playlist_tracks.get_playlist_tracks_by_kfjc_playlist_id(
                 kfjc_playlist_id=kfjc_playlist_id))
@@ -429,7 +431,7 @@ one_dj_favorites_schema = DJFavoritesSchema(many=True)
 
 
 class DJFavoriteArtistResource(Resource):
-    def get(self, dj_id):
+    def get(self, dj_id: int) -> List[Dict[str, Any]]:
         favorites = playlist_tracks.get_favorite_artists(
             dj_id=dj_id, reverse=True, min_plays=5)
         if not favorites:
@@ -441,7 +443,7 @@ class DJFavoriteArtistResource(Resource):
 
 
 class DJFavoriteAlbumResource(Resource):
-    def get(self, dj_id):
+    def get(self, dj_id: int) -> List[Dict[str, Any]]:
         favorites = playlist_tracks.get_favorite_albums(
             dj_id=dj_id, reverse=True, min_plays=5)
         if not favorites:
@@ -453,7 +455,7 @@ class DJFavoriteAlbumResource(Resource):
 
 
 class DJFavoriteTrackResource(Resource):
-    def get(self, dj_id):
+    def get(self, dj_id: int) -> List[Dict[str, Any]]:
         favorites = playlist_tracks.get_favorite_tracks(
             dj_id=dj_id, reverse=True, min_plays=5)
         if not favorites:
@@ -488,21 +490,21 @@ last_played_schema = LastPlayedSchema(many=True)
 
 
 class LastPlayedByArtist(Resource):
-    def get(self, artist):
+    def get(self, artist: str) -> List[Dict[str, Any]]:
         last_time_played = playlist_tracks.get_last_play_of_artist(
             artist=artist, reverse=True)
         return last_played_schema.dump(last_time_played)
 
 
 class LastPlayedByAlbum(Resource):
-    def get(self, album):
+    def get(self, album: str) -> List[Dict[str, Any]]:
         last_time_played = playlist_tracks.get_last_play_of_album(
             album=album, reverse=True)
         return last_played_schema.dump(last_time_played)
 
 
 class LastPlayedByTrack(Resource):
-    def get(self, track):
+    def get(self, track: str) -> List[Dict[str, Any]]:
         last_time_played = playlist_tracks.get_last_play_of_track(
             track=track, reverse=True)
         return last_played_schema.dump(last_time_played)
@@ -529,7 +531,9 @@ top_n_artist_schema = TopTenSchema(many=True)
 
 
 class TopTen(Resource):
-    def get(self, order_by, start_date, end_date, top=10):
+    def get(
+            self, order_by: str, start_date: str, end_date: str, top: int = 10
+            ) -> List[Dict[str, Any]]:
         if order_by in ['artist', 'artists']:
             top_10 = playlist_tracks.get_top10_artists(
                 start_date, end_date, n=top)
@@ -568,14 +572,16 @@ dj_stats_schema = DJStatsSchema(many=True)
 
 
 class DJStatsNoArgs(Resource):
-    def get(self):
+    def get(self) -> List[Dict[str, Any]]:
         dj_stats = playlists.get_djs_alphabetically()
         # return dj_stats_schema.dump(dj_stats)
         return dj_stats_schema.jsonify(dj_stats)
 
 
 class DJStats(Resource):
-    def get(self, order_by='air_name', reverse=1):
+    def get(
+            self, order_by: str = 'air_name', reverse: int = 1
+            ) -> List[Dict[str, Any]]:
         # Use 0, 1 for reverse
         if order_by in ['dj_id', 'id']:
             dj_stats = playlists.get_djs_by_dj_id(reverse=reverse)
@@ -610,7 +616,7 @@ album_tracks_schema = AlbumTracksSchema(many=True)
 
 
 class AlbumTracks(Resource):
-    def get(self, kfjc_album_id):
+    def get(self, kfjc_album_id: int) -> List[Dict[str, Any]]:
         album_tracks = tracks.get_tracks_by_kfjc_album_id(kfjc_album_id)
         return album_tracks_schema.dump(album_tracks)
 
@@ -636,7 +642,7 @@ artists_albums_schema = ArtistsAlbumsSchema(many=True)
 
 
 class ArtistsAlbums(Resource):
-    def get(self, artist):
+    def get(self, artist: str) -> List[Dict[str, Any]]:
         albums_by_artist = []
         tracks_by_artist = tracks.get_tracks_by_an_artist(artist=artist)
         for track_by_artist in tracks_by_artist:

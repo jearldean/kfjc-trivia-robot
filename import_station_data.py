@@ -7,6 +7,7 @@ import itertools
 from random import choice
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
+from typing import List, Dict, Any, Callable
 
 from server import app
 from model import db, connect_to_db
@@ -22,7 +23,7 @@ BAD_TIMES = [
     "0000-00-00 00:00:00", "1970-01-01 01:00:00", "1969-12-31 16:00:00"]
 
 
-def fix_playlist_times(start_time, end_time):
+def fix_playlist_times(start_time: str, end_time: str) -> datetime:
     """A few dates are borked but if the other time cell is populated,
     we can make a decent guess. Fixes 166 rows.
 
@@ -42,7 +43,7 @@ def fix_playlist_times(start_time, end_time):
     return start_time, end_time
 
 
-def time_shift(one_datetime_cell, shift=3):
+def time_shift(one_datetime_cell: str, shift: int = 3) -> datetime:
     """
     >>> time_shift('2000-07-27 10:30:00')
     '2000-07-27 13:30:00'
@@ -55,7 +56,7 @@ def time_shift(one_datetime_cell, shift=3):
         timedelta(hours=shift)).strftime('%Y-%m-%d %H:%M:%S')
 
 
-def coerce_imported_data(one_cell):
+def coerce_imported_data(one_cell: Any) -> Any:
     """Coerce incoming data to the correct type.
     >>> coerce_imported_data('NULL')
     >>> coerce_imported_data('Null')
@@ -88,7 +89,7 @@ def coerce_imported_data(one_cell):
         return fix_titles(some_title=one_cell)
 
 
-def fix_titles(some_title):
+def fix_titles(some_title: str) -> str:
     """Fixes radio-station-naming-convention titles to English Readable titles.
 
     >>> fix_titles("Connick, Harry Jr.")
@@ -118,7 +119,7 @@ def fix_titles(some_title):
     return some_title.strip()
 
 
-def profanity_filter(title_string):
+def profanity_filter(title_string: str) -> str:
     """
     Data comes from an edgey Radio station:
     Found out I needed a Profanity Filter.
@@ -155,7 +156,7 @@ COLLECTION_TRACK_DATA_PATH = 'station_data/coll_track.csv'
 TRACK_DATA_PATH = 'station_data/track.csv'
 
 
-def create_djs(row):
+def create_djs(row: List[Dict[str, Any]]):
     """Add all djs rows."""
 
     dj_id = coerce_imported_data(row[0])
@@ -180,7 +181,7 @@ def create_djs(row):
         silent_mic=silent_mic)
 
 
-def add_a_missing_dj(dj_id, air_name):
+def add_a_missing_dj(dj_id: int, air_name: str):
     """Add a dummy dj row to avoid import conflicts."""
     if not air_name:
         air_name = "None"
@@ -191,7 +192,7 @@ def add_a_missing_dj(dj_id, air_name):
     db.session.commit()
 
 
-def create_albums(row):
+def create_albums(row: List[Dict[str, Any]]):
     """Add all albums rows."""
 
     kfjc_album_id = coerce_imported_data(row[0])
@@ -209,7 +210,7 @@ def create_albums(row):
         is_collection=is_collection)
 
 
-def add_a_missing_album(kfjc_album_id, artist, album_title):
+def add_a_missing_album(kfjc_album_id: int, artist: str, album_title: str):
     """Add a dummy album row to avoid import conflicts."""
 
     row = [kfjc_album_id, artist, album_title, None, None, None, None, 1]
@@ -217,7 +218,7 @@ def add_a_missing_album(kfjc_album_id, artist, album_title):
     db.session.commit()
 
 
-def create_playlists(row):
+def create_playlists(row: List[Dict[str, Any]]):
     """Add all playlists rows."""
 
     # If if time is blank but the other isn't,
@@ -266,14 +267,15 @@ def create_playlists(row):
         db.session.commit()
 
 
-def add_a_missing_playlist(kfjc_playlist_id):
+def add_a_missing_playlist(kfjc_playlist_id: int):
     """Add a dummy playlist row to avoid import conflicts."""
     row = [kfjc_playlist_id, 1, "Swiss Cheese", None, None]
     create_playlists(row=row)
     db.session.commit()
 
 
-def fix_self_titled_items(album_title, artist, track_title):
+def fix_self_titled_items(
+        album_title: str, artist: str, track_title: str) -> str:
     """S/T is shorthand for Self-Titled. Copy the artist or as much as we know.
 
     >>> fix_self_titled_items("S/T", 'Prince', None)
@@ -330,7 +332,7 @@ def fix_self_titled_items(album_title, artist, track_title):
     return album_title, artist, track_title
 
 
-def create_playlist_tracks(row):
+def create_playlist_tracks(row: List[Dict[str, Any]]):
     """Add all playlist_tracks rows."""
 
     album_title = str(coerce_imported_data(row[5]))
@@ -391,7 +393,7 @@ def create_playlist_tracks(row):
         db.session.commit()
 
 
-def create_collection_tracks(row):
+def create_collection_tracks(row: List[Dict[str, Any]]):
     """Add all collection tracks rows."""
 
     kfjc_album_id = coerce_imported_data(row[0])
@@ -425,7 +427,7 @@ def create_collection_tracks(row):
         db.session.commit()
 
 
-def create_tracks(row):
+def create_tracks(row: List[Dict[str, Any]]):
     """Add all tracks rows without Artist."""
 
     kfjc_album_id = coerce_imported_data(row[0])
@@ -482,7 +484,7 @@ def import_all_tables():
     print(f"Importing Station Data took {hours:0.4f} hours.")
 
 
-def seed_a_large_csv(file_path, row_handler):
+def seed_a_large_csv(file_path: str, row_handler: Callable):
     """Large files must be broken into chunks."""
 
     num_loops = get_num_loops(file_path=file_path)
@@ -502,7 +504,7 @@ def seed_a_large_csv(file_path, row_handler):
         db.session.commit()  # Commit after each large chunk.
 
 
-def get_num_loops(file_path):
+def get_num_loops(file_path: str) -> int:
     """Get the number of loops it will take to import a CSV
     file for a given CHUNK_SIZE."""
 
@@ -512,7 +514,7 @@ def get_num_loops(file_path):
     return num_loops
 
 
-def get_start_chunk_and_end_chunk_row_indexes(loop_number):
+def get_start_chunk_and_end_chunk_row_indexes(loop_number: int) -> tuple:
     """Identify the start and end rows for a data chunk to be imported."""
 
     if loop_number == 0:

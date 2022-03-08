@@ -7,7 +7,9 @@ import common
 WHITE_HEART_EMOJI = '♡'
 
 
-def create_dj(dj_id, air_name, administrative, silent_mic):
+def create_dj(
+        dj_id: int, air_name: str, administrative: bool,
+        silent_mic: bool) -> Dj:
     """Create and return a new dj."""
 
     dj = Dj(
@@ -22,13 +24,13 @@ def create_dj(dj_id, air_name, administrative, silent_mic):
     return dj
 
 
-def get_dj_id_by_id(dj_id):
+def get_dj_id_by_id(dj_id: int) -> Dj:
     """Return a dj by primary key."""
 
     return Dj.query.get(dj_id)
 
 
-def get_airname_for_dj(dj_id, posessive=False):
+def get_airname_for_dj(dj_id: int, posessive: bool = False) -> str:
     """Return an air_name by primary key."""
 
     dj = Dj.query.get(dj_id)
