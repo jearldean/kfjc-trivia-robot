@@ -7,7 +7,7 @@ import itertools
 from random import choice
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
-from typing import List, Dict, Any, Callable
+from typing import List, Any, Callable
 
 from server import app
 from model import db, connect_to_db

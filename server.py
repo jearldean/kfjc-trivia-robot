@@ -311,12 +311,13 @@ def retrieve_dj_stats_only_once() -> Tuple:
     for zz in djs_alphabetically:
         dj_id = zz.dj_id
         air_name = djs.get_airname_for_dj(dj_id=dj_id)
+        air_name_posessive = djs.get_airname_for_dj(
+            dj_id=dj_id, posessive=True)
         showcount = common.format_an_int_with_commas(zz.showcount)
         firstshow = common.make_date_pretty(zz.firstshow)
         lastshow = common.make_date_pretty(zz.lastshow)
-        the_right_apostrophe = common.the_right_apostrophe(air_name=air_name)
         dj_stats = (
-            f"{air_name}{the_right_apostrophe} first show was on {firstshow}, "
+            f"{air_name_posessive} first show was on {firstshow}, "
             f"their last show was on {lastshow} and they have done "
             f"{showcount} shows!")
         dj_dict[dj_id] = {
