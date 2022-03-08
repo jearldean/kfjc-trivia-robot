@@ -7,7 +7,7 @@ from jinja2 import StrictUndefined
 from operator import itemgetter
 from flask_restful import Api, Resource  # reqparse
 from flask_marshmallow import Marshmallow
-from typing import List, Dict, Any, NamedTuple, Union
+from typing import List, Dict, Any, Tuple, Union
 from werkzeug.wrappers import Response
 
 from model import db, connect_to_db, Playlist
@@ -306,7 +306,7 @@ def assemble_greeting() -> str:
     return greeting
 
 
-def retrieve_dj_stats_only_once() -> tuple[Dict, List]:
+def retrieve_dj_stats_only_once() -> Tuple:
     djs_alphabetically = playlists.get_djs_alphabetically()
     for zz in djs_alphabetically:
         dj_id = zz.dj_id

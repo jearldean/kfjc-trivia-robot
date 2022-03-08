@@ -156,7 +156,7 @@ COLLECTION_TRACK_DATA_PATH = 'station_data/coll_track.csv'
 TRACK_DATA_PATH = 'station_data/track.csv'
 
 
-def create_djs(row: List[Dict[str, Any]]):
+def create_djs(row: List[Any]):
     """Add all djs rows."""
 
     dj_id = coerce_imported_data(row[0])
@@ -192,7 +192,7 @@ def add_a_missing_dj(dj_id: int, air_name: str):
     db.session.commit()
 
 
-def create_albums(row: List[Dict[str, Any]]):
+def create_albums(row: List[Any]):
     """Add all albums rows."""
 
     kfjc_album_id = coerce_imported_data(row[0])
@@ -218,7 +218,7 @@ def add_a_missing_album(kfjc_album_id: int, artist: str, album_title: str):
     db.session.commit()
 
 
-def create_playlists(row: List[Dict[str, Any]]):
+def create_playlists(row: List[Any]):
     """Add all playlists rows."""
 
     # If if time is blank but the other isn't,
@@ -332,7 +332,7 @@ def fix_self_titled_items(
     return album_title, artist, track_title
 
 
-def create_playlist_tracks(row: List[Dict[str, Any]]):
+def create_playlist_tracks(row: List[Any]):
     """Add all playlist_tracks rows."""
 
     album_title = str(coerce_imported_data(row[5]))
@@ -393,7 +393,7 @@ def create_playlist_tracks(row: List[Dict[str, Any]]):
         db.session.commit()
 
 
-def create_collection_tracks(row: List[Dict[str, Any]]):
+def create_collection_tracks(row: List[Any]):
     """Add all collection tracks rows."""
 
     kfjc_album_id = coerce_imported_data(row[0])
@@ -427,7 +427,7 @@ def create_collection_tracks(row: List[Dict[str, Any]]):
         db.session.commit()
 
 
-def create_tracks(row: List[Dict[str, Any]]):
+def create_tracks(row: List[Any]):
     """Add all tracks rows without Artist."""
 
     kfjc_album_id = coerce_imported_data(row[0])
