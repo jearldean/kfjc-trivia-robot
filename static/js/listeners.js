@@ -161,7 +161,7 @@ function artistLastPlays(evt) {
         sentences += sentence;
       }
   
-    const heading = `<h3>Here's everything I found about the Artist '${search_artist}':</h3>`;
+    const heading = `<h3>Here's everything I found about Artists containing '${search_artist}':</h3>`;
     document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
 
   });
@@ -192,7 +192,7 @@ function albumLastPlays(evt) {
         sentences += sentence;
       }
   
-    const heading = `<h3>Here's everything I found about the Album '${search_album}':</h3>`;
+    const heading = `<h3>Here's everything I found about Albums containing '${search_album}':</h3>`;
     document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
 
   });
@@ -223,7 +223,7 @@ function trackLastPlays(evt) {
         sentences += sentence;
       }
 
-    const heading = `<h3>Here's everything I found about the Track '${search_track}':</h3>`;
+    const heading = `<h3>Here's everything I found about Tracks containing '${search_track}':</h3>`;
     document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
 
   });
