@@ -149,21 +149,25 @@ function artistLastPlays(evt) {
   .then(status => {
 
     const json = JSON.parse(status);
+    let results_length= json.length;
     
-    let sentences = "";
-      for (const row of json) {
-        const air_name = row.air_name;
-        const track_title = row.track_title;
-        const album_title = row.album_title;
-        const artist = row.artist;
-        const human_date = humanReadableDate(row.time_played);
-        const sentence = `<li>${air_name} played the track '${track_title}' from the album '${album_title}' by the artist '<span class="word_highlight">${artist}</span>' on ${human_date}.</li>`;
-        sentences += sentence;
-      }
-  
-    const heading = `<h3>Here's everything I found about Artists containing '${search_artist}':</h3>`;
-    document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
-
+    if (results_length == 0) {
+      document.querySelector('#answer_window').innerHTML = `<h3>My laserdisk archives show no hits for '${search_artist}'.</h3>`;
+    } else {
+      let sentences = "";
+        for (const row of json) {
+          const air_name = row.air_name;
+          const track_title = row.track_title;
+          const album_title = row.album_title;
+          const artist = row.artist;
+          const human_date = humanReadableDate(row.time_played);
+          const sentence = `<li>${air_name} played the track '${track_title}' from the album '${album_title}' by the artist '<span class="word_highlight">${artist}</span>' on ${human_date}.</li>`;
+          sentences += sentence;
+        }
+    
+      const heading = `<h3>There are ${results_length} plays of artists containing '${search_artist}':</h3>`;
+      document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
+    }
   });
 }
 
@@ -180,21 +184,24 @@ function albumLastPlays(evt) {
   .then(status => {
 
     const json = JSON.parse(status);
+    let results_length= json.length;
+    if (results_length == 0) {
+      document.querySelector('#answer_window').innerHTML = `<h3>My backup tapes show no hits for '${search_album}'.</h3>`;
+    } else {
+      let sentences = "";
+        for (const row of json) {
+          const air_name = row.air_name;
+          const track_title = row.track_title;
+          const album_title = row.album_title;
+          const artist = row.artist;
+          const human_date = humanReadableDate(row.time_played);
+          const sentence = `<li>${air_name} played the track '${track_title}' from the album '<span class="word_highlight">${album_title}</span>' by the artist '${artist}' on ${human_date}.</li>`;
+          sentences += sentence;
+        }
     
-    let sentences = "";
-      for (const row of json) {
-        const air_name = row.air_name;
-        const track_title = row.track_title;
-        const album_title = row.album_title;
-        const artist = row.artist;
-        const human_date = humanReadableDate(row.time_played);
-        const sentence = `<li>${air_name} played the track '${track_title}' from the album '<span class="word_highlight">${album_title}</span>' by the artist '${artist}' on ${human_date}.</li>`;
-        sentences += sentence;
-      }
-  
-    const heading = `<h3>Here's everything I found about Albums containing '${search_album}':</h3>`;
-    document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
-
+      const heading = `<h3>I found ${results_length} plays of albums containing '${search_album}':</h3>`;
+      document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
+    }
   });
 }
 
@@ -211,20 +218,24 @@ function trackLastPlays(evt) {
   .then(status => {
 
     const json = JSON.parse(status);
+    let results_length= json.length;
     
-    let sentences = "";
-      for (const row of json) {
-        const air_name = row.air_name;
-        const track_title = row.track_title;
-        const album_title = row.album_title;
-        const artist = row.artist;
-        const human_date = humanReadableDate(row.time_played);
-        const sentence = `<li>${air_name} played the track '<span class="word_highlight">${track_title}</span>' from the album '${album_title}' by the artist '${artist}' on ${human_date}.</li>`;
-        sentences += sentence;
-      }
-
-    const heading = `<h3>Here's everything I found about Tracks containing '${search_track}':</h3>`;
-    document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
+    if (results_length == 0) {
+      document.querySelector('#answer_window').innerHTML = `<h3>All my floppy disks have produced no hits for '${search_track}'.</h3>`;
+    } else {
+      let sentences = "";
+        for (const row of json) {
+          const air_name = row.air_name;
+          const track_title = row.track_title;
+          const album_title = row.album_title;
+          const artist = row.artist;
+          const human_date = humanReadableDate(row.time_played);
+          const sentence = `<li>${air_name} played the track '<span class="word_highlight">${track_title}</span>' from the album '${album_title}' by the artist '${artist}' on ${human_date}.</li>`;
+          sentences += sentence;
+        }
+      const heading = `<h3>Datatapes show ${results_length} plays of tracks containing '${search_track}':</h3>`;
+      document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
+    }
 
   });
 }

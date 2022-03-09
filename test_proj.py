@@ -36,10 +36,10 @@ class RobotTestsDatabase(unittest.TestCase):
         ["/dj_favorites/album/dj_id=255", b"Monty Python\'s Previous Record"],
         # ["/dj_favorites/artist/dj_id=255", b"The Meditations"],
         # ["/dj_favorites/track/dj_id=255", b"Uprising in Dub"],
-        ["/last_played/artist=JAMES%20BROWN", b"2019-11-26T02:06:29"],
-        ["/last_played/album=Matching%20tie", b"2019-10-06T13:24:49"],
-        ["/last_played/track=Spanish%20Inquisition", b"2019-10-06T14:36:01"],
-        # Didn't expect
+        ["/last_played/artist=JAMES%20BROWN", b"2019-11-26T02:01:15"],
+        ["/last_played/album=Matching%20tie", b"2019-10-06T11:57:36"],
+        ["/last_played/track=Spanish%20Inquisition", b"2019-10-06T11:57:36"],
+        # Didn't expect that.
         # ["/top_plays/top=5&order_by=artist&start_date=2000-01-02
         # &end_date=2020-01-10", b"The Meditations"],
         # ["/top_plays/top=5&order_by=artists&start_date=2001-01-02
@@ -184,7 +184,7 @@ class RobotTestsDatabase(unittest.TestCase):
                 track="Star Quality")[0].air_name)
 
         # Also tests: common.get_count(table_dot_column, unique=True)
-        self.assertEqual(128, playlist_tracks.how_many_tracks())
+        self.assertEqual(97, playlist_tracks.how_many_tracks())
 
         playlists.MIN_SHOW_COUNT = 0
         self.assertEqual('Cy Thoth', playlists.get_djs_by_dj_id()[0].air_name)

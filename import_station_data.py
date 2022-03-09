@@ -333,11 +333,15 @@ def fix_self_titled_items(
 
 
 def create_playlist_tracks(row: List[Any]):
-    """Add all playlist_tracks rows."""
+    """Add all playlist_tracks rows.
+    
+    >>> create_playlist_tracks([24506,57,"0","","","",0,'NULL','NULL'])
+    >>> create_playlist_tracks([24858,36,"0",'NULL','NULL',"",0,'NULL','NULL'])
+    """
 
-    album_title = str(coerce_imported_data(row[5]))
-    artist = str(coerce_imported_data(row[3]))
-    track_title = str(coerce_imported_data(row[4]))
+    artist = coerce_imported_data(row[3])
+    album_title = coerce_imported_data(row[5])
+    track_title = coerce_imported_data(row[4])
 
     album_title, artist, track_title = fix_self_titled_items(
         album_title, artist, track_title)
@@ -349,23 +353,23 @@ def create_playlist_tracks(row: List[Any]):
     kfjc_playlist_id = coerce_imported_data(row[0])
     indx = coerce_imported_data(row[1])
     kfjc_album_id = coerce_imported_data(row[6])
-    time_played = coerce_imported_data(row[8])
-    if not time_played:
-        # 'Borrow' the time from the playlist.
-        # An estimate is better than a NULL.
-        try:
-            time_played = playlists.get_playlist_by_id(
-                kfjc_playlist_id=kfjc_playlist_id).start_time
-        except AttributeError:  # Some start_times are still blank.
-            pass
+    """Consider this: performance will be improved if we just use
+    the playlist start_time for all question-making. More granularity
+    than one day is not needed and this is a 3-hour window.
+    """
+    try:
+        time_played = playlists.get_playlist_by_id(
+            kfjc_playlist_id=kfjc_playlist_id).start_time
+    except AttributeError:  # Some start_times are still blank.
+        time_played = None
 
     playlist_tracks.create_playlist_track(
         kfjc_playlist_id=kfjc_playlist_id,
         indx=indx,
         kfjc_album_id=kfjc_album_id,
-        album_title=album_title,
-        artist=artist,
-        track_title=track_title,
+        album_title=str(album_title),
+        artist=str(artist),
+        track_title=str(track_title),
         time_played=time_played)
 
     try:

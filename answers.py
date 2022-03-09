@@ -14,7 +14,7 @@ import common
 PRAISE_MSG = [
     "Aw, yeah!", "Oh, yeah!", "Sch-weet!", "Cool!", "Yay!",
     "Right!", "Correct!", "You're right!", "You are Correct!",
-    "Awesome!", "You're a wiz!"]
+    "Awesome!", "You're a wiz!", "Oh, my punchcards!", "Good job!"]
 CONSOLATION_MSG = [
     "Shucks", "Bad luck.", "Too bad.", "Better luck next time!",
     "Awwww...", "Oh no!", "Sorry, wrong...", "So close!"]
