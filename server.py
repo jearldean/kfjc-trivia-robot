@@ -27,7 +27,7 @@ app.jinja_env.undefined = StrictUndefined
 api = Api(app)
 ma = Marshmallow(app)
 
-TOP_N_USERS = 10  # Displayed on Leaderboard
+TOP_N_USERS = 40  # Displayed on Leaderboard
 ROBOT_MSG = [
     "Robot loves you!", "Pretty good, meatbag!",
     "Well done, bag of mostly water!", "Pretty good for a human!",
@@ -254,9 +254,9 @@ def leaderboard() -> Response:
 
     table_range = min(TOP_N_USERS, len(score_board))
     if session["user_id"] in [f[0] for f in score_board[:table_range]]:
-        user_msg = "You're in the KFJC Top10!"
+        user_msg = f"You're in the KFJC Top{TOP_N_USERS}!"
     else:
-        user_msg = "Our Top10 Leaders:"
+        user_msg = f"Our Top{TOP_N_USERS} Leaders:"
 
     return render_template(
         'leaderboard.html',

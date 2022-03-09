@@ -249,7 +249,7 @@ def get_last_play_of_track(track: str, reverse: bool = False) -> NamedTuple:
 
 def last_time_played(
         search_column_name: str, search_for_item: str,
-        reverse: bool = False) -> NamedTuple:
+        reverse: bool = False, limit = 1000) -> NamedTuple:
     """Search and return the last time any DJ played
     an artist, album or track."""
 
@@ -263,7 +263,8 @@ def last_time_played(
         WHERE LOWER(pt.{search_column_name}) LIKE LOWER('%{search_for_item}%')
         AND pt.time_played IS NOT NULL
         AND pt.{search_column_name} != 'None'
-        ORDER BY pt.time_played {reverse_it} """)
+        ORDER BY pt.time_played {reverse_it}
+        LIMIT {limit}""")
 
     results = db.session.execute(who_played_it_when)
     reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(
