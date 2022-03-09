@@ -51,10 +51,10 @@ class RobotTestsDatabase(unittest.TestCase):
         # ["/top_plays/top=5&order_by=track&start_date=2000-01-02
         # &end_date=2020-01-10", b"The Meditations"],
         ["/dj_stats", b"Cy Thoth"],
-        ["/dj_stats/order_by=air_name&reverse=1", b"DJ Click"],
+        ["/dj_stats/order_by=air_name&reverse=1", b"DK Click"],
         ["/dj_stats/order_by=air_name&reverse=0", b"Sir Cumference"],
-        ["/dj_stats/order_by=dj_id&reverse=1", b"Spliff Skankin\'"],
-        ["/dj_stats/order_by=showcount&reverse=1", b"Spliff Skankin\'"],
+        ["/dj_stats/order_by=dj_id&reverse=1", b"Spliff Skankin"],
+        ["/dj_stats/order_by=showcount&reverse=1", b"Spliff Skankin"],
         ["/dj_stats/order_by=firstshow&reverse=0", b"Sir Cumference"],
         ["/dj_stats/order_by=lastshow&reverse=1", b"Cy Thoth"],
         ["/album_tracks/184227", b"Reality Dub"],
@@ -189,31 +189,31 @@ class RobotTestsDatabase(unittest.TestCase):
         playlists.MIN_SHOW_COUNT = 0
         self.assertEqual('Cy Thoth', playlists.get_djs_by_dj_id()[0].air_name)
         self.assertEqual(
-            "Dr Doug", playlists.get_djs_by_dj_id(reverse=True)[0].air_name)
+            "dr doug", playlists.get_djs_by_dj_id(reverse=True)[0].air_name)
 
         self.assertEqual(
             'Cy Thoth', playlists.get_djs_alphabetically()[0].air_name)
         self.assertEqual(
-            "Spliff Skankin'",
+            "Spliff Skankin",
             playlists.get_djs_alphabetically(reverse=True)[0].air_name)
 
         self.assertEqual(
-            "Spliff Skankin'", playlists.get_djs_by_first_show()[0].air_name)
-        self.assertEqual('Dr Doug', playlists.get_djs_by_first_show(
+            "Spliff Skankin", playlists.get_djs_by_first_show()[0].air_name)
+        self.assertEqual('dr doug', playlists.get_djs_by_first_show(
             reverse=True)[0].air_name)
 
         self.assertIn(
             playlists.get_djs_by_last_show()[0].air_name,
-            ["Robert Emmett", 'Dr Doug'])
+            ["Robert Emmett", 'dr doug'])
         self.assertEqual(
-            "Dr Doug",
+            "dr doug",
             playlists.get_djs_by_last_show(reverse=True)[0].air_name)
 
         self.assertIn(
             playlists.get_djs_by_show_count()[0].air_name,
-            ["Robert Emmett", 'Dr Doug'])
+            ["Robert Emmett", 'dr doug'])
         self.assertEqual(
-            "Spliff Skankin'",
+            "Spliff Skankin",
             playlists.get_djs_by_show_count(reverse=True)[0].air_name)
 
         self.assertEqual((

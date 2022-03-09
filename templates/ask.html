@@ -8,9 +8,7 @@
 <div class="container">
   <div class="row">
     <div class="col">
-      <!-- COLUMN ONE -->
       <div class="row justify-content-center">
-        <!--You can have as many rows as you need.-->
         <img src={{ random_robot_img }} />
       </div>
     </div>
@@ -24,10 +22,9 @@
             <div>
               <label>Air Name: </label>
                 <select onchange="this.form.submit()" name="dj_id" id="dj-picker">
-                  <!-- TODO return ii[1], the airname to the js handler, too. -->
                   {% for ii in dj_airnames %}
-                    {% if ii[0] == dj_selected %}
-                      <option selected value="{{ dj_selected }}">{{ ii[1] }}</option>
+                    {% if ii[0] == selected_dj_id %}
+                      <option selected value="{{ selected_dj_id }}">{{ ii[1] }}</option>
                     {% else %}
                       <option value="{{ ii[0] }}">{{ ii[1] }}</option>
                     {% endif %}
@@ -39,13 +36,27 @@
             {% endif %}
             <div>
               <br>
-                <label> DJ's Most Played: </label>
+                <label> Selected DJ's Favorite: </label>
+                  <input type="hidden" name="airname" id="airname" value = '{{ dj_dict[selected_dj_id]['air_name'] }}' />
                   <input type="radio" name="dj-favorite" value="artist" class="dj" checked/>Artist
                   <input type="radio" name="dj-favorite" value="album" class="dj"/>Album
                   <input type="radio" name="dj-favorite" value="track" class="dj"/>Track
             </div>
             <div>
               <button class="orange_button" type="submit" id="dj-most-plays">DJ's Top Plays</button>
+            </div>
+          </form>
+
+          <form id="dj-stats-form" method="GET">
+            <div>
+              <br>
+                <label> All DJs: </label>
+                  <input type="radio" name="all-djs" value="firstshow" class="dj-stats" checked/>First Show
+                  <input type="radio" name="all-djs" value="lastshow" class="dj-stats"/>Last Show
+                  <input type="radio" name="all-djs" value="showcount" class="dj-stats"/>Show Count
+            </div>
+            <div>
+              <button class="orange_button" type="submit" id="dj-stats-button">DJ Stats</button>
             </div>
           </form>
 

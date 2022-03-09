@@ -6,13 +6,8 @@ from typing import NamedTuple, List
 from model import db, connect_to_db, Playlist
 import common
 
-MIN_SHOW_COUNT = 14
+MIN_SHOW_COUNT = 12
 # A DJ is born when they complete one training excercise and 13 grave shifts.
-
-ADMINISTRATIVE_DJ_IDS = (
-    1, 58, 57, -1, 434, 445, 191, 164, 105, 433,
-    104, 139, 120, 432, 431, 123, 122, 114, 424, 423, 140)
-# TODO use the 'administrative' boolean column you made.
 
 
 def create_playlist(
@@ -89,13 +84,8 @@ def dj_stats(order_by_column: str, reverse: bool = False) -> NamedTuple:
         HAVING dj_id in ({prolific_djs}) """)
     dj_id_to_air_name = (
         f"""SELECT dj_id, air_name
-        FROM (
-            SELECT *, ROW_NUMBER() OVER (PARTITION BY dj_id ORDER BY dj_id) rn
-            FROM playlists) q
-        WHERE rn = 1
-        AND dj_id NOT IN {ADMINISTRATIVE_DJ_IDS}
-        AND air_name NOT LIKE '%KFJC%' """)
-    # TODO PUT BACK  AND administrative is False
+        FROM djs
+        WHERE NOT administrative""")
     dj_stats = (
         f"""SELECT dj_id_to_air_name.air_name, first_last_count.dj_id,
         first_last_count.SHOWCOUNT as showcount,
@@ -104,14 +94,14 @@ def dj_stats(order_by_column: str, reverse: bool = False) -> NamedTuple:
         FROM ({first_last_count}) first_last_count
         LEFT JOIN ({dj_id_to_air_name}) dj_id_to_air_name
         ON (first_last_count.dj_id = dj_id_to_air_name.dj_id)
-        WHERE dj_id_to_air_name.dj_id NOT IN {ADMINISTRATIVE_DJ_IDS}
+        WHERE dj_id_to_air_name.air_name is not NULL
         ORDER BY {order_by_column} {reverse_it} """)
-    # TODO PUT BACK  AND administrative is False
 
     results = db.session.execute(dj_stats)
     reply_named_tuple = (
         common.convert_list_o_dicts_to_list_o_named_tuples(results))
     return reply_named_tuple
+
 
 # -=-=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-=-
 

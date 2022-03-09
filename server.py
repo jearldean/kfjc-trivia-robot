@@ -226,11 +226,11 @@ def user_asks() -> Response:
     dj_id = request.args.get("dj_id")
     if not dj_id:
         print(dj_airnames[0])
-        dj_selected = choice(dj_airnames)[0]
+        selected_dj_id = choice(dj_airnames)[0]
     else:
-        dj_selected = int(dj_id)  # Only strings come back from forms.
-    session['dj_selected'] = dj_selected
-    dj_stat = dj_dict[dj_selected]['dj_stats']
+        selected_dj_id = int(dj_id)  # Only strings come back from forms.
+    session['selected_dj_id'] = selected_dj_id
+    dj_stat = dj_dict[selected_dj_id]['dj_stats']
 
     return render_template(
         'ask.html',
@@ -238,7 +238,7 @@ def user_asks() -> Response:
         dj_airnames=dj_airnames,
         dj_dict=dj_dict,
         dj_most_plays_headings=False,
-        dj_selected=session['dj_selected'],
+        selected_dj_id=session['selected_dj_id'],
         dj_stat=dj_stat,
         footer='private')
 
