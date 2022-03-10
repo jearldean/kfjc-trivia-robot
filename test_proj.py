@@ -170,6 +170,11 @@ class RobotTestsDatabase(unittest.TestCase):
             playlist_tracks.get_top10_tracks(
                 start_date='2002-01-02', end_date='2022-01-10',
                 n=5)[0].track_title)
+        self.assertEqual(
+            "Zion Train Dub",
+            playlist_tracks.get_top10_tracks(
+                start_date='2022-01-10', end_date='2002-01-02',
+                n=5)[0].track_title)
 
         self.assertEqual(
             'The Meditations',

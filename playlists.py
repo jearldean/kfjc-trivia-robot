@@ -6,7 +6,7 @@ from typing import NamedTuple, List
 from model import db, connect_to_db, Playlist
 import common
 
-MIN_SHOW_COUNT = 12
+MIN_SHOW_COUNT = 13
 # A DJ is born when they complete one training excercise and 13 grave shifts.
 
 

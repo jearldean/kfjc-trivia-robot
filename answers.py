@@ -20,7 +20,7 @@ CONSOLATION_MSG = [
     "Awwww...", "Oh no!", "Sorry, wrong...", "So close!"]
 INFO_MSG = [
     "Here's what I found:", "I found these:", "Here's your answer:",
-    "My databanks say:", "I computed these results:"]
+    "My databanks say:", "I computed these results:", "Paper Tape confirms:"]
 
 
 def create_answer(

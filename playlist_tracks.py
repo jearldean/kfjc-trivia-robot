@@ -143,6 +143,12 @@ def get_top_plays(
         group_by: str, n: int = 10) -> NamedTuple:
     """Get the top plays between any two dates.***"""
 
+    if start_date > end_date:  # Just flip 'em
+        old_start_date = start_date
+        old_end_date = end_date
+        end_date = old_start_date
+        start_date = old_end_date
+
     top_n = text(
         f""" SELECT count({sql_variable}) as plays, {group_by}
         FROM playlist_tracks
@@ -267,6 +273,7 @@ def last_time_played(
         AND pt.{search_column_name} != 'None'
         ORDER BY pt.time_played {reverse_it}
         LIMIT {LIMITER}""")
+    # TODO: are we vulnerable to SQL injection attack from search_for_item?
 
     results = db.session.execute(who_played_it_when)
     reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(
