@@ -34,24 +34,24 @@ class RobotTestsDatabase(unittest.TestCase):
         ["/playlists/60340", b"Sir Cumference"],
         ["/playlist_tracks/60706", b"James Brown"],
         ["/dj_favorites/album/dj_id=255", b"Monty Python\'s Previous Record"],
-        # ["/dj_favorites/artist/dj_id=255", b"The Meditations"],
-        # ["/dj_favorites/track/dj_id=255", b"Uprising in Dub"],
+        ["/dj_favorites/artist/dj_id=255", b"Monty Python\'s Previous Record"],
+        ["/dj_favorites/track/dj_id=177", b"Zion Train Dub"],
         ["/last_played/artist=JAMES%20BROWN", b"2019-11-26T02:01:15"],
         ["/last_played/album=Matching%20tie", b"2019-10-06T11:57:36"],
         ["/last_played/track=Spanish%20Inquisition", b"2019-10-06T11:57:36"],
         # Didn't expect that.
-        # ["/top_plays/top=5&order_by=artist&start_date=2000-01-02
-        # &end_date=2020-01-10", b"The Meditations"],
-        # ["/top_plays/top=5&order_by=artists&start_date=2001-01-02
-        # &end_date=2021-01-10", b"The Meditations"],
-        # ["/top_plays/top=5&order_by=album&start_date=2002-01-02
-        # &end_date=2022-01-10", b"The Meditations"],
-        # ["/top_plays/top=5&order_by=albums&start_date=2000-01-02
-        # &end_date=2020-01-10", b"The Meditations"],
-        # ["/top_plays/top=5&order_by=track&start_date=2000-01-02
-        # &end_date=2020-01-10", b"The Meditations"],
+        [("/top_plays/top=5&order_by=artist&start_date=2000-01-02&"
+          "end_date=2020-01-10"), b"The Meditations"],
+        ["/top_plays/top=5&order_by=artists&start_date=2001-01-02&"
+         "end_date=2021-01-10", b"The Meditations"],
+        ["/top_plays/top=5&order_by=album&start_date=2002-01-02&"
+         "end_date=2022-01-10", b"The Meditations"],
+        ["/top_plays/top=5&order_by=albums&start_date=2000-01-02&"
+         "end_date=2020-01-10", b"The Meditations"],
+        ["/top_plays/top=5&order_by=track&start_date=2000-01-02&"
+         "end_date=2020-01-10", b"The Meditations"],
         ["/dj_stats", b"Cy Thoth"],
-        ["/dj_stats/order_by=air_name&reverse=1", b"DK Click"],
+        ["/dj_stats/order_by=air_name&reverse=1", b"DJ Click"],
         ["/dj_stats/order_by=air_name&reverse=0", b"Sir Cumference"],
         ["/dj_stats/order_by=dj_id&reverse=1", b"Spliff Skankin"],
         ["/dj_stats/order_by=showcount&reverse=1", b"Spliff Skankin"],
@@ -139,18 +139,38 @@ class RobotTestsDatabase(unittest.TestCase):
 
         # TODO   import_station_data. no bad times
         # ["0000-00-00 00:00:00", "1970-01-01 01:00:00", "1969-12-31 16:00:00"]
-        # TODO   import_station_data. profanity filter
         # TODO   import_station_data. time estimator
         # TODO   import_station_data. other data smoothing.
-        # TODO   playlist_tracks.get_favorite_artists(
-        # dj_id, reverse=True, min_plays=5):
-        # TODO   playlist_tracks.get_favorite_albums(
-        # dj_id, reverse=True, min_plays=5):
-        # TODO   playlist_tracks.get_favorite_tracks(
-        # dj_id, reverse=True, min_plays=5)
-        # TODO   playlist_tracks.get_top10_artists(start_date, end_date, n=10)
-        # TODO   playlist_tracks.get_top10_albums(start_date, end_date, n=10)
-        # TODO   playlist_tracks.get_top10_tracks(start_date, end_date, n=10)
+
+        self.assertEqual(
+            "Monty Python\'s Previous Record",
+            playlist_tracks.get_favorite_artists(
+                dj_id=255, reverse=True, min_plays=5)[0].artist)
+        self.assertEqual(
+            "Monty Python\'s Previous Record",
+            playlist_tracks.get_favorite_albums(
+                dj_id=255, reverse=True, min_plays=5)[0].album_title)
+        self.assertEqual(
+            "Zion Train Dub",
+            playlist_tracks.get_favorite_tracks(
+                dj_id=177, reverse=True, min_plays=5)[0].track_title)
+
+        self.assertEqual(
+            "Delixx",
+            playlist_tracks.get_top10_artists(
+                start_date='2002-01-02', end_date='2022-01-10',
+                n=5)[0].artist)
+        self.assertEqual(
+            "Uprising in Dub",
+            playlist_tracks.get_top10_albums(
+                start_date='2002-01-02', end_date='2022-01-10',
+                n=5)[0].album_title)
+        self.assertEqual(
+            "Zion Train Dub",
+            playlist_tracks.get_top10_tracks(
+                start_date='2002-01-02', end_date='2022-01-10',
+                n=5)[0].track_title)
+
         self.assertEqual(
             'The Meditations',
             playlist_tracks.get_favorite_artists(
@@ -228,7 +248,7 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertEqual(
             1, playlists.get_dj_ids_and_show_counts()[0].showcount)
         self.assertEqual(431, playlists.get_dj_ids_and_show_counts()[0].dj_id)
-        self.assertEqual(8, playlists.how_many_djs())
+        self.assertEqual(7, playlists.how_many_djs())
 
         self.assertEqual("Sir Cumference", djs.get_airname_for_dj(
             dj_id=255, posessive=False))

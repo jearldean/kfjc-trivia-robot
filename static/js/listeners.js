@@ -1,4 +1,5 @@
 "use strict";
+let limiter = 500;
 
 //  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- DJ Most Plays -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -129,6 +130,14 @@ document.querySelector("#artist-last-plays").addEventListener("submit", artistLa
 document.querySelector("#album-last-plays").addEventListener("submit", albumLastPlays);
 document.querySelector("#track-last-plays").addEventListener("submit", trackLastPlays);
 
+function areWeHittingTheLimiter(count_results) {
+  let add_text = "";
+  if (count_results == limiter) {
+    add_text = " over";
+  }
+  return add_text;
+}
+
 function humanReadableDate(isoFormatDate) {
   const readable = new Date(
     isoFormatDate).toLocaleDateString(
@@ -164,8 +173,9 @@ function artistLastPlays(evt) {
           const sentence = `<li>${air_name} played the track '${track_title}' from the album '${album_title}' by the artist '<span class="word_highlight">${artist}</span>' on ${human_date}.</li>`;
           sentences += sentence;
         }
-    
-      const heading = `<h3>There are ${results_length} plays of artists containing '${search_artist}':</h3>`;
+
+      const add_string = areWeHittingTheLimiter(results_length);
+      const heading = `<h3>There are${add_string} ${results_length} plays of artists containing '${search_artist}':</h3>`;
       document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
     }
   });
@@ -199,7 +209,8 @@ function albumLastPlays(evt) {
           sentences += sentence;
         }
     
-      const heading = `<h3>I found ${results_length} plays of albums containing '${search_album}':</h3>`;
+      const add_string = areWeHittingTheLimiter(results_length);
+      const heading = `<h3>There are${add_string} ${results_length} plays of albums containing '${search_album}':</h3>`;
       document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
     }
   });
@@ -233,10 +244,11 @@ function trackLastPlays(evt) {
           const sentence = `<li>${air_name} played the track '<span class="word_highlight">${track_title}</span>' from the album '${album_title}' by the artist '${artist}' on ${human_date}.</li>`;
           sentences += sentence;
         }
-      const heading = `<h3>Datatapes show ${results_length} plays of tracks containing '${search_track}':</h3>`;
+
+      const add_string = areWeHittingTheLimiter(results_length);
+      const heading = `<h3>There are${add_string} ${results_length} plays of tracks containing '${search_track}':</h3>`;
       document.querySelector('#answer_window').innerHTML = `${heading}<br>${sentences}`;
     }
-
   });
 }
 

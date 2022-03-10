@@ -4,7 +4,6 @@ import re
 import csv
 import time
 import itertools
-from random import choice
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 from typing import List, Any, Callable
@@ -21,6 +20,9 @@ import tracks
 
 BAD_TIMES = [
     "0000-00-00 00:00:00", "1970-01-01 01:00:00", "1969-12-31 16:00:00"]
+
+DO_NOT_CHANGE = [
+        'Listen, Whitey!  The Sounds of Black Power 1967-1974']
 
 
 def fix_playlist_times(start_time: str, end_time: str) -> datetime:
@@ -78,9 +80,11 @@ def coerce_imported_data(one_cell: Any) -> Any:
     except (ValueError, TypeError):
         pass
 
-    if one_cell in [
-            'NULL', "Null", '', " ", "?", ".", "..", "...", "*", "-", ",",
-            "\""] + BAD_TIMES:
+    throwaway_titles = [
+        'NULL', "Null", '', " ", "?", ".", "..", "...", "*", "-", ",",
+        "\""]
+
+    if one_cell in throwaway_titles + BAD_TIMES:
         return None  # No Data *IS* No Data.
     elif isinstance(one_cell, datetime):
         return datetime.fromisoformat(one_cell)
@@ -98,9 +102,14 @@ def fix_titles(some_title: str) -> str:
     'James Brown'
     >>> fix_titles("Hendrix, Jimi Experience")
     'Jimi Hendrix Experience'
+    >>> fix_titles("Listen, Whitey!  The Sounds of Black Power 1967-1974")
+    'Listen, Whitey!  The Sounds of Black Power 1967-1974'
     """
     if not some_title:
         return
+
+    if some_title in DO_NOT_CHANGE:
+        return some_title.strip()
 
     some_title = profanity_filter(title_string=some_title)
 
@@ -124,26 +133,42 @@ def profanity_filter(title_string: str) -> str:
     Data comes from an edgey Radio station:
     Found out I needed a Profanity Filter.
 
-    >>> profanity_filter(title_string="Pussy")
-    'P&#x128576;ssy'
-    >>> profanity_filter(title_string="Shit")
-    'Sh&#x128169;t'
+    It's a real hoot to check these words into git.
+    I'm sure the community takes a clinical view.
+
+    >>> profanity_filter(title_string="PuSsy")
+    'P&#128576;ssy'
+    >>> profanity_filter(title_string="ShiT")
+    'Sh&#128169;t'
+    >>> profanity_filter(title_string="Shithouse")
+    'Sh&#128169;thouse'
+    >>> profanity_filter(title_string="shit house")
+    'Sh&#128169;t house'
+    >>> profanity_filter(title_string="[COLL]: Collection")
+    'Collection'
+    >>> profanity_filter(title_string="<COLL>: Collection")
+    'Collection'
+    >>> profanity_filter(title_string="<COLL> Collection")
+    'Collection'
+    >>> profanity_filter(title_string="Coll Collection")
+    'Collection'
     """
-    emojis = [
-        "&#x129296;", "&#x129323;", "&#x129325;",
-        "&#x129300;", "&#x128526;", "&#x128520;"]
-    replace_with_emoji = choice(emojis)
-    title_string = title_string.replace(
-        "Fuck", f"F{replace_with_emoji}ck").replace(
-        "Shit", f"Sh&#x128169;t").replace(
-        "Pussy", "P&#x128576;ssy").replace(
-        "Cunt", "C&#x128576;nt").replace(
-        "[coll]:", "").replace(  # Station shorthand for collaboration tracks.
-        "[Coll]:", "").replace(
-        "  ", " ").replace(
-        "______________________________", "")
+
+    replacements = [
+        (r"[Ff][Uu][Cc][Kk]", "F&#129296;ck"),
+        (r"[Pp][Uu][Ss][Ss][Yy]", "P&#128576;ssy"),
+        (r"[Ss][Hh][Ii][Tt]", "Sh&#128169;t"),
+        (r"[Cc][Uu][Nn][Tt]", "C&#128576;nt"),
+        (r"[Aa][Ss][Ss][Hh][0Oo][Ll][Ee]", "A$$hole"),
+        (r"[Nn][Ii][Gg][Gg][Ee][Rr]", "N&#9994;&#127998;gger"),
+        (r"\[[Cc][Oo][Ll][Ll]\]:?", ""),
+        (r"\<[Cc][Oo][Ll][Ll]\>:?", ""),
+        (r"[Cc][Oo][Ll][Ll]:?\b", "")]
+    for pat, repl in replacements:
+        title_string = re.sub(pat, repl, title_string)
 
     return title_string.strip()
+
 
 # -=-=-=-=-=-=-=-=-=-=-=- Import the 5 CSV Files -=-=-=-=-=-=-=-=-=-=-=-
 
@@ -164,6 +189,8 @@ def create_djs(row: List[Any]):
     # administrative dj_ids represent station business and not
     # real people we should make questions out of:
     administrative = False
+    if air_name == 'DK Click':
+        air_name = 'DJ Click'  # Honestly think this is a typo
     if air_name == 'None':
         administrative = True
     if 'kfjc' in air_name.lower():
@@ -269,7 +296,7 @@ def create_playlists(row: List[Any]):
 
 def add_a_missing_playlist(kfjc_playlist_id: int):
     """Add a dummy playlist row to avoid import conflicts."""
-    row = [kfjc_playlist_id, 1, "Swiss Cheese", None, None]
+    row = [kfjc_playlist_id, 1, None, None, None]
     create_playlists(row=row)
     db.session.commit()
 
@@ -334,7 +361,7 @@ def fix_self_titled_items(
 
 def create_playlist_tracks(row: List[Any]):
     """Add all playlist_tracks rows.
-    
+
     >>> create_playlist_tracks([24506,57,"0","","","",0,'NULL','NULL'])
     >>> create_playlist_tracks([24858,36,"0",'NULL','NULL',"",0,'NULL','NULL'])
     """

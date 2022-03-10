@@ -113,11 +113,3 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .myButton:active {
     background: #071d2b; 
 }
-
-.disabled_button {
-    color: rgb(12, 9, 7); font-size: 20px; line-height: 20px; padding: 10px; border-top-left-radius: 8px; border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-bottom-left-radius: 8px; font-family: Georgia, serif; font-weight: normal; text-decoration: none; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-variant-east-asian: normal; font-variant-position: normal; text-transform: none; background-image: linear-gradient(to right, rgb(28, 110, 164) 0%, rgb(35, 136, 203) 50%, rgb(20, 78, 117) 100%); box-shadow: rgb(0, 0, 0) 5px 5px 15px 5px; border: 2px solid rgb(28, 110, 164); display: inline-block;}
-    .myButton:hover {
-    background: #1C6EA4; }
-    .myButton:active {
-    background: #144E75; 
-}

@@ -7,6 +7,8 @@ from model import db, connect_to_db, PlaylistTrack
 import djs
 import common
 
+LIMITER = 500  # Make sure this agrees with listeners.js.
+
 
 def create_playlist_track(
         kfjc_playlist_id: int, indx: int, kfjc_album_id: int, album_title: str,
@@ -249,7 +251,7 @@ def get_last_play_of_track(track: str, reverse: bool = False) -> NamedTuple:
 
 def last_time_played(
         search_column_name: str, search_for_item: str,
-        reverse: bool = False, limit = 1000) -> NamedTuple:
+        reverse: bool = False) -> NamedTuple:
     """Search and return the last time any DJ played
     an artist, album or track."""
 
@@ -264,7 +266,7 @@ def last_time_played(
         AND pt.time_played IS NOT NULL
         AND pt.{search_column_name} != 'None'
         ORDER BY pt.time_played {reverse_it}
-        LIMIT {limit}""")
+        LIMIT {LIMITER}""")
 
     results = db.session.execute(who_played_it_when)
     reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(
