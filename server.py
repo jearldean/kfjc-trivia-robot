@@ -9,6 +9,7 @@ from flask_restful import Api, Resource  # reqparse
 from flask_marshmallow import Marshmallow
 from typing import List, Dict, Any, Tuple, Union
 from werkzeug.wrappers import Response
+from flask_restful_swagger import swagger
 
 from model import db, connect_to_db, Playlist
 import djs
@@ -342,7 +343,7 @@ class LeaderboardSchema(ma.Schema):
 
 leaderboard_schema = LeaderboardSchema(many=True)
 
-
+@swagger.model
 class LeaderboardResource(Resource):
     def get(self) -> List[Dict[str, Any]]:
         score_board = []
@@ -372,6 +373,7 @@ api.add_resource(LeaderboardResource, '/rest_leaderboard')
 # http://0.0.0.0:5000/playlists/66581
 
 
+#@swagger.model
 class PlaylistSchema(ma.Schema):
     class Meta:
         fields = (
@@ -396,6 +398,7 @@ api.add_resource(PlaylistResource, '/playlists/<int:kfjc_playlist_id>')
 # http://0.0.0.0:5000/playlist_tracks/66581
 
 
+#@swagger.model
 class PlaylistTracksSchema(ma.Schema):
     class Meta:
         fields = (
@@ -423,6 +426,7 @@ api.add_resource(
 # http://0.0.0.0:5000/dj_favorites/track/dj_id=255
 
 
+#@swagger.model
 class DJFavoritesSchema(ma.Schema):
     class Meta:
         fields = ("dj_id", "artist", "album_title", "track_title", "plays")
@@ -480,6 +484,7 @@ api.add_resource(
 # http://0.0.0.0:5000/last_played/track=eclipse
 
 
+#@swagger.model
 class LastPlayedSchema(ma.Schema):
     class Meta:
         fields = (
@@ -523,6 +528,7 @@ api.add_resource(LastPlayedByTrack, '/last_played/track=<string:track>')
 # http://0.0.0.0:5000/top_plays/top=5&order_by=track&start_date=2020-01-02&end_date=2020-01-10
 
 
+#@swagger.model
 class TopTenSchema(ma.Schema):
     class Meta:
         fields = ("plays", "artist", "album_title", "track_title")
@@ -564,6 +570,7 @@ api.add_resource(
 # http://0.0.0.0:5000/dj_stats/order_by=lastshow&reverse=1
 
 
+#@swagger.model
 class DJStatsSchema(ma.Schema):
     class Meta:
         fields = ("air_name", "dj_id", "showcount", "firstshow", "lastshow")
@@ -608,6 +615,7 @@ api.add_resource(DJStatsNoArgs, '/dj_stats')
 # http://0.0.0.0:5000/album_tracks/497606
 
 
+#@swagger.model
 class AlbumTracksSchema(ma.Schema):
     class Meta:
         fields = ("indx", "title", "artist")
@@ -634,6 +642,7 @@ we use the albums table lookup. But if we back it out from the tracks table,
 compilation albums would be included."""
 
 
+#@swagger.model
 class ArtistsAlbumsSchema(ma.Schema):
     class Meta:
         fields = ("kfjc_album_id", "album_title", "artist")

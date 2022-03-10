@@ -41,6 +41,12 @@ body {
     background-color: yellow; 
 }
 
+.dj_highlight {
+    display: inline; /* the default for span */
+    padding: 5px;
+    background-color: hotpink; 
+}
+
 #table_heading {
   font-weight: bold;
 }
