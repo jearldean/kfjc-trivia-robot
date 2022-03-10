@@ -9,7 +9,7 @@ from flask_restful import Api, Resource  # reqparse
 from flask_marshmallow import Marshmallow
 from typing import List, Dict, Any, Tuple, Union
 from werkzeug.wrappers import Response
-from flask_restful_swagger import swagger
+#from flask_restful_swagger import swagger
 
 from model import db, connect_to_db, Playlist
 import djs
@@ -343,7 +343,7 @@ class LeaderboardSchema(ma.Schema):
 
 leaderboard_schema = LeaderboardSchema(many=True)
 
-@swagger.model
+#@swagger.model
 class LeaderboardResource(Resource):
     def get(self) -> List[Dict[str, Any]]:
         score_board = []
