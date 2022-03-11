@@ -362,6 +362,7 @@ def fix_self_titled_items(
 def create_playlist_tracks(row: List[Any]):
     """Add all playlist_tracks rows.
 
+    Don't import blank rows:
     >>> create_playlist_tracks([24506,57,"0","","","",0,'NULL','NULL'])
     >>> create_playlist_tracks([24858,36,"0",'NULL','NULL',"",0,'NULL','NULL'])
     """
@@ -370,12 +371,16 @@ def create_playlist_tracks(row: List[Any]):
     album_title = coerce_imported_data(row[5])
     track_title = coerce_imported_data(row[4])
 
-    album_title, artist, track_title = fix_self_titled_items(
-        album_title, artist, track_title)
-
     if all(v is None for v in [album_title, artist, track_title]):
         # Not importing blank rows reduced the table size by 11%.
         return
+
+    artist = str(artist)
+    album_title = str(album_title)
+    track_title = str(track_title)
+
+    album_title, artist, track_title = fix_self_titled_items(
+        album_title, artist, track_title)
 
     kfjc_playlist_id = coerce_imported_data(row[0])
     indx = coerce_imported_data(row[1])

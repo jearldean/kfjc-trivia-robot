@@ -3,8 +3,7 @@
 from model import db, connect_to_db, Dj
 import common
 
-# TODO Couldn't get real emojis to work so, we have this for now:
-WHITE_HEART_EMOJI = '♡'
+WHITE_HEART = '♡'
 
 
 def create_dj(
@@ -40,11 +39,11 @@ def get_airname_for_dj(dj_id: int, posessive: bool = False) -> str:
         if posessive:
             suffix = common.the_right_apostrophe(air_name=air_name)
             return (
-                f"{WHITE_HEART_EMOJI} {dj.air_name}{suffix} "
-                f"{WHITE_HEART_EMOJI}")
+                f"{WHITE_HEART} {dj.air_name}{suffix} "
+                f"{WHITE_HEART}")
 
         else:
-            return f"{WHITE_HEART_EMOJI} {dj.air_name} {WHITE_HEART_EMOJI}"
+            return f"{WHITE_HEART} {dj.air_name} {WHITE_HEART}"
     else:
         if posessive:
             suffix = common.the_right_apostrophe(air_name=air_name)

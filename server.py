@@ -2,16 +2,17 @@
 
 import os
 from random import choice
-from flask import (Flask, render_template, request, flash, session, redirect)
+from typing import List, Dict, Any, Tuple, Union
 from jinja2 import StrictUndefined
 from operator import itemgetter
+from flask import (Flask, render_template, request, flash, session, redirect)
 from flask_restful import Api, Resource  # reqparse
 from flask_marshmallow import Marshmallow
-from typing import List, Dict, Any, Tuple, Union
+from flask_restful_swagger import swagger
 from werkzeug.wrappers import Response
-#from flask_restful_swagger import swagger
 
-from model import db, connect_to_db, Playlist
+from model import (
+    db, connect_to_db, Answer, Playlist, PlaylistTrack, Album, Track)
 import djs
 import playlists
 import playlist_tracks
@@ -25,7 +26,8 @@ import common
 app = Flask(__name__)
 app.secret_key = os.environ['APP_SECRET_KEY']
 app.jinja_env.undefined = StrictUndefined
-api = Api(app)
+# api = Api(app)
+api = swagger.docs(Api(app), apiVersion='0.1')
 ma = Marshmallow(app)
 
 TOP_N_USERS = 40  # Displayed on Leaderboard
@@ -343,8 +345,35 @@ class LeaderboardSchema(ma.Schema):
 
 leaderboard_schema = LeaderboardSchema(many=True)
 
-#@swagger.model
+
+@swagger.model
 class LeaderboardResource(Resource):
+    "Leaderboard"
+    @swagger.operation(
+        notes='User Scores in order of Percent Correct',
+        responseClass=Answer.__name__,
+        nickname='leader',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": Answer.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self) -> List[Dict[str, Any]]:
         score_board = []
         for user in users.get_users():
@@ -373,7 +402,6 @@ api.add_resource(LeaderboardResource, '/rest_leaderboard')
 # http://0.0.0.0:5000/playlists/66581
 
 
-#@swagger.model
 class PlaylistSchema(ma.Schema):
     class Meta:
         fields = (
@@ -385,7 +413,34 @@ playlist_schema = PlaylistSchema()
 playlists_schema = PlaylistSchema(many=True)
 
 
+@swagger.model
 class PlaylistResource(Resource):
+    "Playlist"
+    @swagger.operation(
+        notes='One show by a DJ',
+        responseClass=Playlist.__name__,
+        nickname='playlist',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": Playlist.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, kfjc_playlist_id: int) -> List[Dict[str, Any]]:
         playlist = Playlist.query.get_or_404(kfjc_playlist_id)
         return playlist_schema.dump(playlist)
@@ -398,7 +453,6 @@ api.add_resource(PlaylistResource, '/playlists/<int:kfjc_playlist_id>')
 # http://0.0.0.0:5000/playlist_tracks/66581
 
 
-#@swagger.model
 class PlaylistTracksSchema(ma.Schema):
     class Meta:
         fields = (
@@ -409,7 +463,34 @@ class PlaylistTracksSchema(ma.Schema):
 playlist_tracks_schema = PlaylistTracksSchema(many=True)
 
 
+@swagger.model
 class PlaylistTracksResource(Resource):
+    "PlaylistTracks"
+    @swagger.operation(
+        notes="Tracks played during one show",
+        responseClass=PlaylistTrack.__name__,
+        nickname='playlist_tracks',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": PlaylistTrack.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, kfjc_playlist_id: int) -> List[Dict[str, Any]]:
         playlist_tracks_found = (
             playlist_tracks.get_playlist_tracks_by_kfjc_playlist_id(
@@ -426,7 +507,6 @@ api.add_resource(
 # http://0.0.0.0:5000/dj_favorites/track/dj_id=255
 
 
-#@swagger.model
 class DJFavoritesSchema(ma.Schema):
     class Meta:
         fields = ("dj_id", "artist", "album_title", "track_title", "plays")
@@ -435,7 +515,34 @@ class DJFavoritesSchema(ma.Schema):
 one_dj_favorites_schema = DJFavoritesSchema(many=True)
 
 
+@swagger.model
 class DJFavoriteArtistResource(Resource):
+    "DJs Favorite Artists"
+    @swagger.operation(
+        notes="Top plays of artists by one DJ",
+        responseClass=PlaylistTrack.__name__,
+        nickname='dj_favorite_artist',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": PlaylistTrack.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, dj_id: int) -> List[Dict[str, Any]]:
         favorites = playlist_tracks.get_favorite_artists(
             dj_id=dj_id, reverse=True, min_plays=5)
@@ -447,7 +554,34 @@ class DJFavoriteArtistResource(Resource):
         return one_dj_favorites_schema.dump(favorites)
 
 
+@swagger.model
 class DJFavoriteAlbumResource(Resource):
+    "DJs Favorite Albums"
+    @swagger.operation(
+        notes="Top plays of albums by one DJ",
+        responseClass=PlaylistTrack.__name__,
+        nickname='dj_favorite_album',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": PlaylistTrack.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, dj_id: int) -> List[Dict[str, Any]]:
         favorites = playlist_tracks.get_favorite_albums(
             dj_id=dj_id, reverse=True, min_plays=5)
@@ -459,7 +593,34 @@ class DJFavoriteAlbumResource(Resource):
         return one_dj_favorites_schema.dump(favorites)
 
 
+@swagger.model
 class DJFavoriteTrackResource(Resource):
+    "DJs Favorite Tracks"
+    @swagger.operation(
+        notes="Top plays of tracks by one DJ",
+        responseClass=PlaylistTrack.__name__,
+        nickname='dj_favorite_track',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": PlaylistTrack.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, dj_id: int) -> List[Dict[str, Any]]:
         favorites = playlist_tracks.get_favorite_tracks(
             dj_id=dj_id, reverse=True, min_plays=5)
@@ -484,7 +645,6 @@ api.add_resource(
 # http://0.0.0.0:5000/last_played/track=eclipse
 
 
-#@swagger.model
 class LastPlayedSchema(ma.Schema):
     class Meta:
         fields = (
@@ -495,21 +655,102 @@ class LastPlayedSchema(ma.Schema):
 last_played_schema = LastPlayedSchema(many=True)
 
 
+@swagger.model
 class LastPlayedByArtist(Resource):
+    "Last Plays of Artist"
+    @swagger.operation(
+        notes="Last plays of artists containing the search_word",
+        responseClass=PlaylistTrack.__name__,
+        nickname='last_played_artist',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": PlaylistTrack.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, artist: str) -> List[Dict[str, Any]]:
         last_time_played = playlist_tracks.get_last_play_of_artist(
             artist=artist, reverse=True)
         return last_played_schema.dump(last_time_played)
 
 
+@swagger.model
 class LastPlayedByAlbum(Resource):
+    "Last Plays of Album"
+    @swagger.operation(
+        notes="Last plays of albums containing the search_word",
+        responseClass=PlaylistTrack.__name__,
+        nickname='last_played_album',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": PlaylistTrack.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, album: str) -> List[Dict[str, Any]]:
         last_time_played = playlist_tracks.get_last_play_of_album(
             album=album, reverse=True)
         return last_played_schema.dump(last_time_played)
 
 
+@swagger.model
 class LastPlayedByTrack(Resource):
+    "Last Plays of Tracks"
+    @swagger.operation(
+        notes="Last plays of tracks containing the search_word",
+        responseClass=PlaylistTrack.__name__,
+        nickname='last_played_track',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": PlaylistTrack.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, track: str) -> List[Dict[str, Any]]:
         last_time_played = playlist_tracks.get_last_play_of_track(
             track=track, reverse=True)
@@ -528,7 +769,6 @@ api.add_resource(LastPlayedByTrack, '/last_played/track=<string:track>')
 # http://0.0.0.0:5000/top_plays/top=5&order_by=track&start_date=2020-01-02&end_date=2020-01-10
 
 
-#@swagger.model
 class TopTenSchema(ma.Schema):
     class Meta:
         fields = ("plays", "artist", "album_title", "track_title")
@@ -537,7 +777,34 @@ class TopTenSchema(ma.Schema):
 top_n_artist_schema = TopTenSchema(many=True)
 
 
+@swagger.model
 class TopTen(Resource):
+    "Top Plays"
+    @swagger.operation(
+        notes="Top plays between two dates",
+        responseClass=PlaylistTrack.__name__,
+        nickname='top plays',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": PlaylistTrack.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(
             self, order_by: str, start_date: str, end_date: str, top: int = 10
             ) -> List[Dict[str, Any]]:
@@ -570,7 +837,6 @@ api.add_resource(
 # http://0.0.0.0:5000/dj_stats/order_by=lastshow&reverse=1
 
 
-#@swagger.model
 class DJStatsSchema(ma.Schema):
     class Meta:
         fields = ("air_name", "dj_id", "showcount", "firstshow", "lastshow")
@@ -579,14 +845,67 @@ class DJStatsSchema(ma.Schema):
 dj_stats_schema = DJStatsSchema(many=True)
 
 
+@swagger.model
 class DJStatsNoArgs(Resource):
+    "DJs by air_name"
+    @swagger.operation(
+        notes="DJs on order of air_name",
+        responseClass=Playlist.__name__,
+        nickname='DJ air_names',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": Playlist.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self) -> List[Dict[str, Any]]:
         dj_stats = playlists.get_djs_alphabetically()
-        # return dj_stats_schema.dump(dj_stats)
         return dj_stats_schema.jsonify(dj_stats)
 
 
+@swagger.model
 class DJStats(Resource):
+    "DJs by various accomplishments"
+    @swagger.operation(
+        notes="DJs by first_show, last_show, show_count, dj_id or air_name",
+        responseClass=Playlist.__name__,
+        nickname='DJ Stats',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": Playlist.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(
             self, order_by: str = 'air_name', reverse: int = 1
             ) -> List[Dict[str, Any]]:
@@ -615,7 +934,6 @@ api.add_resource(DJStatsNoArgs, '/dj_stats')
 # http://0.0.0.0:5000/album_tracks/497606
 
 
-#@swagger.model
 class AlbumTracksSchema(ma.Schema):
     class Meta:
         fields = ("indx", "title", "artist")
@@ -624,7 +942,34 @@ class AlbumTracksSchema(ma.Schema):
 album_tracks_schema = AlbumTracksSchema(many=True)
 
 
+@swagger.model
 class AlbumTracks(Resource):
+    "Tracks on an Album"
+    @swagger.operation(
+        notes="Tracks on an Album",
+        responseClass=Track.__name__,
+        nickname='Album Tracks',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": Track.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, kfjc_album_id: int) -> List[Dict[str, Any]]:
         album_tracks = tracks.get_tracks_by_kfjc_album_id(kfjc_album_id)
         return album_tracks_schema.dump(album_tracks)
@@ -642,7 +987,6 @@ we use the albums table lookup. But if we back it out from the tracks table,
 compilation albums would be included."""
 
 
-#@swagger.model
 class ArtistsAlbumsSchema(ma.Schema):
     class Meta:
         fields = ("kfjc_album_id", "album_title", "artist")
@@ -651,7 +995,34 @@ class ArtistsAlbumsSchema(ma.Schema):
 artists_albums_schema = ArtistsAlbumsSchema(many=True)
 
 
+@swagger.model
 class ArtistsAlbums(Resource):
+    "Albums by an Artist"
+    @swagger.operation(
+        notes="Albums by an Artist",
+        responseClass=Album.__name__,
+        nickname='Artist\'s Albums',
+        parameters=[
+            {
+              "name": "body",
+              "description": "blueprint object that needs to be added. YAML.",
+              "required": True,
+              "allowMultiple": False,
+              "dataType": Album.__name__,
+              "paramType": "body"
+            }
+          ],
+        responseMessages=[
+            {
+              "code": 201,
+              "message": "Created. created blueprint URL in Location header"
+            },
+            {
+              "code": 405,
+              "message": "Invalid input"
+            }
+          ]
+        )
     def get(self, artist: str) -> List[Dict[str, Any]]:
         albums_by_artist = []
         tracks_by_artist = tracks.get_tracks_by_an_artist(artist=artist)

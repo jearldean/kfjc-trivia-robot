@@ -99,7 +99,7 @@ def dj_needs_more_shows(dj_id: int) -> str:
         f"""Beep! Beep! Not enough data!\nMy databanks show """
         f"""that DJ {air_name} hasn't done enough shows to """
         f"""compute favorites data.""")
-    if djs.WHITE_HEART_EMOJI not in air_name:
+    if djs.WHITE_HEART not in air_name:
         # Insensitive to put this on a DJ memorial.
         warning_will_robinson += " Keep listening!"
     return warning_will_robinson
@@ -268,14 +268,13 @@ def last_time_played(
         FROM playlists as p
         INNER JOIN playlist_tracks as pt
         ON (p.kfjc_playlist_id = pt.kfjc_playlist_id)
-        WHERE LOWER(pt.{search_column_name}) LIKE LOWER('%{search_for_item}%')
+        WHERE LOWER(pt.{search_column_name}) LIKE LOWER('%%s%')
         AND pt.time_played IS NOT NULL
         AND pt.{search_column_name} != 'None'
         ORDER BY pt.time_played {reverse_it}
         LIMIT {LIMITER}""")
-    # TODO: are we vulnerable to SQL injection attack from search_for_item?
 
-    results = db.session.execute(who_played_it_when)
+    results = db.session.execute(who_played_it_when, (search_for_item, ))
     reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(
         results)
     return reply_named_tuple

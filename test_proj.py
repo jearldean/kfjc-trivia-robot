@@ -33,8 +33,8 @@ class RobotTestsDatabase(unittest.TestCase):
     rest_api_parameterized_tests = [
         ["/playlists/60340", b"Sir Cumference"],
         ["/playlist_tracks/60706", b"James Brown"],
-        ["/dj_favorites/album/dj_id=255", b"Monty Python\'s Previous Record"],
-        ["/dj_favorites/artist/dj_id=255", b"Monty Python\'s Previous Record"],
+        ["/dj_favorites/artist/dj_id=177", b"Delixx"],
+        ["/dj_favorites/album/dj_id=177", b"Uprising in Dub"],
         ["/dj_favorites/track/dj_id=177", b"Zion Train Dub"],
         ["/last_played/artist=JAMES%20BROWN", b"2019-11-26T02:01:15"],
         ["/last_played/album=Matching%20tie", b"2019-10-06T11:57:36"],
@@ -132,20 +132,16 @@ class RobotTestsDatabase(unittest.TestCase):
         self.assertFalse(
             albums.get_album_by_id(kfjc_album_id=695055).is_collection)
 
+        # Testing the Profanity Filter:
         self.assertNotIn(
             "Fuck", albums.get_album_by_id(kfjc_album_id=140533).title)
         self.assertNotIn(
             "Pussy", albums.get_album_by_id(kfjc_album_id=140533).title)
 
-        # TODO   import_station_data. no bad times
-        # ["0000-00-00 00:00:00", "1970-01-01 01:00:00", "1969-12-31 16:00:00"]
-        # TODO   import_station_data. time estimator
-        # TODO   import_station_data. other data smoothing.
-
         self.assertEqual(
-            "Monty Python\'s Previous Record",
+            "The Meditations",
             playlist_tracks.get_favorite_artists(
-                dj_id=255, reverse=True, min_plays=5)[0].artist)
+                dj_id=177, reverse=True, min_plays=5)[0].artist)
         self.assertEqual(
             "Monty Python\'s Previous Record",
             playlist_tracks.get_favorite_albums(
@@ -182,29 +178,30 @@ class RobotTestsDatabase(unittest.TestCase):
                 dj_id=177, min_plays=5)[0].artist)
         self.assertEqual(9, playlist_tracks.get_favorite_artists(
             dj_id=177, min_plays=5)[0].plays)
-        # self.assertEqual('The Meditations',
-        # playlist_tracks.get_a_random_artist(min_appearances=4))
-        self.assertIn(playlist_tracks.get_a_random_album(min_appearances=3),  [
-            'Greatest Hits', 'Message From the Meditations',
-            'Another Monty Python Record',
-            "Monty Python's Previous Record", 'Matching Tie & Handkerchief',
-            "Monty Python's Contractual Obligation Album", 'Uprising in Dub'])
-        # TODO self.assertIn(playlist_tracks.get_a_random_track(
-        # min_appearances=2), [])
-        # TODO playlist_tracks.get_a_random_track(min_appearances=0)
-        # self.assertEqual('Zion Train Dub',
-        # playlist_tracks.get_a_random_track(min_appearances=2))
+
+        self.assertIn(
+            playlist_tracks.get_a_random_artist(min_appearances=6),
+            ['The Meditations', "Delixx"])
+        self.assertIn(
+            playlist_tracks.get_a_random_album(min_appearances=3),
+            ['Greatest Hits', 'Message From the Meditations',
+             'Another Monty Python Record',
+             "Monty Python's Previous Record", 'Matching Tie & Handkerchief',
+             "Monty Python's Contractual Obligation Album", 'Uprising in Dub'])
+        self.assertIn(
+            playlist_tracks.get_a_random_track(min_appearances=5),
+            ["Zion Train Dub"])
 
         self.assertEqual(
-            'Dr Doug',
+            "Spliff Skankin'",
             playlist_tracks.get_last_play_of_artist(
                 artist="Brother Ali")[0].air_name)
         self.assertEqual(
-            'Dr Doug',
+            "Spliff Skankin'",
             playlist_tracks.get_last_play_of_album(
                 album="Shadows on the Sun")[0].air_name)
         self.assertEqual(
-            'Dr Doug',
+            "Spliff Skankin'",
             playlist_tracks.get_last_play_of_track(
                 track="Star Quality")[0].air_name)
 
