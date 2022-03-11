@@ -333,6 +333,7 @@ def retrieve_dj_stats_only_once() -> Tuple:
     return dj_dict, dj_airnames
 
 # -=-=-=-=-=-=-=-=-=-=-=- REST API: Leaderboard -=-=-=-=-=-=-=-=-=-=-=-
+# Your Swagger Spec is generated at: http://0.0.0.0:5000/api/spec.json
 # http://0.0.0.0:5000/rest_leaderboard
 
 
