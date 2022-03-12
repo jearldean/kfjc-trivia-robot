@@ -1,6 +1,7 @@
 """Script to import station data and seed the question table."""
 
 import os
+import time
 from server import app
 from model import db, connect_to_db
 
@@ -22,8 +23,13 @@ def recreate_all_tables():
 def nuclear_option():
     """Import and fix all Station Data and Seed All Questions."""
     recreate_all_tables()  # I DELETE DATA!
+
+    tic = time.perf_counter()
     kfjc.import_all_tables()
+    toc = time.perf_counter()
     questions.make_all_questions()
+    hours = float((toc - tic)/3600)
+    print(f"Importing Station Data took {hours:0.4f} hours.")
 
 
 if __name__ == "__main__":
