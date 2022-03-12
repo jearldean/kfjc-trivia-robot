@@ -263,9 +263,13 @@ def last_time_played(
 
     # LIKE on a bare string is vulnerable to SQL Injection attack;
     # so, neuter their weapons:
-    search_column_name = search_column_name.replace(
+    search_for_item = search_for_item.replace(
         "'", " ").replace("dropdb", " ").replace("%", " ").replace(
-            "@", " ").replace("-", " ").replace("*", " ")
+            "@", " ").replace("-", " ").replace(
+            "*", " ").replace("  ", " ").strip()
+
+    # Still, each word should participate in the search:
+    search_for_item = search_for_item.replace(" ", "%")
 
     reverse_it = "DESC" if reverse else ""
     who_played_it_when = (

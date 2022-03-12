@@ -204,6 +204,14 @@ class RobotTestsDatabase(unittest.TestCase):
             "Dr Doug",
             playlist_tracks.get_last_play_of_track(
                 track="Star Quality")[0].air_name)
+        self.assertEqual(
+            "BLM - Rock and Hip Hop",
+            playlist_tracks.get_last_play_of_artist(
+                artist="hip  hop")[0].artist)
+        self.assertEqual(
+            "BLM - Rock and Hip Hop",
+            playlist_tracks.get_last_play_of_artist(
+                artist=" h i p  h o p ")[0].artist)
 
         # Also tests: common.get_count(table_dot_column, unique=True)
         self.assertEqual(97, playlist_tracks.how_many_tracks())
