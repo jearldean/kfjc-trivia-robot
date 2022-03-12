@@ -1,0 +1,151 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2580
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red109\green109\blue109;\red32\green32\blue32;\red110\green110\blue109;
+\red32\green32\blue32;\red216\green0\blue213;\red191\green100\blue38;\red153\green168\blue186;\red133\green96\blue154;
+\red134\green97\blue155;\red32\green32\blue32;\red251\green0\blue174;\red86\green132\blue173;\red88\green118\blue71;
+}
+{\*\expandedcolortbl;;\csgenericrgb\c42745\c42745\c42745;\csgenericrgb\c12549\c12549\c12549;\cssrgb\c50547\c50547\c50232;
+\cssrgb\c16835\c16835\c16730;\cssrgb\c88817\c6175\c86790;\csgenericrgb\c74902\c39216\c14902;\csgenericrgb\c60000\c65882\c72941;\csgenericrgb\c52157\c37647\c60392;
+\cssrgb\c60121\c47003\c67146;\cssrgb\c16817\c16817\c16733;\cssrgb\c100000\c4020\c73799;\csgenericrgb\c33725\c51765\c67843;\csgenericrgb\c34510\c46275\c27843;
+}
+\margl1440\margr1440\vieww18700\viewh15300\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs26 \cf2 \cb3 -- There\'92s a \cf4 \cb5 \strike \strikec6 pink line\cf2 \cb3 \strike0\striked0  through the columns NOT USED by the KFJC Trivia Robot.\
+\
+\
+-- auto-generated definition\
+\cf7 create table user\
+\cf8 (\
+    \cf9 ID          \cf7 int auto_increment\
+        primary key,\
+    \cf10 \cb11 \strike \strikec12 NAME\cf9 \cb3 \strike0\striked0         \cf7 varchar\cf8 (\cf13 20\cf8 )                          \cf7 not null,\
+    \cf9 AIRNAME     \cf7 varchar\cf8 (\cf13 30\cf8 )                          \cf7 not null,\
+    \cf10 \cb11 \strike \strikec12 REALNAME\cf9 \cb3 \strike0\striked0     \cf7 varchar\cf8 (\cf13 20\cf8 )                          \cf7 not null,\
+    \cf10 \cb11 \strike \strikec12 PASSWORD\cf9 \cb3 \strike0\striked0     \cf7 varchar\cf8 (\cf13 20\cf8 )                          \cf7 not null,\
+    \cf10 \cb11 \strike \strikec12 EXPIRATION\cf9 \cb3 \strike0\striked0   \cf7 date            default \cf14 '0000-00-00' \cf7 not null,\
+    \cf9 `\cf10 \cb11 \strike \strikec12 GROUP\cf9 \cb3 \strike0\striked0 `     \cf7 char            default \cf14 'b'          \cf7 not null,\
+    \cf10 \cb11 \strike \strikec12 email\cf9 \cb3 \strike0\striked0        \cf7 varchar\cf8 (\cf13 80\cf8 )                          \cf7 null,\
+    \cf10 \cb11 \strike \strikec12 preferences\cf9 \cb3 \strike0\striked0  \cf7 varchar\cf8 (\cf13 1024\cf8 )                        \cf7 not null,\
+    \cf9 SILENT_MIC  \cf7 enum \cf8 (\cf14 'Y'\cf7 , \cf14 'N'\cf8 ) \cf7 default \cf14 'N'          \cf7 not null comment \cf14 'Dead == Y'\
+\cf8 )\
+    \cf7 charset \cf8 = \cf7 ascii;\
+\
+create index \cf8 DJNAME\
+    \cf7 on user \cf8 (\cf9 AIRNAME\cf8 )\cf7 ;\
+\
+\
+\cf2 -- auto-generated definition\
+\cf7 create table \cf8 playlist_track\
+(\
+    \cf9 playlist_id \cf7 int default \cf13 0 \cf7 not null,\
+    \cf9 indx        \cf7 int           null,\
+    \cf10 \cb11 \strike \strikec12 is_current\cf9 \cb3 \strike0\striked0   \cf7 char          null,\
+    \cf9 artist      \cf7 varchar\cf8 (\cf13 60\cf8 )   \cf7 null,\
+    \cf9 track_title \cf7 varchar\cf8 (\cf13 60\cf8 )   \cf7 null,\
+    \cf9 album_title \cf7 varchar\cf8 (\cf13 60\cf8 )   \cf7 null,\
+    \cf9 album_id    \cf7 int           null,\
+    \cf10 \cb11 \strike \strikec12 album_label\cf9 \cb3 \strike0\striked0  \cf7 varchar\cf8 (\cf13 60\cf8 )   \cf7 null,\
+    \cf9 time_played \cf7 datetime      null\
+\cf8 )\
+    \cf7 charset \cf8 = \cf7 ascii;\
+\
+create index \cf8 album_id\
+    \cf7 on \cf8 playlist_track (\cf9 album_id\cf8 )\cf7 ;\
+\
+create index \cf8 playlist_id\
+    \cf7 on \cf8 playlist_track (\cf9 playlist_id\cf8 )\cf7 ;\
+\
+\cf2 -- auto-generated definition\
+\cf7 create table \cf8 playlist\
+(\
+    \cf9 id         \cf7 int default \cf13 0 \cf7 not null\
+        primary key,\
+    \cf9 user_id    \cf7 int           null,\
+    \cf9 air_name   \cf7 varchar\cf8 (\cf13 30\cf8 )   \cf7 null,\
+    \cf9 start_time \cf7 datetime      null,\
+    \cf9 end_time   \cf7 datetime      null\
+\cf8 )\
+    \cf7 charset \cf8 = \cf7 ascii;\
+\
+create index \cf8 USER_ID\
+    \cf7 on \cf8 playlist (\cf9 user_id\cf8 )\cf7 ;\
+\
+create index \cf8 start_time\
+    \cf7 on \cf8 playlist (\cf9 start_time\cf8 )\cf7 ;\
+\
+\
+\cf2 -- auto-generated definition\
+\cf7 create table \cf8 coll_track\
+(\
+    \cf9 album_id \cf7 int  default \cf13 0   \cf7 not null,\
+    \cf9 title    \cf7 varchar\cf8 (\cf13 60\cf8 )      \cf7 null,\
+    \cf9 artist   \cf7 varchar\cf8 (\cf13 60\cf8 )      \cf7 null,\
+    \cf9 indx     \cf7 int              null,\
+    \cf10 \cb11 \strike \strikec12 clean\cf9 \cb3 \strike0\striked0     \cf7 char default \cf14 '0' \cf7 not null\
+\cf8 )\
+    \cf7 charset \cf8 = \cf7 ascii;\
+\
+create index \cf8 album_id\
+    \cf7 on \cf8 coll_track (\cf9 album_id\cf8 )\cf7 ;\
+\
+create fulltext index \cf8 artist\
+    \cf7 on \cf8 coll_track (\cf9 artist\cf8 )\cf7 ;\
+\
+\cf2 -- auto-generated definition\
+\cf7 create table \cf8 track\
+(\
+    \cf9 album_id \cf7 int  default \cf13 0   \cf7 not null,\
+    \cf9 title    \cf7 varchar\cf8 (\cf13 60\cf8 )      \cf7 null,\
+    \cf9 indx     \cf7 int              null,\
+    \cf10 \cb11 \strike \strikec12 clean\cf9 \cb3 \strike0\striked0     \cf7 char default \cf14 '0' \cf7 not null\
+\cf8 )\
+    \cf7 charset \cf8 = \cf7 ascii;\
+\
+create index \cf8 album_id\
+    \cf7 on \cf8 track (\cf9 album_id\cf8 )\cf7 ;\
+\
+\
+\
+\cf2 -- auto-generated definition\
+\cf7 create table \cf8 album\
+(\
+    \cf9 id            \cf7 int          default \cf13 0            \cf7 not null\
+        primary key,\
+    \cf9 artist        \cf7 varchar\cf8 (\cf13 60\cf8 )                       \cf7 null,\
+    \cf9 title         \cf7 varchar\cf8 (\cf13 60\cf8 )                       \cf7 null,\
+    \cf10 \cb11 \strike \strikec12 category\cf9 \cb3 \strike0\striked0       \cf7 char                              null,\
+    \cf10 \cb11 \strike \strikec12 media\cf9 \cb3 \strike0\striked0          \cf7 char                              null,\
+    \cf10 \cb11 \strike \strikec12 format\cf9 \cb3 \strike0\striked0         \cf7 char                              null,\
+    \cf10 \cb11 \strike \strikec12 dummy1\cf9 \cb3 \strike0\striked0         \cf7 char                              null,\
+    \cf9 is_collection \cf7 char                              null,\
+    \cf10 \cb11 \strike \strikec12 location\cf9 \cb3 \strike0\striked0       \cf7 char                              null,\
+    \cf10 \cb11 \strike \strikec12 dummy2\cf9 \cb3 \strike0\striked0         \cf7 char                              null,\
+    \cf10 \cb11 \strike \strikec12 add_date\cf9 \cb3 \strike0\striked0       \cf7 date                              null,\
+    \cf10 \cb11 \strike \strikec12 mod_date\cf9 \cb3 \strike0\striked0       \cf7 date                              null,\
+    \cf10 \cb11 \strike \strikec12 label_id\cf9 \cb3 \strike0\striked0       \cf7 int                               null,\
+    \cf10 \cb11 \strike \strikec12 mp3\cf9 \cb3 \strike0\striked0            \cf7 smallint                          null,\
+    \cf10 \cb11 \strike \strikec12 reviewer_djid\cf9 \cb3 \strike0\striked0  \cf7 int unsigned default \cf14 '0'          \cf7 not null,\
+    \cf10 \cb11 \strike \strikec12 date_assigned\cf9 \cb3 \strike0\striked0  \cf7 date         default \cf14 '0000-00-00' \cf7 not null,\
+    \cf10 \cb11 \strike \strikec12 date_reviewed\cf9 \cb3 \strike0\striked0  \cf7 date         default \cf14 '0000-00-00' \cf7 not null\
+\cf8 )\
+    \cf7 charset \cf8 = \cf7 ascii;\
+\
+create fulltext index \cf8 artist\
+    \cf7 on \cf8 album (\cf9 artist\cf8 )\cf7 ;\
+\
+create index \cf8 category\
+    \cf7 on \cf8 album (\cf9 category\cf8 )\cf7 ;\
+\
+create index \cf8 date_assigned\
+    \cf7 on \cf8 album (\cf9 date_assigned\cf8 )\cf7 ;\
+\
+create index \cf8 location\
+    \cf7 on \cf8 album (\cf9 location\cf8 )\cf7 ;\
+\
+create index \cf8 reviewer_djid\
+    \cf7 on \cf8 album (\cf9 reviewer_djid\cf8 )\cf7 ;\
+\
+\
+\
+}

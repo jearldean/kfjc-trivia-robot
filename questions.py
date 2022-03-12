@@ -90,7 +90,7 @@ def make_all_questions():
     mins = float((toc - tic)/60)
     print(
         f"Seeding Questions took {mins:0.4f} minutes "
-        "using SEED_QUESTION_COUNT={SEED_QUESTION_COUNT}.")
+        f"using SEED_QUESTION_COUNT={SEED_QUESTION_COUNT}.")
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
