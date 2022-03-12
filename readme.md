@@ -49,9 +49,14 @@ Here's how to install the robot from scratch.
 
 * **First, get a radio station.**
 
-  Let's pretend there's another radio station out there with a SQL database matching KFJC's schema (schema provided in /docs. Also, there are some much shorter example csv files in test_data/station_data). This describes how we could install a new working instance based on this new data set.
+  Let's pretend there's another radio station out there with a SQL database matching KFJC's schema. Schemas provided in
+   * /docs/kfjc_trivia_robot_schema.dll.rtf
+   * station_data/radio_station_schema.dll
+   * Short example csv files in test_data/station_data
+  
+  This document shall describe how we could install a new working instance based on this new data set.
 
-* **Import their data from CSVs.**
+* **Import Data from CSVs.**
 
   Create CSVs of the station data:
 
@@ -64,7 +69,7 @@ Here's how to install the robot from scratch.
   |coll_track.csv|track data with an artist field. (Collections)|
   |track.csv|track data with no artist field.|
 
-  Put them in the kfjc-trivia-robot/station_data folder.
+  Put them in the kfjc-trivia-robot/station_data folder for import.
 
 
 * **Run the Seed Database Program**
@@ -95,7 +100,7 @@ Here's how to install the robot from scratch.
 
 
 * **Test Your Server Locally**
-  * Run it: ` python3 server.py `
+  * Run it: $ ` python3 server.py `
   * Hit it: http://0.0.0.0:5000
 
 
