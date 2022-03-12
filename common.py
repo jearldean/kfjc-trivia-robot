@@ -39,14 +39,14 @@ def format_an_int_with_commas(your_int: int) -> str:
 def make_date_pretty(date_time_string: Union[datetime, str]) -> str:
     """
     >>> make_date_pretty('2022-02-01 00:03:33.000000')
-    'Feb 1, 2022'
+    'Tue, Feb 1, 2022'
     >>> make_date_pretty(date(2010, 10, 8))
-    'Oct 8, 2010'
+    'Fri, Oct 8, 2010'
     """
     if isinstance(date_time_string, str):
         date_time_string = datetime.strptime(
             date_time_string, "%Y-%m-%d %H:%M:%S.%f")
-    return date_time_string.strftime('%b %-d, %Y')
+    return date_time_string.strftime('%a, %b %-d, %Y')
 
 
 def minutes_to_years(minutes: int) -> str:

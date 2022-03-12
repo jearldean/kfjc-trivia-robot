@@ -618,15 +618,9 @@ def last_play_engine(media: str):
             air_name = djs.get_airname_for_dj(dj_id=zz.dj_id)
             pretty_date = common.make_date_pretty(
                 date_time_string=zz.time_played)
-            if media == 'artist':
-                media_title = zz.artist
-            elif media == 'album':
-                media_title = zz.album_title
-            else:  # 'track'
-                media_title = zz.track_title
             present_answer_data.append([
-                f"{air_name} played the {media} '{media_title}' on ",
-                pretty_date])
+                f"{air_name} played the track '{zz.track_title}' from the album"
+                f" '{zz.album_title}' by {zz.artist} on {pretty_date}"])
 
         create_question(
             question_type=QUESTION_TYPES[media+'s'],
