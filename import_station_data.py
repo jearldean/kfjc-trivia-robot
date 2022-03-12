@@ -82,7 +82,7 @@ def coerce_imported_data(one_cell: Any) -> Any:
 
     throwaway_titles = [
         'NULL', "Null", '', " ", "?", ".", "..", "...", "*", "-", ",",
-        "\""]
+        "\"", "None.", "None", "(None)", "none", "none."]
 
     if one_cell in throwaway_titles + BAD_TIMES:
         return None  # No Data *IS* No Data.

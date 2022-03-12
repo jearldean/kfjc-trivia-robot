@@ -193,15 +193,15 @@ class RobotTestsDatabase(unittest.TestCase):
             ["Zion Train Dub"])
 
         self.assertEqual(
-            "Spliff Skankin'",
+            "Dr Doug",
             playlist_tracks.get_last_play_of_artist(
                 artist="Brother Ali")[0].air_name)
         self.assertEqual(
-            "Spliff Skankin'",
+            "Dr Doug",
             playlist_tracks.get_last_play_of_album(
                 album="Shadows on the Sun")[0].air_name)
         self.assertEqual(
-            "Spliff Skankin'",
+            "Dr Doug",
             playlist_tracks.get_last_play_of_track(
                 track="Star Quality")[0].air_name)
 

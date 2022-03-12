@@ -261,6 +261,12 @@ def last_time_played(
     """Search and return the last time any DJ played
     an artist, album or track."""
 
+    # LIKE on a bare string is vulnerable to SQL Injection attack;
+    # so, neuter their weapons:
+    search_column_name = search_column_name.replace(
+        "'", " ").replace("dropdb", " ").replace("%", " ").replace(
+            "@", " ").replace("-", " ").replace("*", " ")
+
     reverse_it = "DESC" if reverse else ""
     who_played_it_when = (
         f""" SELECT p.dj_id, p.air_name, pt.artist, pt.album_title,
@@ -268,13 +274,13 @@ def last_time_played(
         FROM playlists as p
         INNER JOIN playlist_tracks as pt
         ON (p.kfjc_playlist_id = pt.kfjc_playlist_id)
-        WHERE LOWER(pt.{search_column_name}) LIKE LOWER('%%s%')
+        WHERE LOWER(pt.{search_column_name}) LIKE LOWER('%{search_for_item}%')
         AND pt.time_played IS NOT NULL
         AND pt.{search_column_name} != 'None'
         ORDER BY pt.time_played {reverse_it}
         LIMIT {LIMITER}""")
 
-    results = db.session.execute(who_played_it_when, (search_for_item, ))
+    results = db.session.execute(who_played_it_when)
     reply_named_tuple = common.convert_list_o_dicts_to_list_o_named_tuples(
         results)
     return reply_named_tuple
