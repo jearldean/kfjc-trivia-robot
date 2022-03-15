@@ -100,7 +100,11 @@ Here's how to install the robot from scratch.
 
 
 * **Test Your Server Locally**
-  * Run it: $ ` python3 server.py `
+  * Make a venv: `virtualenv venv` 
+  * Activate it: `source venv/bin/activate`
+  * Install Requirements: $ `pip3 install -r requirements.txt`
+  * Do a secret: $ `export APP_SECRET_KEY=`some secret key
+  * Run it: $ `python3 server.py`
   * Hit it: http://0.0.0.0:5000
 
 

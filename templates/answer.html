@@ -34,11 +34,11 @@
           {% for ii in present_answer_data %}
             {% if the_right_answer in ii %}
             <tr id="ima_leader">
-              <td>{{ ii[0] }} </td><td>{{ ii[1] }} </td> 
+              <td>{{ ii[0] }}</td><td style="width: 170px;">{{ ii[1] }}</td> 
             </tr>
             {% else %}
             <tr>
-              <td>{{ ii[0] }} </td><td>{{ ii[1] }} </td> 
+              <td>{{ ii[0] }}</td><td style="width: 170px;">{{ ii[1] }}</td> 
             </tr>
             {% endif %}
           {% endfor %}

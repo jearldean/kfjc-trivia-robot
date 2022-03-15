@@ -277,11 +277,11 @@ def leaderboard() -> Response:
 def random_robot_image(happy: Union[bool, None] = None) -> str:
     """Give a path to a robot image."""
 
-    if happy is None:
+    if happy is None:  # Any Robot
         robot_picture_idx = choice(range(1, 13))
-    elif happy is False:
+    elif happy is False:  # Sad, Encouraging Robot
         robot_picture_idx = choice([7, 8, 11, 12])
-    else:  # happy is True
+    else:  # Happy Robot
         robot_picture_idx = choice([4, 6, 9])
 
     return f"static/img/robot{robot_picture_idx}.png"

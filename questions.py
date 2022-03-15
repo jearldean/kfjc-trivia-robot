@@ -561,9 +561,9 @@ def tracks_on_an_album():
 def create_last_play_questions():
     """Create questions about the last time an
     Artist/Album/Track was played."""
-    last_play_engine(media='track')
     last_play_engine(media='artist')
     last_play_engine(media='album')
+    last_play_engine(media='track')
 
 
 def last_play_engine(media: str):
@@ -619,8 +619,8 @@ def last_play_engine(media: str):
             pretty_date = common.make_date_pretty(
                 date_time_string=zz.time_played)
             present_answer_data.append([
-                f"{air_name} played the track '{zz.track_title}' from the album"
-                f" '{zz.album_title}' by {zz.artist} on {pretty_date}"])
+                f"{air_name} played the track '{zz.track_title}' from "
+                f"the album '{zz.album_title}' by {zz.artist}", pretty_date])
 
         create_question(
             question_type=QUESTION_TYPES[media+'s'],
