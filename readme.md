@@ -3,6 +3,8 @@
 <br>
 A friendly robot will quiz you about the KFJC's eclectic music library and 26 years of playlist data. But the quiz answers aren't a secret - you can ask the robot questions on the Ask page!
 
+http://jearldean.com
+
 <br>
 
 ***How to Play***
