@@ -290,21 +290,21 @@ def random_robot_image(happy: Union[bool, None] = None) -> str:
 def assemble_greeting() -> str:
     """Gather stats for to make a compelling reason to take a database quiz."""
 
-    first_and_last_show = playlists.first_show_last_show()
-    first_show_in_db = common.make_date_pretty(first_and_last_show[0])
-    duration = common.minutes_to_years(
-        ((first_and_last_show[1] - first_and_last_show[0]).total_seconds())/60)
+    first_show, last_show = playlists.first_show_last_show()
+    first_show_in_db = common.make_date_pretty(first_show)
+    last_show_in_db = common.make_date_pretty(last_show)
     count_all_shows = common.format_an_int_with_commas(
         playlists.how_many_shows())
     count_prolific_djs = common.format_an_int_with_commas(
         playlists.how_many_djs())
     count_playlist_tracks = common.format_an_int_with_commas(
         playlist_tracks.how_many_tracks())
-
+    duration = common.minutes_to_years(((last_show - first_show).total_seconds())/60)
     greeting = (
         f"KFJC has a database going back to {first_show_in_db} "
         f"that contains {count_all_shows} shows by {count_prolific_djs} DJs. "
         f"They've played {count_playlist_tracks} songs in {duration}! "
+        f"My data was refreshed on {last_show_in_db}. "
         f"Wanna play a trivia game with me?")
     return greeting
 

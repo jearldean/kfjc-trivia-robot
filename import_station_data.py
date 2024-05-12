@@ -19,11 +19,13 @@ import tracks
 # -=-=-=-=-=-=-=-=-=-=-=- Clean up Data for Import -=-=-=-=-=-=-=-=-=-=-=-
 
 BAD_TIMES = [
-    "0000-00-00 00:00:00", "1970-01-01 01:00:00", "1969-12-31 16:00:00"]
+    "0000-00-00 00:00:00", "1970-01-01 01:00:00", "1969-12-31 16:00:00",
+    "1900-12-01 20:00:00.00", "1970-07-27 12:00:00.00"]
 
 DO_NOT_CHANGE = [
-        'Listen, Whitey!  The Sounds of Black Power 1967-1974']
+    'Listen, Whitey!  The Sounds of Black Power 1967-1974']
 
+SILENT_MIC = [210]  # When someone passes, it can be psychologically difficult to flip this bit.
 
 def fix_playlist_times(start_time: str, end_time: str) -> datetime:
     """A few dates are borked but if the other time cell is populated,
@@ -41,6 +43,21 @@ def fix_playlist_times(start_time: str, end_time: str) -> datetime:
         start_time = time_shift(end_time, shift=-3)
     elif end_time in BAD_TIMES and start_time not in BAD_TIMES:
         end_time = time_shift(start_time, shift=3)
+
+    if start_time:
+        start_time_datetime_obj = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+        if start_time_datetime_obj.date() > datetime.today().date():
+            start_time = None
+            end_time = None
+    if end_time:
+        end_time_datetime_obj = datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
+        if end_time_datetime_obj.date() > datetime.today().date():
+            start_time = None
+            end_time = None
+
+    ##if start_time.date() > datetime.today().date() or end_time.date() > datetime.today().date():
+    #    start_time = None    # Future: disallow dates before 1995 birth of spidey.
+    #    end_time = None
 
     return start_time, end_time
 
@@ -116,15 +133,17 @@ def fix_titles(some_title: str) -> str:
     if ", the" in some_title.lower() or ",the" in some_title.lower():
         without_the = some_title.replace(
             ", the", "").replace(",the", "").replace(
-                ", The", "").replace(",The", "")
+            ", The", "").replace(",The", "")
         return f"The {without_the}".strip()
-    elif "," in some_title:
+    if "," in some_title:
         some_title = some_title.replace(",", " ")
         some_title = some_title.replace("  ", " ")
         parts = some_title.split(" ")
         # Swap the first 2 items. Keep everything else in the same order.
         parts[0], parts[1] = parts[1], parts[0]
         some_title = " ".join(parts)
+    if "/" in some_title:
+        some_title = some_title.replace("/", " ")  # Enclose in Backticks, a slash means a new column to SQL.
     return some_title.strip()
 
 
@@ -198,8 +217,8 @@ def create_djs(row: List[Any]):
     if dj_id in [104, 105, -1, 191, 164, 434, 445]:
         administrative = True
     silent_mic = False
-    if row[9] == 'Y' or dj_id == 210:
-        silent_mic = True  # For Djs that have escaped this mortal realm.
+    if row[9] == 'Y' or dj_id in SILENT_MIC:  # (Sometimes they're not so quick to set this flag.)
+        silent_mic = True  # For Djs that have escaped this mortal realm. 💀
 
     djs.create_dj(
         dj_id=dj_id,
@@ -248,7 +267,7 @@ def add_a_missing_album(kfjc_album_id: int, artist: str, album_title: str):
 def create_playlists(row: List[Any]):
     """Add all playlists rows."""
 
-    # If if time is blank but the other isn't,
+    # If one time is blank but the other isn't,
     # we can improve the data by estimating the other time:
     fixed_start_time, fixed_end_time = fix_playlist_times(
         start_time=row[3], end_time=row[4])
@@ -366,10 +385,36 @@ def create_playlist_tracks(row: List[Any]):
     >>> create_playlist_tracks([24506,57,"0","","","",0,'NULL','NULL'])
     >>> create_playlist_tracks([24858,36,"0",'NULL','NULL',"",0,'NULL','NULL'])
     """
-
-    artist = coerce_imported_data(row[3])
+    try:
+        artist = coerce_imported_data(row[3])
+        album_title = coerce_imported_data(row[5])
+        track_title = coerce_imported_data(row[4])
+    except IndexError:  #
+        """ try fixing this later but whatever:
+        ime AS playlists_end_time 
+FROM playlists 
+WHERE playlists.kfjc_playlist_id = %(pk_1)s
+2024-05-11 22:10:24,530 INFO sqlalchemy.engine.Engine [cached since 1290s ago] {'pk_1': 25920}
+2024-05-11 22:10:24,531 INFO sqlalchemy.engine.Engine INSERT INTO playlist_tracks (kfjc_playlist_id, indx, kfjc_album_id, album_title, artist, track_title, time_played) VALUES (%(kfjc_playlist_id)s, %(indx)s, %(kfjc_album_id)s, %(album_title)s, %(artist)s, %(track_title)s, %(time_played)s) RETURNING playlist_tracks.id_
+2024-05-11 22:10:24,531 INFO sqlalchemy.engine.Engine [cached since 1290s ago] {'kfjc_playlist_id': 25920, 'indx': 7, 'kfjc_album_id': 609713, 'album_title': 'Haunted Graffiti 2 The Doldrums Vital Pink', 'artist': 'Ariel Pink', 'track_title': 'strange fires', 'time_played': datetime.datetime(2006, 8, 18, 6, 13, 12)}
+2024-05-11 22:10:24,531 INFO sqlalchemy.engine.Engine COMMIT
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/Users/jem/PyCharmProjects/kfjc-trivia-robot/seed_database.py", line 28, in nuclear_option
+    kfjc.import_all_tables()
+  File "/Users/jem/PyCharmProjects/kfjc-trivia-robot/import_station_data.py", line 535, in import_all_tables
+    seed_a_large_csv(file_path=file_path, row_handler=row_handler)
+  File "/Users/jem/PyCharmProjects/kfjc-trivia-robot/import_station_data.py", line 556, in seed_a_large_csv
+    row_handler(row)
+  File "/Users/jem/PyCharmProjects/kfjc-trivia-robot/import_station_data.py", line 389, in create_playlist_tracks
     album_title = coerce_imported_data(row[5])
-    track_title = coerce_imported_data(row[4])
+IndexError: list index out of range
+>>> ^D
+(venv) jem@Sandys-New-Laptop/Users/jem/PyCharmProjects/kfjc-trivia-robot on 05/11/24 10:22P
+        
+        """
+        return
+
 
     if all(v is None for v in [album_title, artist, track_title]):
         # Not importing blank rows reduced the table size by 11%.
@@ -432,11 +477,37 @@ def create_playlist_tracks(row: List[Any]):
 def create_collection_tracks(row: List[Any]):
     """Add all collection tracks rows."""
 
-    kfjc_album_id = coerce_imported_data(row[0])
-    artist = str(coerce_imported_data(row[2]))
-    title = str(coerce_imported_data(row[1]))
-    indx = coerce_imported_data(row[3])
-    _, artist, title = fix_self_titled_items(None, artist, title)
+    try:
+        kfjc_album_id = coerce_imported_data(row[0])
+        artist = str(coerce_imported_data(row[2]))
+        title = str(coerce_imported_data(row[1]))
+        indx = coerce_imported_data(row[3])
+        _, artist, title = fix_self_titled_items(None, artist, title)
+    except IndexError:
+        return
+
+    """ Try fixing this one later:
+    
+    2024-05-11 23:17:27,585 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+    2024-05-11 23:17:27,585 INFO sqlalchemy.engine.Engine INSERT INTO tracks (kfjc_album_id, artist, title, indx) VALUES (%(kfjc_album_id)s, %(artist)s, %(title)s, %(indx)s) RETURNING tracks.id_
+    2024-05-11 23:17:27,585 INFO sqlalchemy.engine.Engine [cached since 0.09069s ago] {'kfjc_album_id': 9111, 'artist': 'Juluka', 'title': "Nans'impi", 'indx': 6}
+    2024-05-11 23:17:27,586 INFO sqlalchemy.engine.Engine COMMIT
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "/Users/jem/PyCharmProjects/kfjc-trivia-robot/seed_database.py", line 28, in nuclear_option
+        kfjc.import_all_tables()
+      File "/Users/jem/PyCharmProjects/kfjc-trivia-robot/import_station_data.py", line 561, in import_all_tables
+        file_path, row_handler = each_tuple  # unpack
+      File "/Users/jem/PyCharmProjects/kfjc-trivia-robot/import_station_data.py", line 582, in seed_a_large_csv
+        # This points to each table's import function:
+      File "/Users/jem/PyCharmProjects/kfjc-trivia-robot/import_station_data.py", line 482, in create_collection_tracks
+        title = str(coerce_imported_data(row[1]))
+    IndexError: list index out of range
+    >>> 
+
+
+"""
+
 
     tracks.create_track(
         kfjc_album_id=kfjc_album_id,
