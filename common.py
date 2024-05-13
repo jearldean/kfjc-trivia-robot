@@ -20,12 +20,12 @@ def get_count(table_dot_column: str, unique: bool = True) -> sqlalchemy:
         return db.session.query(func.count(table_dot_column)).scalar()
 
 
-def get_ages(table_dot_column: str) -> List[str]:
+def get_ages(table_dot_column: str) -> tuple[Any, Any]:
     """Get oldest and newest date in a column."""
 
     oldest = db.session.query(func.min(table_dot_column)).first()[0]
     newest = db.session.query(func.max(table_dot_column)).first()[0]
-    return (oldest, newest)
+    return oldest, newest
 
 
 def format_an_int_with_commas(your_int: int) -> str:
@@ -36,7 +36,7 @@ def format_an_int_with_commas(your_int: int) -> str:
     return f"{your_int:,}"
 
 
-def make_date_pretty(date_time_string: Union[datetime, str]) -> str:
+def make_date_pretty(date_time_string: Union[date, str]) -> str:
     """
     >>> make_date_pretty('2022-02-01 00:03:33.000000')
     'Tue, Feb 1, 2022'
@@ -159,7 +159,9 @@ def convert_dict_to_named_tuple(a_dict: Dict[str, Any]) -> NamedTuple:
 if __name__ == '__main__':
     """Will connect you to the database when you run common.py interactively"""
     from server import app
+
     connect_to_db(app)
 
     import doctest
+
     doctest.testmod()  # python3 common.py -v

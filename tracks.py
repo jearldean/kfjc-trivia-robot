@@ -18,6 +18,7 @@ def create_track(kfjc_album_id, artist, title, indx):
 
     return track
 
+
 # -=-=-=-=-=-=-=-=-=-=-=- Tracks on an Album -=-=-=-=-=-=-=-=-=-=-=-
 
 
@@ -48,4 +49,5 @@ def get_tracks_by_an_artist(artist):
 if __name__ == '__main__':
     """Will connect you to the database when you run tracks.py interactively"""
     from server import app
+
     connect_to_db(app)

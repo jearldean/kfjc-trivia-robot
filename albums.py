@@ -29,4 +29,5 @@ def get_album_by_id(kfjc_album_id: int) -> Album:
 if __name__ == '__main__':
     """Will connect you to the database when you run albums.py interactively"""
     from server import app
+
     connect_to_db(app)

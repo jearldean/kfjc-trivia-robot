@@ -88,4 +88,5 @@ def hash_it(password: str) -> str:
 if __name__ == '__main__':
     """Will connect you to the database when you run users.py interactively"""
     from server import app
+
     connect_to_db(app)

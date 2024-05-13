@@ -55,4 +55,5 @@ def get_airname_for_dj(dj_id: int, posessive: bool = False) -> str:
 if __name__ == '__main__':
     """Will connect you to the database when you run djs.py interactively"""
     from server import app
+
     connect_to_db(app)

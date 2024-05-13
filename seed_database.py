@@ -28,7 +28,7 @@ def nuclear_option():
     kfjc.import_all_tables()
     toc = time.perf_counter()
     questions.make_all_questions()
-    hours = float((toc - tic)/3600)
+    hours = float((toc - tic) / 3600)
     print(f"Importing Station Data took {hours:0.4f} hours.")
 
 

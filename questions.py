@@ -50,6 +50,7 @@ def get_question_by_id(question_id: int) -> Question:
 
     return Question.query.get(question_id)
 
+
 # -=-=-=-=-=-=-=-=-=-=-=- Choose Random Question -=-=-=-=-=-=-=-=-=-=-=-
 
 
@@ -67,6 +68,7 @@ def get_unique_question(user_id: int) -> Question:
 
     random_question_id = choice(allowed_pool)
     return get_question_by_id(question_id=random_question_id)
+
 
 # -=-=-=-=-=-=-=-=-=-=-=- Seed Questions Table -=-=-=-=-=-=-=-=-=-=-=-
 
@@ -87,10 +89,11 @@ def make_all_questions():
     tracks_on_an_album()
     create_last_play_questions()
     toc = time.perf_counter()
-    mins = float((toc - tic)/60)
+    mins = float((toc - tic) / 60)
     print(
         f"Seeding Questions took {mins:0.4f} minutes "
         f"using SEED_QUESTION_COUNT={SEED_QUESTION_COUNT}.")
+
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -206,6 +209,7 @@ def dj_competition_engine(
 
     db.session.commit()
 
+
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
@@ -245,6 +249,7 @@ def when_was_dj_last_on_the_air():
             present_answer_data=present_answer_data)
 
     db.session.commit()
+
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -311,7 +316,7 @@ def dj_favorites_engine(media: str):
                     acceptable_answer = the_right_answer.track_title
             shuffle(display_shuffled_answers)
             create_question(
-                question_type=QUESTION_TYPES[media+'s'],
+                question_type=QUESTION_TYPES[media + 's'],
                 ask_question=choice(ask_questions),
                 present_answer=choice(present_answers),
                 acceptable_answer=acceptable_answer,
@@ -320,6 +325,7 @@ def dj_favorites_engine(media: str):
                 present_answer_data=present_answer_data)
 
     db.session.commit()
+
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -398,7 +404,7 @@ def top_ten_engine(media: str):
                 present_answer_data.append([zz.track_title, zz.plays])
 
         create_question(
-            question_type=QUESTION_TYPES[media+'s'],
+            question_type=QUESTION_TYPES[media + 's'],
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answer=acceptable_answer,
@@ -407,6 +413,7 @@ def top_ten_engine(media: str):
             present_answer_data=present_answer_data)
 
     db.session.commit()
+
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -555,6 +562,7 @@ def tracks_on_an_album():
 
     db.session.commit()
 
+
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
@@ -623,7 +631,7 @@ def last_play_engine(media: str):
                 f"the album '{zz.album_title}' by {zz.artist}", pretty_date])
 
         create_question(
-            question_type=QUESTION_TYPES[media+'s'],
+            question_type=QUESTION_TYPES[media + 's'],
             ask_question=choice(ask_questions),
             present_answer=choice(present_answers),
             acceptable_answer=the_pretty_right_answer,
@@ -632,6 +640,7 @@ def last_play_engine(media: str):
             present_answer_data=present_answer_data)
 
     db.session.commit()
+
 
 # -=-=-=-=-=-=-=-=-=-=-=- Make Fake Answers -=-=-=-=-=-=-=-=-=-=-=-
 
@@ -656,8 +665,8 @@ def random_date_surrounding_another_date(
 
     if isinstance(target_date_time, str):
         days_from_now = (
-            date.today() - date.fromisoformat(
-                target_date_time[:10])).days
+                date.today() - date.fromisoformat(
+            target_date_time[:10])).days
     elif isinstance(target_date_time, datetime):
         days_from_now = (date.today() - target_date_time.date()).days
     elif isinstance(target_date_time, datetime.date):
@@ -674,7 +683,7 @@ def random_date_surrounding_another_date(
     random_dates = []
     for dd in random_days:
         random_dates.append(common.make_date_pretty(date_time_string=(
-            datetime.now() - timedelta(days=dd))))
+                datetime.now() - timedelta(days=dd))))
     return random_dates
 
 
@@ -682,4 +691,5 @@ if __name__ == '__main__':
     """Will connect you to the database when you run
     questions.py interactively"""
     from server import app
+
     connect_to_db(app)

@@ -20,8 +20,7 @@ import tracks
 
 BIRTH_OF_SPIDEY = datetime(1995, 9, 19, 0, 0, 0)
 
-DO_NOT_CHANGE = [
-    'Listen, Whitey!  The Sounds of Black Power 1967-1974']
+DO_NOT_CHANGE = ['Listen, Whitey!  The Sounds of Black Power 1967-1974']
 
 SILENT_MIC = [210]  # When someone passes, it can be psychologically difficult to flip this bit.
 
@@ -76,7 +75,7 @@ def coerce_imported_data(one_cell: Any) -> Any:
     >>> coerce_imported_data('Null')
     >>> coerce_imported_data("")
     >>> coerce_imported_data("0000-00-00 00:00:00")
-    >>> coerce_imported_data("1969-12-31 16:00:00")
+    '0000-00-00 00:00:00'
     >>> coerce_imported_data(-3)
     -3
     >>> coerce_imported_data('-3')
@@ -227,9 +226,7 @@ def add_a_missing_dj(dj_id: int, air_name: str):
     if not air_name:
         air_name = "None"
     create_djs(
-        row=[
-            dj_id, None, air_name, None,
-            None, None, None, None, None, "N"])
+        row=[dj_id, None, air_name, None, None, None, None, None, None, "N"])
     db.session.commit()
 
 

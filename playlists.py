@@ -7,6 +7,8 @@ from model import db, connect_to_db, Playlist
 import common
 
 MIN_SHOW_COUNT = 13
+
+
 # A DJ is born when they complete one training excercise and 13 grave shifts.
 
 
@@ -32,6 +34,7 @@ def get_playlist_by_id(kfjc_playlist_id: int) -> Playlist:
     """Return an album by primary key."""
 
     return Playlist.query.get(kfjc_playlist_id)
+
 
 # -=-=-=-=-=-=-=-=-=-=-=- DJ Stats -=-=-=-=-=-=-=-=-=-=-=-
 
@@ -117,7 +120,7 @@ def get_dj_ids_and_show_counts() -> NamedTuple:
         func.count(Playlist.dj_id).label('showcount'),
         Playlist.dj_id).group_by(
         Playlist.dj_id).having(
-            func.count(Playlist.dj_id) > MIN_SHOW_COUNT).all()
+        func.count(Playlist.dj_id) > MIN_SHOW_COUNT).all()
     return common.convert_list_o_dicts_to_list_o_named_tuples(
         list_of_dicts=result_tuples)
     # [GenericDict(showcount=26, dj_id=53), ...]
@@ -146,4 +149,5 @@ if __name__ == '__main__':
     """Will connect you to the database when you run
     playlists.py interactively"""
     from server import app
+
     connect_to_db(app)

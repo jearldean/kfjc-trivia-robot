@@ -19,6 +19,7 @@ class User(db.Model):
     username = db.Column(db.String(256), unique=True, nullable=False)
     fname = db.Column(db.String(30), unique=False, nullable=True)
     hashed_password = db.Column(db.String, nullable=False)
+
     # answers = a list of Answer objects
 
     def __repr__(self):
@@ -43,6 +44,7 @@ class Question(db.Model):
         mutable_json_type(dbtype=JSON, nested=True))
     present_answer_data = db.Column(
         mutable_json_type(dbtype=JSON, nested=True))
+
     # answers = a list of Answer objects
 
     def __repr__(self):
@@ -89,6 +91,7 @@ class Dj(db.Model):
     air_name = db.Column(db.String(60), nullable=True)
     administrative = db.Column(db.Boolean)
     silent_mic = db.Column(db.Boolean)
+
     # playlists = a list of Playlist objects
 
     def __repr__(self):
@@ -158,6 +161,7 @@ class Album(db.Model):
     artist = db.Column(db.String(100))
     title = db.Column(db.String(100))
     is_collection = db.Column(db.Boolean)
+
     # tracks = a list of Track objects
     # playlist_tracks = a list of PlaylistTrack objects
 

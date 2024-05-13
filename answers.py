@@ -10,7 +10,6 @@ from model import db, connect_to_db, Answer, Question, User
 import users
 import common
 
-
 PRAISE_MSG = [
     "Aw, yeah!", "Oh, yeah!", "Sch-weet!", "Cool!", "Yay!",
     "Right!", "Correct!", "You're right!", "You are Correct!",
@@ -124,7 +123,9 @@ if __name__ == '__main__':
     """Will connect you to the database when you run
     answers.py interactively"""
     from server import app
+
     connect_to_db(app)
 
     import doctest
+
     doctest.testmod()  # python3 answers.py -v

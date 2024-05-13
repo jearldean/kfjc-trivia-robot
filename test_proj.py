@@ -280,13 +280,13 @@ class RobotTestsDatabase(unittest.TestCase):
         self.make_users()
         self.assertEqual("Percy", users.get_user_by_id(user_id=5).fname)
         self.assertEqual(
-             "Charlie",
-             users.get_user_by_username(
-                 username='charlie@dragon_preserve.ro').fname)
+            "Charlie",
+            users.get_user_by_username(
+                username='charlie@dragon_preserve.ro').fname)
         self.assertEqual(
-             "Arthur",
-             users.get_user_by_username(
-                 username='arthur@ministry_of_magic.gov').fname)
+            "Arthur",
+            users.get_user_by_username(
+                username='arthur@ministry_of_magic.gov').fname)
         self.assertTrue(users.does_user_exist_already(
             username='arthur@ministry_of_magic.gov'))
         self.assertFalse(users.does_user_exist_already(

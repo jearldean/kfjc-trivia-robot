@@ -37,6 +37,7 @@ def get_playlist_tracks_by_kfjc_playlist_id(
     return PlaylistTrack.query.filter(
         PlaylistTrack.kfjc_playlist_id == kfjc_playlist_id).all()
 
+
 # -=-=-=-=-=-=-=-=-=-=-=- DJ Favorites -=-=-=-=-=-=-=-=-=-=-=-
 
 
@@ -104,6 +105,7 @@ def dj_needs_more_shows(dj_id: int) -> str:
         warning_will_robinson += " Keep listening!"
     return warning_will_robinson
 
+
 # -=-=-=-=-=-=-=-=-=-=-=- Top10, Top10, Most Plays -=-=-=-=-=-=-=-=-=-=-=-
 
 
@@ -164,6 +166,7 @@ def get_top_plays(
         common.convert_list_o_dicts_to_list_o_named_tuples(reply))
     return reply_named_tuple
 
+
 # -=-=-=-=-=-=-=- When is the last time someone played _ ? -=-=-=-=-=-=-=-
 
 
@@ -210,11 +213,11 @@ def random_library_pick(
     try:
         return db.session.query(
             library_category).filter(
-                searcher != 'None').group_by(
-                    library_category).having(
-                        func.count(
-                            library_category) > min_appearances).order_by(
-                                func.random()).first()[0]
+            searcher != 'None').group_by(
+            library_category).having(
+            func.count(
+                library_category) > min_appearances).order_by(
+            func.random()).first()[0]
     except exc.ProgrammingError:
         # Pick again if there's a problem.
         return
@@ -265,8 +268,8 @@ def last_time_played(
     # so, neuter their weapons:
     search_for_item = search_for_item.replace(
         "'", " ").replace("dropdb", " ").replace("%", " ").replace(
-            "@", " ").replace("-", " ").replace(
-            "*", " ").replace("  ", " ").strip()
+        "@", " ").replace("-", " ").replace(
+        "*", " ").replace("  ", " ").strip()
 
     # Still, each word should participate in the search:
     search_for_item = search_for_item.replace(" ", "%")
@@ -289,6 +292,7 @@ def last_time_played(
         results)
     return reply_named_tuple
 
+
 # -=-=-=-=-=-=-=- Get stats for greeting statement -=-=-=-=-=-=-=-
 
 
@@ -301,4 +305,5 @@ if __name__ == '__main__':
     """Will connect you to the database when you run
     playlist_tracks.py interactively"""
     from server import app
+
     connect_to_db(app)
