@@ -335,4 +335,4 @@ class RobotTestsDatabase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()  # pytest --tb=long
+    unittest.main(exit=False)  # pytest --tb=long
